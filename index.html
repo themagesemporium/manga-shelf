@@ -1639,9 +1639,18 @@ async function acctPull(){ const d = await acctGql(`{customer{id firstName email
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
 function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null }; }
+// copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
+function siteMirror(){ const owned = {}; let tb = 0;
+  Object.entries(shelf.series).forEach(([k, s]) => { const hit = SNAP ? snapEntry(k) : null; const key = hit ? hit[0] : k; const vs = ints(s);
+    tb += s.v.length; const o = owned[key] = owned[key] || { n: hit ? hit[1].n : s.n, v: [] }; vs.forEach(v => { const t = String(Math.floor(v)); if (!o.v.includes(t)) o.v.push(t); }); });
+  const ent = Object.entries(owned).sort((a, b) => b[1].v.length - a[1].v.length); const A = {}, B = {}; let sa = 0, sb = 0;
+  ent.forEach(([k, o]) => { const z = k.length + JSON.stringify(o).length + 4; if (sa + z < 120000){ A[k] = o; sa += z; } else if (sb + z < 120000){ B[k] = o; sb += z; } });
+  const at = new Date().toISOString().slice(0, 10); const mk = (key, val) => ({ ownerId: acct.cid, namespace: 'custom', key, type: 'json', value: JSON.stringify(val) });
+  return [mk('collection', { owned: A, bought: {}, tb, updated: at, src: 'app' }), mk('collection_2', { owned: B })]; }
 async function acctPush(){ if (!acct || !acct.cid) return; const b = await gzB64(JSON.stringify(shelfBody()));
   if (b.length > PARTS * CHUNK) throw new Error('shelf too big to save to your account');
   const mfs = []; for (let i = 0; i < PARTS; i++) mfs.push({ ownerId: acct.cid, namespace: 'mme', key: 'shelf' + i, type: 'json', value: JSON.stringify(b.slice(i * CHUNK, (i + 1) * CHUNK)) });
+  try { mfs.push(...siteMirror()); } catch(e){}
   const d = await acctGql(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{field message}}}`, { m: mfs });
   const er = d.metafieldsSet.userErrors; if (er && er.length) throw new Error(er[0].message);
   acct.saved = Date.now(); ls.set('mme-acct', acct); ls.set('mme-dirty', 0); }
