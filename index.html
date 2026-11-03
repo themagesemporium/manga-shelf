@@ -357,7 +357,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
     <div class="list" id="list"></div>
     <div id="dupBox" style="margin-top:14px"></div>
     <p style="text-align:center;margin:18px 0 6px"><button class="btn ghost sm" data-openacct="io">⤓ Back up or bring in a collection</button></p>
-    <p style="text-align:center;margin:6px 0 10px;font-size:14px"><a class="helpLink" href="help.html" target="_top" style="color:inherit;font-weight:600">❓ How to use the app</a> &nbsp;·&nbsp; <a href="https://themagesemporium.com" target="_top" style="color:inherit;font-weight:600">🛍️ Back to the shop</a></p>
+    <p style="text-align:center;margin:6px 0 10px;font-size:14px"><a class="helpLink" href="help.html" target="_top" style="color:inherit;font-weight:600">❓ How to use the app</a> &nbsp;·&nbsp; <a href="#" data-feedback style="color:inherit;font-weight:600">💬 Send feedback</a> &nbsp;·&nbsp; <a href="https://themagesemporium.com" target="_top" style="color:inherit;font-weight:600">🛍️ Back to the shop</a></p>
   </section>
 
   <section id="tab-finds" class="hidden">
@@ -1625,7 +1625,7 @@ document.addEventListener('click', e => { if (!e.target.closest('[data-wantgaps]
   save(); renderLists(); toast(`♥ Added ${n} missing ${n === 1 ? 'volume' : 'volumes'} to your wishlist`, () => { shelf.series = prev; save(); renderLists(); }); });
 document.addEventListener('click', async e => {
   const c = e.target.closest('[data-copy]'); if (c){ const t = $('#lists')['_' + c.dataset.copy]; try { await navigator.clipboard.writeText(t); toast('Copied'); } catch(err){ openSheet(`<h2>Copy this</h2><textarea class="rv" readonly>${esc(t)}</textarea><button class="btn ghost" data-close>Close</button>`); } return; }
-  const ln = e.target.closest('[data-ln]'); if (ln){ listView = ln.dataset.ln; renderLists(); return; }
+  const ln = e.target.closest('[data-ln]'); if (ln){ listView = ln.dataset.ln; renderLists(); if (listView === 'friends') liveLoad(); return; }
   const rt = e.target.closest('[data-ret]'); if (rt){ const [k, v] = rt.dataset.ret.split('|'); const s = shelf.series[k]; if (s && s.ln){ const prev = JSON.parse(JSON.stringify(s.ln)); delete s.ln[v]; if (!Object.keys(s.ln).length) delete s.ln; save(); toast(`Vol ${v} is back`, () => { s.ln = prev; save(); }); } return; }
   const ra = e.target.closest('[data-retall]'); if (ra){ const [w, d] = ra.dataset.retall.split('|'); const prev = JSON.parse(JSON.stringify(shelf.series)); let n = 0;
     Object.values(shelf.series).forEach(s => { if (!s.ln) return; Object.keys(s.ln).forEach(v => { if (s.ln[v].w === w && s.ln[v].d === d){ delete s.ln[v]; n++; } }); if (!Object.keys(s.ln).length) delete s.ln; });
@@ -1726,7 +1726,7 @@ async function acctPush(){ if (!acct || !acct.cid) return; const b = await gzB64
   try { mfs.push(...siteMirror()); } catch(e){}
   const d = await acctGql(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{field message}}}`, { m: mfs });
   const er = d.metafieldsSet.userErrors; if (er && er.length) throw new Error(er[0].message);
-  acct.saved = Date.now(); ls.set('mme-acct', acct); ls.set('mme-dirty', 0); }
+  acct.saved = Date.now(); ls.set('mme-acct', acct); ls.set('mme-dirty', 0); livePush(); }
 function acctQueue(){ if (!acct || !acct.at) return; ls.set('mme-dirty', 1); clearTimeout(acctT); acctT = setTimeout(acctSave, 2500); }
 async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true;
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
@@ -1761,7 +1761,7 @@ async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy =
     else if (acct.fresh){ acctBusy = false; delete acct.fresh; ls.set('mme-acct', acct); askMerge(local, cloud); return; }
     else { applyBody(combine(local, cloud)); acctBusy = false; await acctPush(); }
     delete acct.fresh; ls.set('mme-acct', acct); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; acctMsg = '';
-    acctOrders().catch(() => {});
+    acctOrders().catch(() => {}); liveLoad().then(() => livePush()); liveFromHash();
   } catch(e){ acctBusy = false; $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t reach your account: ' + e.message; }
   renderAll(); renderFinds(); if (current) renderSeries(current); renderAcct(); }
 function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your store account already has a saved shelf, and this device has one too. Which should we keep?</p>
@@ -1772,10 +1772,14 @@ function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your
     applyBody(w === 'cloud' ? cloud : w === 'local' ? local : combine(local, cloud)); closeSheet(); renderAll(); renderFinds();
     try { await acctPush(); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; } catch(e){ acctMsg = 'Couldn’t save to your account: ' + e.message; }
     renderAcct(); toast(w === 'both' ? 'Shelves combined' : 'Shelf chosen', () => { shelf = prev; save(); }); }); }
+function feedbackMail(){ const em = acct && acct.email || ''; const ver = (document.querySelector('meta[name=app-version]') || {}).content || '';
+  const body = 'What I love / what I’d like / what went wrong:\n\n\n\n---\nAccount: ' + (em || 'not logged in') + '\nShelf: ' + Object.keys(shelf.series).length + ' series\nDevice: ' + navigator.userAgent + (ver ? '\nApp: ' + ver : '');
+  location.href = 'mailto:themagesemporium@gmail.com?subject=' + encodeURIComponent('My Manga Emporium feedback') + '&body=' + encodeURIComponent(body); }
+document.addEventListener('click', e => { if (e.target.closest('[data-feedback]')){ e.preventDefault(); track('feedback'); feedbackMail(); } });
 function photoMailto(){ const em = acct && acct.email || ''; const subj = 'Collection photos for My Manga Emporium' + (em ? ' (' + em + ')' : '');
   const body = 'Hi! Here are photos of my manga collection for the app.\n\nMy store account email: ' + (em || '(please add the email you log in with)') + '\n\nAttach your photos to this email. Spines should be readable. Anything else we should know (other-language editions, box sets, books that are not on the shelf in the photo)?\n\n';
   return 'mailto:themagesemporium@gmail.com?' + 'subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body); }
-function openAcct(focus){ current = null; openSheet(`<h2>${ACCT.client && !window.claude ? 'Account & backup' : 'Backup'}</h2><div id="acctSlot"></div><p style="margin:10px 0 4px;font-size:14px"><a class="helpLink" href="help.html" target="_top" style="font-weight:600">❓ How to use the app</a> &nbsp;·&nbsp; <a href="https://themagesemporium.com" target="_top" style="font-weight:600">🛍️ Back to the shop</a></p><div class="row2" style="margin-top:6px"><button class="btn ghost" data-close>Close</button></div>`);
+function openAcct(focus){ current = null; openSheet(`<h2>${ACCT.client && !window.claude ? 'Account & backup' : 'Backup'}</h2><p style="margin:0 0 10px"><button class="btn sm" data-feedback>💬 Send feedback or report a bug</button></p><div id="acctSlot"></div><p style="margin:10px 0 4px;font-size:14px"><a class="helpLink" href="help.html" target="_top" style="font-weight:600">❓ How to use the app</a> &nbsp;·&nbsp; <a href="https://themagesemporium.com" target="_top" style="font-weight:600">🛍️ Back to the shop</a></p><div class="row2" style="margin-top:6px"><button class="btn ghost" data-close>Close</button></div>`);
   if (window.claude) document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium');
   const slot = $('#acctSlot'); renderAcct(); slot.appendChild($('#acctBox')); slot.appendChild($('#ioBox')); slot.appendChild($('#photoBox')); $('#photoMail').href = photoMailto();
   if (focus === 'io') setTimeout(() => $('#ioBox').scrollIntoView({ block: 'start', behavior: 'smooth' }), 50); }
@@ -1794,8 +1798,8 @@ function renderAcct(){ const el = $('#acctBox'); if (!el) return; const hb = $('
   const i = $('#acctInBtn'); if (i) i.onclick = acctLogin; const s2 = $('#acctSyncBtn'); if (s2) s2.onclick = acctSync;
   const o = $('#acctOutBtn'); if (o) o.onclick = async () => { if (ls.get('mme-dirty')) { try { await acctPush(); } catch(e){} } const idt = acct && acct.idt; acctOut(false); if (idt) location.href = ACCT.logout + '?' + new URLSearchParams({ id_token_hint: idt, post_logout_redirect_uri: redirectUri() }); }; }
 let acctBooted = false;
-async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted = true; try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.acct) ACCT.client = j.acct; } } catch(e){}
-  if (!ACCT.client){ renderAcct(); return; } await acctCallback(); renderAcct(); if (acct && acct.at) acctSync();
+async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted = true; try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.acct) ACCT.client = j.acct; if (j && j.friends) FRIENDS_API = j.friends; } } catch(e){}
+  if (!ACCT.client){ renderAcct(); return; } await acctCallback(); renderAcct(); if (acct && acct.at) acctSync(); else liveFromHash();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && acct && acct.at && !ls.get('mme-dirty')) acctSync(); else if (document.visibilityState === 'hidden' && acct && ls.get('mme-dirty')){ clearTimeout(acctT); acctSave(); } }); }
 /* ---------- share card (Instagram story size): same look as the old My Collection card; colors follow the top genre ---------- */
 function cardData(){ const C = collectorNumbers(); let r = 0; while (r+1 < RANKS.length && C.books >= RANKS[r+1][0]) r++;
@@ -1908,7 +1912,21 @@ function track(ev){ try { if (window.goatcounter && window.goatcounter.count) wi
 if (!window.claude && location.hostname === 'app.themagesemporium.com'){ window.goatcounter = { path: (matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? '/home-screen-app' : '/browser' };
   const gs = document.createElement('script'); gs.async = true; gs.src = 'https://gc.zgo.at/count.js'; gs.dataset.goatcounter = GC; document.head.appendChild(gs); }
 /* ---------- friends: swap shelves by link or file, then compare ---------- */
-let friendSel = null;
+let friendSel = null, FRIENDS_API = '', liveF = null, liveBusy = false, liveShelfAt = 0;
+async function fapi(path, body){ const t = await acctAccess(); if (!t) throw new Error('Log in first');
+  const r = await fetch(FRIENDS_API + path, { method: body ? 'POST' : 'GET', headers: { authorization: t, 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || ('error ' + r.status)); return j; }
+async function liveLoad(){ if (!FRIENDS_API || !acct || !acct.at || liveBusy || !navigator.onLine) return; liveBusy = true;
+  try { const st = await fapi('/state'); for (const f of st.following){ if (f.shelf){ try { let b = f.shelf; f.pk = JSON.parse(await unGzB64(b)); } catch(e){} } } liveF = st; } catch(e){ liveF = { err: e.message || 'unavailable' }; }
+  liveBusy = false; if (listView === 'friends') renderLists(); }
+async function livePush(force){ if (!FRIENDS_API || !liveF || !liveF.me || !liveF.me.live) return; if (!force && Date.now() - liveShelfAt < 120e3) return; liveShelfAt = Date.now();
+  try { await fapi('/shelf', { s: await gzB64(JSON.stringify(friendPack())) }); } catch(e){} }
+function liveLink(){ return 'https://app.themagesemporium.com/#live=' + liveF.me.code; }
+async function liveFromHash(){ const m = location.hash.match(/#live=([a-z0-9]+)/); if (m){ ls.set('mme-livecode', m[1]); history.replaceState(null, '', location.pathname); }
+  const code = ls.get('mme-livecode'); if (!code || !FRIENDS_API) return;
+  if (!acct || !acct.at){ setTimeout(() => toast('Log in (top right) to see your friend’s shelf. Your request is waiting.'), 900); return; }
+  try { const r = await fapi('/request', { code }); ls.set('mme-livecode', null); toast(r.st === 'ok' ? `👯 You can see ${r.name}’s shelf` : `👯 Request sent! ${r.name} needs to approve it.`); listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); liveLoad(); }
+  catch(e){ ls.set('mme-livecode', null); toast('Couldn’t open that invite: ' + e.message); } }
 function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
   return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out }; }
 async function friendShare(){ track('friend-share'); const pk = friendPack(); let nm = pk.name;
@@ -1926,12 +1944,26 @@ function friendAdd(pk){ if (!pk || pk.app !== 'mme-friend' || !pk.s) { toast('Th
 async function friendFromHash(){ const m = location.hash.match(/#f=([A-Za-z0-9_-]+)/); if (!m) return; history.replaceState(null, '', location.pathname);
   try { let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; const pk = JSON.parse(await unGzB64(b)); setTimeout(() => friendAdd(pk), 600); } catch(e){ toast('That friend link didn’t open. Ask them to send it again.'); } }
 function friendKey(fk, f){ if (shelf.series[fk]) return fk; const n = normName(f.n); return Object.keys(shelf.series).find(k => normName(shelf.series[k].n) === n) || null; }
-function friendsHTML(){ const F = shelf.friends || {}; const ids = Object.keys(F); if (friendSel && !F[friendSel]) friendSel = null; if (!friendSel && ids.length) friendSel = ids[0];
+function friendsHTML(){ const F = Object.assign({}, shelf.friends || {}); const ids = Object.keys(F);
   let h = `<div class="st-sec"><h3>👯 Friends</h3><p class="sub" style="margin:0 0 8px">Swap shelves with a friend to see what you both have, what you can borrow from each other, and gift ideas from their wishlist.</p>
     <div class="row2" style="flex-wrap:wrap"><button class="btn sm" data-fshare>📤 Send my shelf to a friend</button><label class="btn ghost sm" style="cursor:pointer">📥 Add a friend’s file<input type="file" id="fFile" accept=".json,application/json" hidden></label></div>
     <p class="sub" style="margin:6px 0 0">Your friend opens your link (or adds your file) in their app. Nothing is shared until you send it.</p></div>`;
-  if (!ids.length) return h;
-  h += `<div class="seg2" style="margin:0 0 10px;flex-wrap:wrap">${ids.map(id => `<button data-fsel="${esc(id)}" aria-pressed="${id === friendSel}">${esc(F[id].name)}</button>`).join('')}</div>`;
+  if (FRIENDS_API && !window.claude){
+    if (!acct || !acct.at) h += `<div class="st-sec"><h3>🔴 Live sharing</h3><p class="sub" style="margin:0">Log in to share your shelf live with friends (they always see your latest shelf, and you approve who can see it).</p></div>`;
+    else if (!liveF) h += `<div class="st-sec"><h3>🔴 Live sharing</h3><p class="sub" style="margin:0"><span class="spin"></span>&nbsp; Loading…</p></div>`;
+    else if (liveF.err) h += `<div class="st-sec"><h3>🔴 Live sharing</h3><p class="sub" style="margin:0">Couldn’t reach live sharing (${esc(liveF.err)}). Check your connection and open Friends again.</p></div>`;
+    else { const M = liveF.me; const ask = M.viewers.filter(v => v.st === 'ask'), ok = M.viewers.filter(v => v.st === 'ok');
+      h += `<div class="st-sec"><h3>🔴 Live sharing ${M.live ? '<span class="chip good">on</span>' : ''}</h3>` + (M.live
+        ? `<p class="sub" style="margin:0 0 6px">Friends who open your invite link ask to see your shelf. They only see it after you approve, and they always see your latest shelf. Revoke anyone anytime.</p>
+           <div class="row2" style="flex-wrap:wrap"><button class="btn sm" data-livesend>📤 Send my invite link</button><button class="btn ghost sm" data-liveoff>Stop sharing with everyone</button></div>
+           ${ask.length ? `<p style="margin:10px 0 4px"><b>Waiting for you</b></p>` + ask.map(v => `<div class="srow" style="cursor:default"><span>${esc(v.name)}<small>wants to see your shelf</small></span><span class="r"><button class="btn sm" data-liveok="${esc(v.cid)}">Approve</button> <button class="btn ghost sm" data-liverev="${esc(v.cid)}">Decline</button></span></div>`).join('') : ''}
+           <p style="margin:10px 0 4px"><b>Can see your shelf</b> (${ok.length})</p>${ok.length ? ok.map(v => `<div class="srow" style="cursor:default"><span>${esc(v.name)}</span><span class="r"><button class="btn ghost sm" data-liverev="${esc(v.cid)}">Revoke</button></span></div>`).join('') : '<p class="sub" style="margin:0">Nobody yet.</p>'}`
+        : `<p class="sub" style="margin:0 0 8px">Let friends see your shelf as it changes. They ask, you approve, and you can revoke anytime.</p><button class="btn sm" data-liveon>🔴 Share my shelf live</button>`) + `</div>`;
+      liveF.following.forEach(f => { if (f.st === 'ok' && f.pk) F['live:' + f.cid] = { name: f.pk.name || f.name, at: f.pk.at || Date.now(), s: f.pk.s, live: 1, cid: f.cid }; });
+      const waiting = liveF.following.filter(f => f.st !== 'ok');
+      if (waiting.length) h += `<div class="st-sec">${waiting.map(f => `<div class="srow" style="cursor:default"><span>${esc(f.name)}<small>${f.st === 'ask' ? 'Waiting for them to approve your request' : 'Stopped sharing with you'}</small></span><span class="r"><button class="btn ghost sm" data-liveunf="${esc(f.cid)}">${f.st === 'ask' ? 'Cancel' : 'Remove'}</button></span></div>`).join('')}</div>`; } }
+  const ids2 = Object.keys(F); if (!ids2.length) return h; if (!friendSel || !F[friendSel]) friendSel = ids2[0];
+  h += `<div class="seg2" style="margin:0 0 10px;flex-wrap:wrap">${ids2.map(id => `<button data-fsel="${esc(id)}" aria-pressed="${id === friendSel}">${F[id].live ? '🔴 ' : ''}${esc(F[id].name)}</button>`).join('')}</div>`;
   const f = F[friendSel]; const both = [], borrow = [], lend = [], gifts = [], theirsOnly = [];
   Object.entries(f.s).forEach(([fk, o]) => { const mk = friendKey(fk, o); const fv = new Set(o.v || []);
     if (mk){ const i = info(mk); const mine = new Set(i.own); const common = (o.v || []).filter(v => mine.has(v)); if (common.length) both.push([o.n, common.length]);
@@ -1941,7 +1973,7 @@ function friendsHTML(){ const F = shelf.friends || {}; const ids = Object.keys(F
     const g = (o.w || []).filter(v => !fv.has(v)); if (g.length) gifts.push([o.n, g]); });
   const row = (n, t) => `<div class="srow" style="cursor:default"><span>${esc(n)}<small>${t}</small></span></div>`;
   const sec = (title, sub, arr, fmt, empty) => `<div class="st-sec"><h3>${title} <span class="sub" style="font-weight:400">(${arr.length})</span></h3>${sub ? `<p class="sub" style="margin:0 0 6px">${sub}</p>` : ''}${arr.length ? arr.slice(0, 60).map(fmt).join('') + (arr.length > 60 ? `<p class="sub">…and ${arr.length - 60} more</p>` : '') : `<p class="sub" style="margin:0">${empty}</p>`}</div>`;
-  h += `<div class="st-sec"><p style="margin:0"><b>${esc(f.name)}</b>: ${Object.keys(f.s).length} series · ${Object.values(f.s).reduce((a, o) => a + (o.v || []).length, 0)} books <span class="sub">(shared ${new Date(f.at).toLocaleDateString()})</span></p><button class="btn ghost sm" data-fdel="${esc(friendSel)}" style="margin-top:6px">Remove ${esc(f.name)}</button></div>`;
+  h += `<div class="st-sec"><p style="margin:0"><b>${esc(f.name)}</b>: ${Object.keys(f.s).length} series · ${Object.values(f.s).reduce((a, o) => a + (o.v || []).length, 0)} books <span class="sub">${f.live ? '(live)' : `(shared ${new Date(f.at).toLocaleDateString()})`}</span></p>${f.live ? `<button class="btn ghost sm" data-liveunf="${esc(f.cid)}" style="margin-top:6px">Stop following ${esc(f.name)}</button>` : `<button class="btn ghost sm" data-fdel="${esc(friendSel)}" style="margin-top:6px">Remove ${esc(f.name)}</button>`}</div>`;
   h += sec('📖 You could borrow', `Volumes you’re missing that ${esc(f.name)} owns.`, borrow, x => row(x[0], 'Vol ' + compactVols(x[1])), 'Nothing to borrow yet.');
   h += sec('🎁 Gift ideas', `From ${esc(f.name)}’s wishlist.`, gifts, x => row(x[0], 'Vol ' + compactVols(x[1])), 'Their wishlist is empty.');
   h += sec('🤝 You could lend', `On ${esc(f.name)}’s wishlist, and you own them.`, lend, x => row(x[0], 'Vol ' + compactVols(x[1])), 'Nothing on their wishlist that you own.');
@@ -1950,6 +1982,15 @@ function friendsHTML(){ const F = shelf.friends || {}; const ids = Object.keys(F
   return h; }
 document.addEventListener('click', e => { if (e.target.closest('[data-fshare]')){ friendShare(); return; } const s2 = e.target.closest('[data-fsel]'); if (s2){ friendSel = s2.dataset.fsel; renderLists(); return; }
   const d = e.target.closest('[data-fdel]'); if (d){ const id = d.dataset.fdel; const prev = shelf.friends[id]; delete shelf.friends[id]; friendSel = null; save(); renderLists(); toast('Friend removed', () => { shelf.friends[id] = prev; save(); renderLists(); }); } });
+document.addEventListener('click', async e => { const t = e.target.closest('[data-liveon],[data-liveoff],[data-liveok],[data-liverev],[data-liveunf],[data-livesend]'); if (!t) return;
+  try { if (t.dataset.liveon !== undefined){ await fapi('/on', {}); await liveLoad(); await livePush(true); toast('🔴 Live sharing is on. Send your invite link!'); }
+    else if (t.dataset.liveoff !== undefined){ if (!confirm('Stop sharing your shelf with everyone? Friends will no longer see it, and your invite link stops working.')) return; await fapi('/off', {}); toast('Live sharing is off'); }
+    else if (t.dataset.liveok){ await fapi('/approve', { cid: t.dataset.liveok }); toast('Approved 👯'); }
+    else if (t.dataset.liverev){ await fapi('/revoke', { cid: t.dataset.liverev }); toast('Removed. They can no longer see your shelf.'); }
+    else if (t.dataset.liveunf){ await fapi('/unfollow', { cid: t.dataset.liveunf }); friendSel = null; toast('Removed'); }
+    else if (t.dataset.livesend !== undefined){ track('live-invite'); const url = liveLink(); const text = 'Want to see my manga shelf? Open this in My Manga Emporium and I’ll approve you:';
+      if (navigator.share){ try { await navigator.share({ title: 'My manga shelf', text, url }); } catch(err){} } else { try { await navigator.clipboard.writeText(url); toast('Invite link copied!'); } catch(err){ openSheet(`<h2>Your invite link</h2><textarea class="rv" readonly>${esc(url)}</textarea><button class="btn ghost" data-close>Close</button>`); } } return; }
+    liveLoad(); } catch(err){ toast(err.message); } });
 document.addEventListener('change', async e => { if (e.target.id !== 'fFile' || !e.target.files[0]) return; try { friendAdd(JSON.parse(await e.target.files[0].text())); } catch(err){ toast('Couldn’t read that file'); } });
 function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
 if (window.claude) document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium');
