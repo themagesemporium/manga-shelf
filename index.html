@@ -1,0 +1,1519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>My Manga Emporium</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Manga Shelf">
+<meta name="theme-color" content="#69c8ec">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Fredoka:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff4c2; --bgimg:linear-gradient(180deg,#69c8ec 0%,#b9e5f1 260px,#fff6c8 620px,#fff3b8 100%);
+  --surface:#fffef7; --surface-2:#fff3c9; --ink:#1b2b4b; --muted:#56637f; --line:#f0da93;
+  --accent:#f0662b; --accent-ink:#fff; --accent-soft:#ffe3d1; --gold:#d27f00; --gold-soft:#fff0bf;
+  --good:#2f7d4f; --shadow:0 1px 2px rgba(27,43,75,.07),0 6px 20px rgba(27,43,75,.09);
+  --rank1:#1d5aae; --rank2:#3fb2e5; --display:Fredoka,Figtree,sans-serif; --r:14px;
+}
+:root[data-skin="grimoire"]{
+  --bg:#f5f0e6; --bgimg:none; --surface:#fffdf8; --surface-2:#efe8da; --ink:#1f1a29; --muted:#6b6478; --line:#ddd3c2;
+  --accent:#5a3fcf; --accent-ink:#fff; --accent-soft:#e6e0fb; --gold:#a8771c; --gold-soft:#f6e7c6;
+  --rank1:#5a3fcf; --rank2:#2d1d75; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="sakura"]{
+  --bg:#fff6f9; --bgimg:linear-gradient(180deg,#ffd3e2 0%,#ffeaf1 300px,#fff7fa 100%); --surface:#fffdfe; --surface-2:#ffe6ee; --ink:#3a1f2c; --muted:#86617a; --line:#f6c9d8;
+  --accent:#d9417a; --accent-ink:#fff; --accent-soft:#ffdbe7; --gold:#c27a00; --gold-soft:#fff0d4;
+  --rank1:#e0578b; --rank2:#8e2c6b; --display:Fredoka,Figtree,sans-serif;
+}
+:root[data-skin="matcha"]{
+  --bg:#f3f7ea; --bgimg:linear-gradient(180deg,#cfe6b8 0%,#e9f2dc 300px,#f6f8ef 100%); --surface:#fdfffa; --surface-2:#e6efd8; --ink:#1f2d1f; --muted:#5d6e5b; --line:#cfdcbc;
+  --accent:#3e8a4e; --accent-ink:#fff; --accent-soft:#d9ecd7; --gold:#a8771c; --gold-soft:#f4ead0;
+  --rank1:#3e8a4e; --rank2:#1d4f34; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="holiday"]{
+  --bg:#fbf6ea; --bgimg:linear-gradient(180deg,#1f6b45 0%,#2f8a5a 230px,#f6edd8 560px,#fbf6ea 100%);
+  --surface:#fffdf6; --surface-2:#f7ecd4; --ink:#2a1c14; --muted:#6e5a4a; --line:#ead7ae;
+  --accent:#c8202f; --accent-ink:#fff; --accent-soft:#fbdcdc; --gold:#c08a12; --gold-soft:#fbefcc;
+  --good:#1f7a4a; --rank1:#b81d2b; --rank2:#7a0f1e; --display:Fredoka,Figtree,sans-serif;
+}
+:root[data-skin="holiday"] body:before{content:"";position:absolute;left:0;right:0;top:0;height:520px;pointer-events:none;z-index:0;background-image:radial-gradient(circle,rgba(255,255,255,.85) 1.6px,transparent 2.4px),radial-gradient(circle,rgba(255,255,255,.6) 1.2px,transparent 2px);background-size:84px 84px,56px 70px;background-position:10px 14px,38px 40px;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
+:root[data-skin="holiday"] .wrap{position:relative;z-index:1}
+:root[data-skin="holiday"] .top h1,:root[data-skin="holiday"] .top small{color:#fff}
+:root[data-skin="harvest"]{
+  --bg:#fbf3e6; --bgimg:linear-gradient(180deg,#7a3418 0%,#b4531f 210px,#e8a85a 400px,#f8e9cf 600px,#fbf3e6 100%);
+  --surface:#fffaf1; --surface-2:#f6e6c9; --ink:#3a2214; --muted:#7a5a44; --line:#ecd3a8;
+  --accent:#c2541d; --accent-ink:#fff; --accent-soft:#f9dcc4; --gold:#b8860b; --gold-soft:#f8ebc6;
+  --good:#5f7a2a; --rank1:#8e2a1c; --rank2:#5a1a10; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="harvest"] body:before{content:"";position:absolute;left:0;right:0;top:0;height:460px;pointer-events:none;z-index:0;background-image:radial-gradient(ellipse 7px 4px,rgba(255,196,92,.75) 60%,transparent 70%),radial-gradient(ellipse 6px 3px,rgba(214,82,40,.7) 60%,transparent 70%),radial-gradient(ellipse 5px 3px,rgba(140,40,30,.55) 60%,transparent 70%);background-size:92px 80px,70px 96px,110px 64px;background-position:12px 18px,46px 52px,70px 30px;-webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
+:root[data-skin="harvest"] .wrap{position:relative;z-index:1}
+:root[data-skin="harvest"] .top h1,:root[data-skin="harvest"] .top small{color:#fff}
+:root[data-skin="night"]{
+  --bg:#13101b; --bgimg:none; --surface:#1d1928; --surface-2:#272235; --ink:#ede8f6; --muted:#a59dba; --line:#352f46;
+  --accent:#a58cff; --accent-ink:#16112a; --accent-soft:#2c2547; --gold:#e6b95c; --gold-soft:#3a2f18;
+  --good:#6fcf97; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  --rank1:#3b2a8f; --rank2:#1c1440; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="ocean"]{
+  --bg:#0f1d2e; --bgimg:linear-gradient(180deg,#123a5a 0%,#0f1d2e 340px); --surface:#162a40; --surface-2:#1e3550; --ink:#e8f3ff; --muted:#9db4cc; --line:#2b4766;
+  --accent:#ff9a4d; --accent-ink:#1a1206; --accent-soft:#3b2c1f; --gold:#ffc35a; --gold-soft:#3a2f18;
+  --good:#6fcf97; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  --rank1:#1e6fb0; --rank2:#0b2c4d; --display:Fredoka,Figtree,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background-color:var(--bg);background-image:var(--bgimg);background-repeat:no-repeat;background-size:100% 100%;min-height:100vh;color:var(--ink);font:15px/1.45 Figtree,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin:0}
+
+/* header */
+.top{padding:18px 0 6px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{flex:none}
+.brand h1{font-size:21px}
+.brand small{display:block;font:500 12px Figtree,sans-serif;color:var(--muted);letter-spacing:.02em}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;width:38px;height:38px;display:grid;place-items:center}
+
+/* rank card */
+.rank{margin-top:12px;background:linear-gradient(135deg,var(--rank1) 0%,var(--rank2) 100%);color:#fff;border-radius:20px;padding:18px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+/* skin picker */
+.skins{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:6px}
+.skin{border:2px solid var(--line);border-radius:14px;padding:0;overflow:hidden;background:var(--surface);text-align:left}
+.skin[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.skin .sw{height:62px;position:relative}
+.skin .sw i{position:absolute;bottom:8px;left:10px;width:44px;height:16px;border-radius:99px}
+.skin .sw b{position:absolute;bottom:8px;left:60px;width:22px;height:16px;border-radius:99px}
+.skin span{display:block;padding:8px 10px;font-weight:700;font-size:14px}
+.skin small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.rank:after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)}
+.rank .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.12em;opacity:.8}
+.rank h2{font-size:28px;margin:2px 0 10px}
+.bar{height:8px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:#f3c969;border-radius:99px;transition:width .6s}
+.rank .next{font-size:13px;opacity:.85;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.stat{background:rgba(255,255,255,.1);border-radius:12px;padding:8px 6px;text-align:center;border:0;color:inherit;font-family:inherit;cursor:pointer}
+.stat:active{background:rgba(255,255,255,.2)}
+.srow{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:inherit}
+.srow:first-of-type{border-top:0}
+.srow small{display:block;color:var(--muted);font-size:13px}
+.srow .r{color:var(--muted);font-weight:700;white-space:nowrap}
+.stat b{display:block;font-weight:700;font-size:20px;font-family:var(--display)}
+.stat span{font-size:11px;opacity:.85}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.badge{font-size:12px;font-weight:600;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.14)}
+.badge{border:0;color:inherit;font-family:inherit}
+.badge.off{opacity:.45}
+.st-sec{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:14px 16px;margin:0 0 12px}
+.st-sec h3{margin:0 0 8px;font-size:16px;font-family:var(--display)}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fact{background:var(--surface-2);border-radius:12px;padding:10px 12px;min-width:0}
+.fact b{display:block;font-size:20px;font-family:var(--display);overflow-wrap:anywhere}.fact small{color:var(--muted);font-size:12.5px}
+.crown{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.crown:first-of-type{border-top:0}
+.crown .ic{font-size:22px;width:30px;text-align:center}.crown.off .ic{filter:grayscale(1);opacity:.55}
+.crown div{flex:1;min-width:0}.crown small{display:block;color:var(--muted);font-size:12.5px}
+.gr{display:grid;grid-template-columns:minmax(0,8.5em) 1fr 3.2em;gap:8px;align-items:center;font-size:14px;margin:5px 0}
+.gr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gr b{text-align:right;font-variant-numeric:tabular-nums}
+.gbar{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden}.gbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--gold))}
+.seg2{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}.seg2 button{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:5px 11px;font-size:13px;color:var(--ink)}.seg2 button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:transparent}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:10px}.cal .dow{text-align:center;font-size:11px;color:var(--muted);font-weight:700}
+.cday{aspect-ratio:1;border:0;border-radius:9px;background:var(--surface-2);color:var(--ink);font-weight:600;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;line-height:1.1}
+.cday{position:relative;overflow:hidden}.cday img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35}.cday span,.cday small,.cday em{position:relative}
+.cday small{font-size:10px;font-weight:800}.cday em{font-style:normal;font-size:10px;position:absolute;top:1px;right:2px}
+.cday.l1{background:color-mix(in srgb,var(--accent) 30%,var(--surface-2))}.cday.l2{background:color-mix(in srgb,var(--accent) 60%,var(--surface-2))}.cday.l3{background:var(--accent);color:#fff}
+.cday.today{box-shadow:inset 0 0 0 2px var(--ink)}.cday.sel{outline:3px solid var(--gold);outline-offset:1px}
+.calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.heat{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px;margin-top:8px}.heat i{aspect-ratio:1;border-radius:3px;background:var(--surface-2)}
+.heat i.l1{background:color-mix(in srgb,var(--accent) 35%,var(--surface-2))}.heat i.l2{background:color-mix(in srgb,var(--accent) 65%,var(--surface-2))}.heat i.l3{background:var(--accent)}
+.bprog{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin:10px 0 4px}.bprog i{display:block;height:100%;background:var(--accent)}
+
+/* tabs + tools */
+.tabs{display:flex;gap:6px;margin:18px 0 10px;background:var(--surface-2);padding:4px;border-radius:12px}
+.tabs button{flex:1;min-width:0;font-size:14px;padding-left:2px!important;padding-right:2px!important;border:0;background:transparent;padding:9px 8px;border-radius:9px;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.tools input{flex:1 1 100%!important}
+.tools select{flex:1 1 0;max-width:none!important}
+.tools input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.tools select{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 8px;max-width:44%}
+.count{font-size:13px;color:var(--muted);margin:2px 2px 8px}
+
+/* series cards */
+.list{display:grid;gap:10px}
+.vx{display:inline-flex;align-items:center;gap:4px;margin:4px 4px 0 0;padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:inherit;font:inherit;font-size:13px;cursor:pointer}
+.vx b{color:var(--muted);font-weight:700}
+.vx:hover b{color:var(--accent)}
+.crow{display:flex;align-items:center;gap:8px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden;font-size:13px!important;padding:7px 10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;text-align:left;color:inherit;font:inherit}
+.crow .nm{flex:1 1 0;min-width:0;max-width:70%;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow .m{color:var(--muted);font-size:12px;flex:none;white-space:nowrap}
+.list.compact{gap:4px;grid-template-columns:minmax(0,1fr)}
+.list{min-width:0}
+.shelfv{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));grid-auto-rows:118px;gap:0 8px;padding:6px 10px 0;border-radius:12px;background:var(--surface);
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 104px,#9a6a3a 104px,#7a4f27 112px,rgba(0,0,0,.18) 112px,transparent 118px)}
+.shelfv .sh{position:relative;align-self:end;height:96px;margin-bottom:14px;padding:0;border:0;background:none;cursor:pointer}
+.shelfv .sh img,.shelfv .sh .ph{width:100%;height:96px;object-fit:cover;border-radius:3px;box-shadow:2px 2px 4px rgba(0,0,0,.35);display:block}
+.shelfv .sh img{position:absolute;inset:0;background:#fff}
+.shelfv .sh .ph{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.shelfv .sh .ph{display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;font-weight:700;line-height:1.15;padding:4px;box-sizing:border-box;color:#fff;overflow:hidden;word-break:break-word}
+.shelfv .sh b{position:absolute;right:-4px;top:-6px;background:var(--accent);color:#fff;font-size:10px;border-radius:999px;padding:1px 6px;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.io textarea{width:100%;min-height:80px;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:13px;background:var(--bg);color:inherit}
+.worth{color:var(--good);font-weight:700}
+.igrid{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:10px 0 0;font-size:14px}
+.igrid dt{color:var(--muted)}
+.igrid dd{margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;text-align:left;width:100%;display:flex;gap:12px;align-items:stretch}
+.card .body{flex:1;min-width:0}
+.cover{width:48px;height:70px;flex:none;border-radius:6px;background:var(--surface-2);overflow:hidden;display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.15);font-family:var(--display);font-weight:700;color:var(--muted);font-size:18px}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.shead{display:flex;gap:12px;align-items:center}
+.shead .cover{width:56px;height:82px}
+.card:active{transform:scale(.995)}
+.card .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.card h3{font-size:16px;line-height:1.25}
+.card .n{font-weight:700;font-size:13px;color:var(--muted);white-space:nowrap}
+.spines{display:flex;gap:1.5px;margin:9px 0 7px;height:16px;align-items:stretch}
+.spines{overflow:hidden;gap:1px!important}
+.spines i{flex:1 1 0;max-width:9px;min-width:0;border-radius:1px;background:var(--line)}
+.spines i.o{background:var(--accent)}
+.spines i.s{background:var(--gold)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:600;padding:3px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.chip.gold{background:var(--gold-soft);color:var(--gold)}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.chip.good{color:var(--good)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,8,16,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--surface);border-radius:20px 20px 0 0;z-index:21;transform:translateY(105%);transition:transform .25s ease;padding:8px 16px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+.sheet.on{transform:none}
+@media (min-width:700px){.sheet{left:50%;width:640px;margin-left:-320px}}
+.sheethead{position:sticky;top:-8px;z-index:2;background:var(--surface);margin:-8px -16px 4px;padding:8px 16px 4px;display:flex;justify-content:center;touch-action:none;cursor:grab}
+.grab{width:44px;height:5px;border-radius:9px;background:var(--line);margin:6px auto 10px}
+.xbtn{position:absolute;right:10px;top:6px;width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2);color:var(--ink);font-size:20px;line-height:1;display:grid;place-items:center}
+.sheet h2{font-size:22px;line-height:1.2}
+.sub{color:var(--muted);font-size:13px;margin:4px 0 12px}
+.vols{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
+.vol{border:1px solid var(--line);background:var(--bg);border-radius:9px;height:46px;font-weight:700;display:grid;place-items:center;position:relative;padding:0}
+.vol.o{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.vol.s{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.vol.rd:before{content:"✓";position:absolute;bottom:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:#2f9e5f;color:#fff;font-size:12px;font-weight:900;line-height:20px;text-align:center;box-shadow:0 0 0 2px var(--surface)}
+.vols{padding:6px 6px 6px 6px}
+.stars{display:flex;gap:4px;margin:2px 0 8px}
+details.about{margin-top:16px;background:var(--surface-2);border-radius:12px;padding:10px 12px}
+details.about summary{font-weight:700;cursor:pointer;list-style:none}
+details.about summary::-webkit-details-marker{display:none}
+details.about summary:after{content:" ▾";color:var(--muted)}
+details.about[open] summary:after{content:" ▴"}
+details.about p{margin:8px 0 0;font-size:14px}
+.ra{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ra a,.ra button{font:600 13px Figtree,sans-serif;padding:6px 10px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none}
+.ra .own{border-color:var(--accent);color:var(--accent)}
+.toggle{display:flex;gap:10px;align-items:flex-start;margin-top:10px;font-size:14px}
+.toggle input{width:20px;height:20px;accent-color:var(--accent);flex:none;margin-top:1px}
+.stars button{border:0;background:none;font-size:28px;line-height:1;padding:2px;color:var(--line)}
+.stars button.on{color:var(--gold)}
+textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:var(--bg);border-radius:11px;padding:10px 12px;font:inherit;color:var(--ink);resize:vertical}
+.vol.s:after{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.vol.lo:after{content:"↗";position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:900;line-height:19px;text-align:center;box-shadow:0 0 0 2px var(--surface)}
+.vol.li:after{content:"↙";position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;background:#1d5aae;color:#fff;font-size:11px;font-weight:900;line-height:19px;text-align:center;box-shadow:0 0 0 2px var(--surface)}
+.vol.wt:before{content:"♥";position:absolute;bottom:-5px;left:-5px;width:19px;height:19px;border-radius:50%;background:#d9417a;color:#fff;font-size:11px;line-height:19px;text-align:center;box-shadow:0 0 0 2px var(--surface)}
+.vol.sl{outline:2px dashed #2f9e5f;outline-offset:-4px}
+.vol:before,.vol:after{content:none!important;display:none!important}
+.vol .bd{position:absolute;width:19px;height:19px;border-radius:50%;color:#fff;font-size:11px;font-weight:900;font-style:normal;line-height:19px;text-align:center;box-shadow:0 0 0 2px var(--surface);pointer-events:none}
+.vol .br{bottom:-5px;right:-5px}.vol .tr{top:-6px;right:-6px}.vol .tl{top:-6px;left:-6px}.vol .bl{bottom:-5px;left:-5px}
+.vpop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.vpopc{width:100%;max-width:420px;max-height:80vh;overflow:auto;margin:0!important;position:relative;box-shadow:0 10px 30px rgba(0,0,0,.35)!important}
+.vpx{position:absolute;top:8px;right:8px;width:32px;height:32px}
+.seg .mi{display:block;font-style:normal;font-size:13px;font-weight:900;line-height:1.1;margin-top:2px}
+.vol .dot{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--gold);pointer-events:none}
+.vol.cn:after{content:"✎";position:absolute;top:-6px;left:-6px;width:19px;height:19px;border-radius:50%;background:#8a6d3b;color:#fff;font-size:11px;line-height:19px;text-align:center;box-shadow:0 0 0 2px var(--surface)}
+.yir{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:end;height:90px;margin:8px 0 2px}
+.yir i{display:block;background:var(--accent);border-radius:4px 4px 0 0;min-height:2px}
+.yirl{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;font-size:10px;color:var(--muted);text-align:center}
+.big{font-family:var(--display);font-size:34px;font-weight:800;line-height:1.1}
+.seg button{padding-left:4px;padding-right:4px}
+.lists textarea{width:100%;min-height:70px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)}
+.loanbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 0}.loanbar input,.locrow input{flex:1;min-width:0;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.locrow{display:flex;gap:8px;margin-top:6px}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin:10px 0 4px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.sec{margin-top:18px}
+.sec h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.prod{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.prod:first-of-type{border-top:0}
+.prod img{width:38px;height:56px;object-fit:cover;border-radius:5px;background:var(--surface-2);flex:none}
+.prod .t{flex:1;min-width:0;font-size:14px}
+.prod .t small{display:block;color:var(--muted)}
+.btn{border:0;border-radius:11px;padding:10px 14px;font-weight:700;background:var(--accent);color:var(--accent-ink);text-decoration:none;display:inline-block;text-align:center}
+.btn.ghost{background:var(--surface-2);color:var(--ink)}
+.btn.gold{background:var(--gold);color:#fff}
+.btn.sm{padding:7px 11px;font-size:13px}
+.btn:disabled{opacity:.5}
+.note{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:12px;padding:10px 12px}
+.row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* fab + toast */
+.fab{position:fixed;right:max(16px,calc(50% - 364px));bottom:calc(20px + env(safe-area-inset-bottom));z-index:15;border:0;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:14px 20px;box-shadow:0 8px 24px rgba(0,0,0,.22);display:flex;gap:8px;align-items:center}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:12px;font-size:14px;opacity:0;transition:.2s;z-index:40;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.toast button{border:0;background:transparent;color:var(--gold);font-weight:700}
+
+/* add sheet */
+.seg{display:flex;gap:6px;margin:4px 0 14px}
+.seg button{flex:1;border:1px solid var(--line);background:var(--bg);padding:9px;border-radius:10px;font-weight:600}
+.seg button[aria-selected="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.field{display:block;margin-bottom:10px}
+.field span{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.field input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:11px;padding:11px 12px}
+.drop{border:2px dashed var(--line);border-radius:16px;padding:26px 14px;text-align:center;display:block;cursor:pointer}
+.drop b{display:block;font-weight:700;font-size:17px;font-family:var(--display);margin:6px 0 2px}
+.drop input{display:none}
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty h3{color:var(--ink);margin-bottom:6px}
+.spin{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:-4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+.find{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.find img{width:42px;height:62px;object-fit:cover;border-radius:5px;background:var(--surface-2);flex:none}
+.find .t{flex:1;min-width:0}
+.find .t b{display:block;font-size:14px}
+.find .t small{color:var(--muted)}
+.price{font-weight:700;font-size:16px;font-family:var(--display);color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="3" y="6" width="7" height="24" rx="1.5" fill="var(--accent)"/><rect x="11.5" y="4" width="7" height="26" rx="1.5" fill="var(--gold)"/><rect x="20" y="8" width="7" height="22" rx="1.5" fill="var(--accent)" opacity=".55" transform="rotate(8 23.5 19)"/><path d="M14.9 8.5l.7 1.6 1.7.2-1.3 1.1.4 1.7-1.5-.9-1.5.9.4-1.7-1.3-1.1 1.7-.2z" fill="#fff"/></svg>
+      <div><h1>My Manga Emporium</h1><small id="sync">Loading your shelf…</small></div>
+    </div>
+    <button class="iconbtn" id="theme" aria-label="Change colors"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1.1 0 1.6-.9 1.2-1.8-.5-1.1.2-2.2 1.4-2.2H17a4 4 0 004-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg></button>
+  </header>
+
+  <section class="rank" id="rank" aria-live="polite">
+    <div class="lbl">Collector rank</div>
+    <h2 id="rankName">—</h2>
+    <div class="bar"><i id="rankBar" style="width:0"></i></div>
+    <div class="next" id="rankNext"></div>
+    <div class="stats">
+      <button class="stat" data-stat="books"><b id="sBooks">0</b><span>books</span></button>
+      <button class="stat" data-stat="series"><b id="sSeries">0</b><span>series</span></button>
+      <button class="stat" data-stat="runs"><b id="sRuns">0</b><span>no-gap runs</span></button>
+      <button class="stat" data-stat="gaps"><b id="sGaps">0</b><span>gaps to fill</span></button>
+    </div>
+    <div class="badges" id="badges"></div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="shelf">Shelf</button>
+    <button role="tab" aria-selected="false" data-tab="finds">Finds</button>
+    <button role="tab" aria-selected="false" data-tab="lists">Lists</button>
+    <button role="tab" aria-selected="false" data-tab="reading">Reading</button>
+    <button role="tab" aria-selected="false" data-tab="stats">Stats</button>
+  </nav>
+
+  <section id="tab-shelf">
+    <div class="tools">
+      <input id="q" type="search" placeholder="Search series, shelves or names" autocomplete="off">
+      <select id="sort" aria-label="Sort">
+        <option value="close">Closest to done</option>
+        <option value="az">A–Z</option>
+        <option value="big">Most volumes</option>
+        <option value="gaps">Most gaps</option>
+        <option value="new">Recently added</option>
+      </select>
+      <select id="view" aria-label="List view"><option value="full">Full view</option><option value="compact">Compact list</option><option value="shelf">Bookshelf</option></select>
+    </div>
+    <div class="count" id="count"></div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section id="tab-finds" class="hidden">
+    <p class="note" id="findsNote">Volumes you're missing that The Mage's Emporium has in stock right now. Your whole shelf is checked automatically when you open the app.</p>
+    <div class="row2"><button class="btn" id="findBtn">Check again</button><span id="findProg" class="sub" style="align-self:center;margin:0"></span></div>
+    <div class="list" id="finds" style="margin-top:14px"></div>
+
+  </section>
+
+  <section id="tab-lists" class="hidden"><div class="seg2" id="listNav" style="margin:0 0 10px"><button data-ln="want" aria-pressed="true">♥ Wishlist</button><button data-ln="sell" aria-pressed="false">$ Sell list</button><button data-ln="loans" aria-pressed="false">↗ Loans</button></div><div id="lists" class="lists"></div></section>
+  <section id="tab-reading" class="hidden"><div id="readBody"></div></section>
+  <section id="tab-stats" class="hidden"><div id="statsBody"></div>
+    <div class="st-sec io"><h3>Back up or bring in a collection</h3>
+      <p class="sub" style="margin:0 0 8px">Save a backup of your whole shelf, or bring books in from a backup, a list from another app, or a file the shop sends you. Imports add to what you have; nothing is removed.</p>
+      <div class="row2" style="margin:0 0 10px"><button class="btn sm" id="expBtn">Copy my backup</button><button class="btn ghost sm" id="expDl">Save backup file</button></div>
+      <label class="sub" for="impFile" style="display:block;margin:6px 0 4px">Import a file (.json, .csv or .txt)</label>
+      <input type="file" id="impFile" accept=".json,.csv,.txt,application/json,text/plain,text/csv">
+      <label class="sub" for="impTxt" style="display:block;margin:10px 0 4px">…or paste a list (one series per line, like <i>Fruits Basket, 1-12</i> or <i>Spy x Family Vol 3</i>)</label>
+      <textarea id="impTxt" placeholder="Fruits Basket, 1-12&#10;Spy x Family Vol 3&#10;Bungo Stray Dogs (Light Novel), 1, 2, 4"></textarea>
+      <div class="row2"><button class="btn sm" id="impBtn">Add to my shelf</button></div>
+      <p class="sub" id="impMsg" style="margin:6px 0 0"></p>
+    </div>
+    <div class="st-sec hidden" id="snapTools"><h3>Shop snapshot (owner only)</h3>
+      <p class="sub" style="margin:0 0 8px">People without your Shopify connection (like Katie) see the store from this snapshot: stock, prices, covers, series details and pre-orders. Refresh it after big listing days.</p>
+      <div class="row2" style="margin:0"><button class="btn sm" id="snapBtn">Publish shop snapshot</button></div>
+      <p class="sub" id="snapMsg" style="margin:6px 0 0"></p>
+    </div>
+  </section>
+</div>
+
+<button class="fab" id="fab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>Add books</button>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="sheethead" id="sheethead"><div class="grab"></div><button class="xbtn" id="xbtn" aria-label="Close">×</button></div><div id="sheetBody"></div></div>
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastBtn" class="hidden">Undo</button></div>
+
+<script>
+(() => {
+'use strict';
+const STORE = 'https://themagesemporium.com';
+const LANGS = ['japanese','spanish','french','italian','german','chinese','korean'];
+const RANKS = [[0,'Apprentice'],[25,'Initiate'],[100,'Adept'],[250,'Conjurer'],[500,'Archmage'],[1000,'Mythic Archmage'],[2000,'Grand Sage']];
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const handleize = s => String(s).toLowerCase().replace(/['’]/g,'-').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const ls = { get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
+
+let shelf = { series:{} };
+let BADGES = [];   // {key:{n, v:[numbers], h?, t?}}
+let docRef = null, mcp = null, mode = 'loading', dbRef = null, myId = null;
+const about = new Map();   // key -> {at, desc, ra:[{title,handle}]}
+let metaDirty = false, crownsData = null; const metaTried = new Set();
+const live = new Map();       // key -> {at, items:[{vol,inv,price,handle,title,img}], total}
+
+/* ---------- theme ---------- */
+const SKINS = [
+  ['emporium','Emporium','Sky blue to sunny yellow, orange highlights','linear-gradient(180deg,#69c8ec,#fff6c8)','#f0662b','#1d5aae'],
+  ['harvest','Harvest','Thanksgiving: pumpkin, cranberry and gold leaves','linear-gradient(180deg,#7a3418,#e8a85a,#f8e9cf)','#c2541d','#8e2a1c'],
+  ['holiday','Holiday','Evergreen, candy-cane red and gold','linear-gradient(180deg,#1f6b45,#f6edd8)','#c8202f','#c08a12'],
+  ['sakura','Sakura','Soft pinks','linear-gradient(180deg,#ffd3e2,#fff7fa)','#d9417a','#8e2c6b'],
+  ['matcha','Matcha','Calm greens','linear-gradient(180deg,#cfe6b8,#f6f8ef)','#3e8a4e','#1d4f34'],
+  ['grimoire','Grimoire','Parchment and violet','#f5f0e6','#5a3fcf','#2d1d75'],
+  ['ocean','Night Ocean','Dark blue with orange','linear-gradient(180deg,#123a5a,#0f1d2e)','#ff9a4d','#1e6fb0'],
+  ['night','Midnight','Dark violet','#13101b','#a58cff','#3b2a8f']
+];
+function applySkin(k){ if (k && k !== 'emporium') document.documentElement.dataset.skin = k; else delete document.documentElement.dataset.skin; }
+applySkin(ls.get('mme-skin'));
+$('#theme').onclick = () => {
+  current = null;
+  const cur = document.documentElement.dataset.skin || 'emporium';
+  openSheet(`<h2>Colors</h2><p class="sub">Pick a look. It follows you to your other devices.</p><div class="skins">${SKINS.map(([k,n,d,bg,a,b]) => `<button class="skin" data-skin="${k}" aria-pressed="${k===cur}"><div class="sw" style="background:${bg}"><i style="background:${a}"></i><b style="background:${b}"></b></div><span>${n}<small>${d}</small></span></button>`).join('')}</div><div class="row2"><button class="btn ghost" data-close>Done</button></div>`);
+};
+function chooseSkin(k){ applySkin(k); ls.set('mme-skin', k); document.querySelectorAll('.skin').forEach(b => b.setAttribute('aria-pressed', b.dataset.skin === k)); if (shelf.skin !== k){ shelf.skin = k; save(); } }
+
+/* ---------- series helpers ---------- */
+function langOf(key){ const m = key.match(/-(japanese|spanish|french|italian|german|chinese|korean)$/); return m ? m[1] : null; }
+function isLN(key, s){ return /-ln$|-light-novel$/.test(key) || /light novel/i.test(s.n); }
+function ints(s){ return s.v.filter(x => Number.isInteger(x) && x > 0); }
+function info(key){
+  const s = shelf.series[key]; const own = ints(s); const set = new Set(own);
+  const L = live.get(key); const total = Math.max(L && L.total ? L.total : 0, s.fin || 0);
+  const max = Math.max(0, ...own);
+  const span = Math.max(max, total);
+  const gaps = []; for (let i=1;i<max;i++) if (!set.has(i)) gaps.push(i);
+  const next = (!total || max < total) ? max + 1 : null;
+  const inStock = L ? L.items.filter(it => it.inv > 0 && !set.has(it.vol)) : [];
+  const complete = total > 0 && own.length >= total && gaps.length === 0;
+  return { s, own, set, max, span, gaps, next, total, inStock, complete };
+}
+function parseVols(txt){
+  const out = new Set();
+  String(txt).split(/[,\s]+/).forEach(part => {
+    const m = part.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (m){ let a=+m[1], b=+m[2]; if (a>b) [a,b]=[b,a]; for (let i=a;i<=b && i-a<400;i++) out.add(i); }
+    else if (/^\d+(\.\d+)?$/.test(part)) out.add(+part);
+  });
+  return [...out];
+}
+
+/* ---------- stats ---------- */
+function renderStats(){
+  const keys = Object.keys(shelf.series);
+  let readN = 0; keys.forEach(k => { readN += (shelf.series[k].r || []).length; });
+  let books = 0, runs = 0, gaps = 0, langs = new Set(), ln = 0, longest = 0, complete = 0;
+  keys.forEach(k => { const i = info(k); books += i.s.v.length; if (i.own.length >= 2 && !i.gaps.length) runs++; if (!langOf(k)) gaps += i.gaps.length; const l = langOf(k); if (l) langs.add(l); if (isLN(k,i.s)) ln++; longest = Math.max(longest, i.own.length); if (i.complete) complete++; });
+  let r = 0; while (r+1 < RANKS.length && books >= RANKS[r+1][0]) r++;
+  $('#rankName').textContent = RANKS[r][1];
+  const nx = RANKS[r+1];
+  $('#rankBar').style.width = nx ? Math.round((books - RANKS[r][0]) / (nx[0] - RANKS[r][0]) * 100) + '%' : '100%';
+  $('#rankNext').textContent = nx ? `${nx[0]-books} more ${nx[0]-books===1?'book':'books'} to ${nx[1]}` : 'The highest rank there is.';
+  $('#sBooks').textContent = books; $('#sSeries').textContent = keys.length; $('#sRuns').textContent = runs; $('#sGaps').textContent = gaps;
+  BADGES = [
+    ['📚 100 books', 'Have 100 books on your shelf.', books, 100],
+    ['🏛️ 500 books', 'Have 500 books on your shelf.', books, 500],
+    ['🗺️ Polyglot', 'Own manga in 3 or more languages besides English.', langs.size, 3],
+    ['📖 Novel reader', 'Collect 10 or more light novel series.', ln, 10],
+    ['🧭 Long haul', 'Own 50 or more volumes of a single series.', longest, 50],
+    ['✨ 25 clean runs', 'Have 25 series with 2+ volumes and no gaps (Vol 1 up to your latest, nothing missing).', runs, 25],
+    ['👑 Completionist', 'Own every volume of 5 finished or caught-up series.', complete, 5],
+    ['🔖 Read 50', 'Mark 50 volumes as read (open a series, switch to “Read”, tap volumes).', readN, 50],
+    ['🦉 Read 250', 'Mark 250 volumes as read.', readN, 250],
+    ['✍️ Critic', 'Rate or review 10 series.', keys.filter(k => shelf.series[k].st || shelf.series[k].rv).length, 10]
+  ];
+  $('#badges').innerHTML = BADGES.map((b,i) => `<button class="badge${b[2]>=b[3]?'':' off'}" data-b="${i}">${b[0]}</button>`).join('');
+}
+
+/* ---------- loans + locations ---------- */
+function loanOf(s, v){ return s.ln && s.ln[v] ? s.ln[v] : null; }
+function loanNames(){ const set = new Set(); Object.values(shelf.series).forEach(s => Object.values(s.ln||{}).forEach(l => set.add(l.w))); return [...set].sort(); }
+function locNames(){ const set = new Set(); Object.values(shelf.series).forEach(s => { if (s.loc) set.add(s.loc); Object.values(s.lc||{}).forEach(l => set.add(l)); }); return [...set].sort(); }
+function volLoc(s, v){ return (s.lc||{})[v] || s.loc || ''; }
+function loansHTML(s){
+  const lcs = {}; Object.entries(s.lc||{}).forEach(([v,l]) => (lcs[l] = lcs[l] || []).push(+v));
+  const locH = Object.keys(lcs).length ? `<div class="sec"><h4>Where they live</h4>${Object.entries(lcs).map(([l,a]) => `<div class="srow" style="cursor:default"><span>📍 ${esc(l)}<small>Vol ${compactVols(a.sort((x,y)=>x-y))}</small></span></div>`).join('')}${s.loc ? `<p class="sub" style="margin:4px 0 0">Everything else: ${esc(s.loc)}</p>` : ''}</div>` : (s.loc ? `<div class="sec"><h4>Where they live</h4><p class="sub" style="margin:0">📍 ${esc(s.loc)} (whole series)</p></div>` : '');
+  const e = Object.entries(s.ln||{}); if (!e.length) return '';
+  return `<div class="sec"><h4>On loan</h4>${e.sort((a,b)=>a[0]-b[0]).map(([v,l]) => `<div class="srow" style="cursor:default"><span>Vol ${v}<small>${l.d==='out' ? 'Lent to' : 'Borrowed from'} ${esc(l.w)}${l.at ? ' · since ' + l.at : ''}</small></span><button class="btn ghost sm" data-back="${v}">${l.d==='out' ? 'Got it back' : 'Returned'}</button></div>`).join('')}</div>`;
+}
+
+/* ---------- reading log + stats tab ---------- */
+function dayKey(d){ const x = d || new Date(); return x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0'); }
+let readDate = null;
+function logRead(n, key, vols, day){ if (!n) return; const L = shelf.log || (shelf.log = {}); const k = day || readDate || dayKey(); const v = (L[k]||0) + n; if (v > 0) L[k] = v; else delete L[k];
+  if (key && vols && vols.length){ const R = shelf.rl || (shelf.rl = {}); let a = R[k] || [];
+    if (n > 0) vols.forEach(x => { const t = key + '|' + x; if (!a.includes(t)) a.push(t); }); else a = a.filter(t => !vols.some(x => t === key + '|' + x));
+    if (a.length) R[k] = a; else delete R[k]; } }
+function streaks(){
+  const L = shelf.log || {}; const has = d => (L[dayKey(d)]||0) > 0;
+  const d = new Date(); let cur = 0; if (!has(d)) d.setDate(d.getDate()-1);
+  while (has(d)){ cur++; d.setDate(d.getDate()-1); }
+  const days = Object.keys(L).filter(k => L[k] > 0).sort(); let best = 0, run = 0, prev = null;
+  days.forEach(k => { const t = new Date(k+'T12:00:00'); run = prev && Math.round((t - prev)/864e5) === 1 ? run + 1 : 1; best = Math.max(best, run); prev = t; });
+  return { cur, best: Math.max(best, cur), days: days.length };
+}
+async function loadCrowns(){
+  if (crownsData) return crownsData; if (!mcp){ await loadSnap(); return crownsData; }
+  try { const d = await gql(`{shop{metafield(namespace:"custom",key:"collector_stats"){value}}}`); crownsData = d.shop.metafield ? JSON.parse(d.shop.metafield.value) : {}; }
+  catch(e){ crownsData = null; }
+  return crownsData;
+}
+function confirmOwnMatch(k, nm){ const n = shelf.series[k].n.toLowerCase(); return nm.length >= 4 && n.startsWith(nm); }
+let statsBy = 'aud', calM = null, calDay = null, preorders = null, preLoading = false;
+async function loadPreorders(){
+  if (preorders || preLoading) return; if (!mcp){ preLoading = true; await loadSnap(); preLoading = false; if (!preorders) preorders = []; if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); return; } preLoading = true;
+  try {
+    const out = []; let after = null;
+    for (let pg = 0; pg < 3; pg++){
+      const d = await gql(`{products(first:250${after ? `, after:${JSON.stringify(after)}` : ''}, query:"tag:pre-order AND status:active"){pageInfo{hasNextPage endCursor} nodes{handle title priceRangeV2{minVariantPrice{amount}} featuredMedia{preview{image{url(transform:{maxWidth:120})}}} ser:metafield(namespace:"custom",key:"series"){value} vol:metafield(namespace:"custom",key:"volume"){value} rd:metafield(namespace:"custom",key:"release_date"){value} fmt:metafield(namespace:"custom",key:"format"){value}}}}`);
+      d.products.nodes.forEach(n => { if (n.rd && n.ser) out.push({ handle: n.handle, title: n.title.replace(/\s*-\s*Pre-?Order$/i,''), ser: handleize(n.ser.value), vol: n.vol ? Math.round(+n.vol.value) : null, rd: n.rd.value.slice(0,10), ln: /light novel/i.test(n.fmt ? n.fmt.value : ''), price: n.priceRangeV2 ? +n.priceRangeV2.minVariantPrice.amount : 0, img: n.featuredMedia && n.featuredMedia.preview && n.featuredMedia.preview.image ? n.featuredMedia.preview.image.url : '' }); });
+      if (!d.products.pageInfo.hasNextPage) break; after = d.products.pageInfo.endCursor;
+    }
+    preorders = out;
+  } catch(e){ preorders = []; }
+  preLoading = false; if (!$('#tab-reading').classList.contains('hidden')) renderReadTab();
+}
+function myPreorders(){
+  if (!preorders) return [];
+  const map = new Map(); Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const ln = isLN(k, s); map.set(handleize(baseName(s.n)) + (ln?'|ln':''), k); map.set(k.replace(/-ln$|-light-novel$/,'') + (ln?'|ln':''), k); });
+  return preorders.map(p => { const k = map.get(p.ser + (p.ln?'|ln':'')); return k && !shelf.series[k].v.includes(p.vol) ? Object.assign({ k }, p) : null; }).filter(Boolean).sort((a,b) => a.rd.localeCompare(b.rd));
+}
+function renderReadTab(){
+  const el = $('#readBody'); if (!el) return;
+  const L = shelf.log || {}, R = shelf.rl || {}; const st = streaks(); const now = new Date();
+  if (!calM) calM = new Date(now.getFullYear(), now.getMonth(), 1);
+  const keys = Object.keys(shelf.series); let books = 0, readN = 0; keys.forEach(k => { books += shelf.series[k].v.length; readN += (shelf.series[k].r||[]).length; });
+  const yr = String(now.getFullYear()), ym = dayKey().slice(0,7);
+  const sumIf = f => Object.keys(L).filter(f).reduce((a,k) => a + L[k], 0);
+  const month = sumIf(k => k.startsWith(ym)), year = sumIf(k => k.startsWith(yr));
+  const goal = shelf.goal && shelf.goal[yr] ? shelf.goal[yr] : 0; const gp = goal ? Math.min(100, Math.round(year/goal*100)) : 0;
+  const fact = (b, t) => `<div class="fact"><b>${b}</b><small>${t}</small></div>`;
+  const y = calM.getFullYear(), m = calM.getMonth(); const first = new Date(y, m, 1).getDay(); const days = new Date(y, m+1, 0).getDate();
+  const mine = myPreorders(); if (!preorders) loadPreorders();
+  let cells = ['S','M','T','W','T','F','S'].map(d => `<span class="dow">${d}</span>`).join('');
+  for (let i=0;i<first;i++) cells += '<span></span>';
+  for (let d=1; d<=days; d++){ const k = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'); const n = L[k] || 0; const today = k === dayKey();
+    const rel = mine.filter(p => p.rd === k); const first = (R[k]||[])[0]; const cv = first ? coverOf(first.split('|')[0]) : '';
+    cells += `<button class="cday${n>=5?' l3':n>=2?' l2':n>=1?' l1':''}${today?' today':''}${calDay===k?' sel':''}" data-day="${k}" aria-label="${k}: ${n} read${rel.length?`, ${rel.length} coming out`:''}">${cv ? `<img src="${esc(cv)}" alt="" onerror="this.remove()">` : ''}<span>${d}</span>${n?`<small>📖${n}</small>`:''}${rel.length?`<em>📦${rel.length>1?rel.length:''}</em>`:''}</button>`; }
+  const mTot = Object.keys(L).filter(k => k.startsWith(y + '-' + String(m+1).padStart(2,'0'))).reduce((a,k)=>a+L[k],0);
+  let dayHTML = '';
+  if (calDay){ const items = (R[calDay]||[]); const n = L[calDay]||0; const rel = mine.filter(p => p.rd === calDay); const past = calDay <= dayKey();
+    dayHTML = `<div class="st-sec"><h3>${new Date(calDay+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</h3>
+    ${rel.map(p => `<div class="srow" style="cursor:default"><span>📦 ${esc(p.title)}<small>Comes out this day · $${p.price.toFixed(2)}</small></span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Pre-order</a></div>`).join('')}
+    ${items.map(t => { const [k,v] = t.split('|'); const s = shelf.series[k] || (shelf.other||{})[k]; return `<div class="srow" style="cursor:default"><span>📖 ${esc(s ? s.n : k)}<small>Vol ${esc(v)}${k.startsWith('x_') ? ' · not on your shelf' : ''}</small></span><button class="btn ghost sm" data-unlog="${esc(t)}">Remove</button></div>`; }).join('')}
+    ${!items.length && !rel.length ? `<p class="sub" style="margin:0">${n ? `${n} read (details weren't saved for this day)` : 'Nothing read this day yet.'}</p>` : ''}
+    ${past ? `<div class="locrow" style="margin-top:12px"> <input id="logSer" list="logSl" placeholder="Title (yours or not)" autocomplete="off" style="flex:2"><input id="logVol" placeholder="Vol, e.g. 3 or 3-5" inputmode="numeric" style="flex:1"></div><datalist id="logSl">${Object.values(shelf.series).map(s => `<option value="${esc(s.n)}">`).join('')}</datalist><div class="row2"><button class="btn sm" data-logday="${calDay}">Log as read this day</button></div>` : ''}</div>`; }
+  el.innerHTML = `
+  <div class="st-sec"><div class="facts">
+    ${fact(`🔥 ${st.cur} ${st.cur===1?'day':'days'}`, 'current streak')}
+    ${fact(`${st.best} ${st.best===1?'day':'days'}`, 'longest streak')}
+    ${fact(`${month} / ${year}`, 'read this month / this year')}
+    ${fact(readN.toLocaleString(), `read · ${books ? Math.round(readN/books*100) : 0}% of your shelf`)}
+  </div></div>
+  <div class="st-sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><h3 style="margin:0">🎉 Your ${yr} in review</h3><p class="sub" style="margin:2px 0 0">Your year in manga, all in one place</p></div><button class="btn gold sm" data-yir="${yr}">Open</button></div>
+  <div class="st-sec"><h3>${yr} reading goal</h3>
+    ${goal ? `<div class="bprog"><i style="width:${gp}%"></i></div><p class="sub" style="margin:0">${year} of ${goal} volumes · ${gp}%${year < goal ? ` · ${goal-year} to go` : ' · goal reached! 🎉'}</p>` : `<p class="sub" style="margin:0 0 8px">Set a goal for the year and watch it fill up.</p>`}
+    <div class="locrow"><input id="goalIn" type="number" min="1" inputmode="numeric" placeholder="e.g. 100" value="${goal||''}"><button class="btn sm" data-goal>${goal ? 'Update' : 'Set goal'}</button></div></div>
+  <div class="st-sec"><div class="calhead"><button class="btn ghost sm" data-cal="-1" aria-label="Previous month">‹</button><h3 style="margin:0">${calM.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</h3><button class="btn ghost sm" data-cal="1" aria-label="Next month">›</button></div>
+    <div class="cal">${cells}</div><p class="sub" style="margin:8px 0 0">${mTot} read this month. Tap a day to see what you read, or to log anything you read that day, even books you don't own.</p></div>
+  ${dayHTML}
+  <div class="st-sec"><h3>📦 Coming out for your series</h3>${!mcp && !preorders ? `<p class="sub" style="margin:0">Loading upcoming releases…</p>` : !preorders ? `<p class="sub" style="margin:0"><span class="spin"></span>&nbsp; Checking pre-orders…</p>` : mine.filter(p => p.rd >= dayKey()).length ? mine.filter(p => p.rd >= dayKey()).slice(0,12).map(p => `<div class="srow" style="cursor:default"><span>${esc(p.title)}<small>${new Date(p.rd+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})} · $${p.price.toFixed(2)}</small></span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Pre-order</a></div>`).join('') : `<p class="sub" style="margin:0">No pre-orders up right now for series on your shelf. New volumes show up here (and on the calendar) as soon as the shop lists them.</p>`}</div>`;
+}
+$('#readBody') && null;
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-cal]'); if (c){ calM = new Date(calM.getFullYear(), calM.getMonth() + (+c.dataset.cal), 1); calDay = null; renderReadTab(); return; }
+  const d = e.target.closest('[data-day]'); if (d){ calDay = calDay === d.dataset.day ? null : d.dataset.day; renderReadTab(); return; }
+  const ul = e.target.closest('[data-unlog]'); if (ul){ const [k, v] = ul.dataset.unlog.split('|'); const day = calDay; logRead(-1, k, [isNaN(+v) ? v : +v], day); const s = shelf.series[k]; if (s && s.r){ const r = s.r.filter(x => String(x) !== v); if (r.length) s.r = r; else delete s.r; } save(); toast(`Removed Vol ${v} from ${day}`); return; }
+  const lg = e.target.closest('[data-logday]'); if (lg){ const day = lg.dataset.logday; const nm = $('#logSer').value.trim().toLowerCase(); let k = Object.keys(shelf.series).find(x => shelf.series[x].n.toLowerCase() === nm) || Object.keys(shelf.series).find(x => shelf.series[x].n.toLowerCase().includes(nm));
+    const vols = parseVols($('#logVol').value).filter(v => Number.isInteger(v) && v > 0);
+    if (!nm){ toast('Type what you read'); return; } if (!vols.length){ toast('Type a volume number (1 for a one-shot)'); return; }
+    let s;
+    if (!k || shelf.series[k].n.toLowerCase() !== nm && !Object.keys(shelf.series).some(x => shelf.series[x].n.toLowerCase() === nm) && !confirmOwnMatch(k, nm)){
+      const raw = $('#logSer').value.trim(); k = 'x_' + handleize(raw).replace(/-/g,'_'); const O = shelf.other || (shelf.other = {}); O[k] = O[k] || { n: raw }; s = O[k];
+    } else { s = shelf.series[k]; const r = new Set(s.r || []); vols.forEach(v => r.add(v)); s.r = [...r].sort((a,b)=>a-b); }
+    const R = shelf.rl || (shelf.rl = {}); const already = vols.filter(v => !(R[day]||[]).includes(k+'|'+v)); if (already.length) logRead(already.length, k, already, day);
+    save(); toast(`Logged ${s.n} Vol ${vols.join(', ')} on ${day}${k.startsWith('x_') ? ' (not on your shelf)' : ''}`); return; }
+  const g = e.target.closest('[data-goal]'); if (g){ const v = parseInt($('#goalIn').value, 10); const yr = String(new Date().getFullYear()); shelf.goal = Object.assign({}, shelf.goal); if (v > 0) shelf.goal[yr] = v; else delete shelf.goal[yr]; save(); toast(v > 0 ? `Goal set: ${v} volumes in ${yr}` : 'Goal cleared'); return; }
+  const yb = e.target.closest('[data-yir]'); if (yb){ openYear(yb.dataset.yir); return; }
+  const r = e.target.closest('#readBody .srow'); if (r) openSeries(r.dataset.k);
+});
+function loanStatsHTML(){
+  const out = {}, inn = {}, locs = {};
+  Object.entries(shelf.series).forEach(([k,s]) => { Object.entries(s.ln||{}).forEach(([v,l]) => { const o = l.d==='out' ? out : inn; (o[l.w] = o[l.w] || []).push({ k, n: esc(s.n), v, at: l.at, d: l.d }); }); const lcv = s.lc || {}; Object.values(lcv).forEach(l => { locs[l] = (locs[l]||0) + 1; }); if (s.loc){ const rest = s.v.filter(v => !lcv[v]).length; if (rest) locs[s.loc] = (locs[s.loc]||0) + rest; } });
+  const grp = (o, verb, btn) => Object.entries(o).sort((a,b)=>b[1].length-a[1].length).map(([w,a]) => `<div class="st-sec" style="padding:10px 14px"><h3 style="font-size:15px">${verb} ${esc(w)} <span class="sub" style="font-weight:400">(${a.length})</span></h3>${a.map(x => `<div class="srow" style="cursor:default"><span>${x.n} Vol ${x.v}<small>${x.at ? 'since ' + x.at : ''}</small></span><button class="btn ghost sm" data-ret="${esc(x.k)}|${x.v}">${btn}</button></div>`).join('')}${a.length > 1 ? `<div class="row2"><button class="btn ghost sm" data-retall="${esc(w)}|${a[0].d}">All back</button></div>` : ''}</div>`).join('');
+  const lh = '' && Object.entries(locs).sort((a,b)=>b[1]-a[1]).map(([l,n]) => `<div class="srow" style="cursor:default"><span>📍 ${esc(l)}</span><span class="r">${n} books</span></div>`).join('');
+  const none = !Object.keys(out).length && !Object.keys(inn).length;
+  return `${none ? `<div class="st-sec"><h3>Loans</h3><p class="sub" style="margin:0">Open a series, switch to “Loan”, type a name and tap volumes to track books you lend or borrow.</p></div>` : grp(out,'↗ Lent to','Got it back') + grp(inn,'↙ Borrowed from','Returned')}
+`;
+}
+function renderStatsTab(){
+  const el = $('#statsBody'); if (!el) return;
+  const keys = Object.keys(shelf.series);
+  if (!keys.length){ el.innerHTML = `<div class="empty">Add some books and your stats show up here.</div>`; return; }
+  const I = Object.fromEntries(keys.map(k => [k, info(k)]));
+  let books = 0, readN = 0, priced = 0, pricedN = 0, ncomplete = 0, rated = 0, starSum = 0;
+  const cnt = { aud:{}, gen:{}, au:{}, pub:{}, fmt:{} };
+  const add = (o, k, n) => { if (k) o[k] = (o[k]||0) + n; };
+  let maxRun = 0, maxRunK = null, mostRead = 0, mostReadK = null, maxGapFree = 0, maxGapFreeK = null;
+  const allPrices = [];
+  keys.forEach(k => { const i = I[k]; const L = live.get(k); if (L) L.items.forEach(p => { if (p.price) allPrices.push(p.price); }); });
+  const avgAll = allPrices.length ? allPrices.reduce((a,b)=>a+b,0)/allPrices.length : 0;
+  let nbl = 0, knownBooks = 0;
+  keys.forEach(k => {
+    const i = I[k], s = i.s, n = s.v.length; books += n; readN += (s.r||[]).length;
+    if (i.complete) ncomplete++;
+    if (s.st){ rated++; starSum += s.st; }
+    if (i.own.length > maxRun){ maxRun = i.own.length; maxRunK = k; }
+    if ((s.r||[]).length > mostRead){ mostRead = s.r.length; mostReadK = k; }
+    if (!i.gaps.length && i.own.length > maxGapFree){ maxGapFree = i.own.length; maxGapFreeK = k; }
+    const L = live.get(k); const byVol = new Map(L ? L.items.map(p => [p.vol, p.price]) : []);
+    const sPrices = L ? L.items.map(p => p.price).filter(Boolean) : []; const sAvg = sPrices.length ? sPrices.reduce((a,b)=>a+b,0)/sPrices.length : avgAll;
+    s.v.forEach(v => { const pr = byVol.get(v) || sAvg; if (pr){ priced += pr; pricedN++; } });
+    const m = s.m || {};
+    const ln = isLN(k, s), lang = langOf(k);
+    add(cnt.fmt, lang ? lang[0].toUpperCase()+lang.slice(1) : (ln ? 'Light novel' : 'Manga'), n);
+    if (s.m) knownBooks += n;
+    add(cnt.aud, m.a, n); add(cnt.au, m.au, n); add(cnt.pub, m.p, n);
+    (m.g || []).forEach(g => add(cnt.gen, g === 'Yaoi/BL' ? 'BL' : g, n));
+    if ((m.g||[]).some(g => /BL|Yaoi/i.test(g))) nbl += n;
+  });
+  const est = pricedN ? priced + (books - pricedN) * (priced / pricedN) : 0;
+  const inches = books * 0.75; const shelfTxt = inches >= 12 ? `${Math.floor(inches/12)} ft ${Math.round(inches%12)} in` : `${Math.round(inches)} in`;
+  const st = streaks();
+  const L = shelf.log || {}; const now = new Date(); const ym = dayKey().slice(0,7), yr = String(now.getFullYear());
+  const sumIf = f => Object.keys(L).filter(f).reduce((a,k) => a + L[k], 0);
+  const month = sumIf(k => k.startsWith(ym)), year = sumIf(k => k.startsWith(yr));
+  let heat = ''; for (let w = 41; w >= 0; w--){ const d = new Date(); d.setDate(d.getDate() - w); const n = L[dayKey(d)] || 0; heat += `<i class="${n>=5?'l3':n>=2?'l2':n>=1?'l1':''}" title="${dayKey(d)}: ${n}"></i>`; }
+  const fact = (b, s) => `<div class="fact"><b>${b}</b><small>${s}</small></div>`;
+  const nm = k => k ? esc(shelf.series[k].n) : '—';
+  // crowns
+  const cs = crownsData && crownsData.crown ? crownsData.crown : null;
+  const aud = a => cnt.aud[a] || 0;
+  const mine = { books, series: keys.length, run: maxRun, bl: nbl, shojo: aud('Shojo'), shonen: aud('Shonen'), seinen: aud('Seinen'), josei: aud('Josei'), complete: ncomplete };
+  const CROWNS = [['books','👑','Largest collection','books'],['series','🗺️','Most series','series'],['run','🏃','Longest series run','volumes in one series'],['bl','💜','Most BL','BL volumes'],['shojo','🎀','Most shojo','shojo volumes'],['shonen','🔥','Most shonen','shonen volumes'],['seinen','🗡️','Most seinen','seinen volumes'],['josei','🍷','Most josei','josei volumes'],['complete','⭐','Most complete series','complete series']];
+  const crownHTML = cs ? CROWNS.map(([k, ic, t, u]) => { const top = cs[k] || 0; const have = mine[k] || 0; const won = have > 0 && have >= top;
+    return `<div class="crown${won?'':' off'}"><span class="ic">${ic}</span><div><b>${t} of all our collectors</b><small>${won ? 'You hold this title!' : `You: ${have.toLocaleString()} · Record: ${top ? top.toLocaleString() : '—'} ${u}${top && have < top ? ` · ${(top-have).toLocaleString()} to go` : ''}`}</small></div></div>`; }).join('')
+    : `<p class="sub" style="margin:0">Loading the shop’s collector records…</p>`;
+  // breakdown
+  const LBL = { aud:'Audience', gen:'Genre', au:'Author', pub:'Publisher', fmt:'Format' };
+  const o = cnt[statsBy]; const tot = statsBy === 'fmt' ? books : knownBooks;
+  const rows = Object.entries(o).sort((a,b) => b[1]-a[1]).slice(0, 10);
+  const known = keys.filter(k => shelf.series[k].m).length;
+  const bars = rows.length ? rows.map(([k,n]) => { const pc = tot ? Math.round(n/tot*100) : 0; return `<div class="gr"><span title="${esc(k)}">${esc(k)}</span><div class="gbar"><i style="width:${pc}%"></i></div><b>${pc}%</b></div>`; }).join('') : `<p class="sub" style="margin:0">No ${LBL[statsBy].toLowerCase()} info yet.</p>`;
+  el.innerHTML = `
+  <div class="st-sec"><h3>Your collection</h3><div class="facts">
+    ${fact(est ? '≈ $' + Math.round(est).toLocaleString() : '—', 'estimated value at our prices')}
+    ${fact(shelfTxt, 'of shelf space')}
+    ${fact(books.toLocaleString(), `books in ${keys.length} series`)}
+    ${fact(ncomplete, 'complete series')}
+  </div></div>
+  <div class="st-sec"><h3>Records</h3>
+    <div class="srow" style="cursor:default"><span>Longest run<small>${nm(maxRunK)}</small></span><span class="r">${maxRun} vols</span></div>
+    <div class="srow" style="cursor:default"><span>Longest gap-free run<small>${nm(maxGapFreeK)}</small></span><span class="r">${maxGapFree} vols</span></div>
+    <div class="srow" style="cursor:default"><span>Most read series<small>${nm(mostReadK)}</small></span><span class="r">${mostRead} read</span></div>
+    <div class="srow" style="cursor:default"><span>Average rating<small>${rated} series rated</small></span><span class="r">${rated ? (starSum/rated).toFixed(1) + ' ★' : '—'}</span></div>
+    ${(() => { const A = allVolReviews(), S = A.filter(r => r.st); return `<div class="srow" style="cursor:default"><span>Volume reviews<small>${A.length} volume${A.length===1?'':'s'} reviewed</small></span><span class="r">${S.length ? (S.reduce((a,r)=>a+r.st,0)/S.length).toFixed(1) + ' ★' : '—'}</span></div>`; })()}
+  </div>
+  ${(() => { const A = allVolReviews(); if (!A.length) return `<div class="st-sec"><h3>Your volume reviews</h3><p class="sub" style="margin:0">Open a series, tap a volume (with no mode selected) and leave stars or a few words. Your favorites show up here.</p></div>`;
+    const top = A.slice().sort(vrSort).slice(0, 5), recent = A.filter(r => r.d).sort((a,b) => b.d > a.d ? 1 : b.d < a.d ? -1 : 0).slice(0, 5);
+    return `<div class="st-sec"><h3>Your volume reviews <span class="sub" style="font-weight:400">(${A.length})</span></h3><p class="sub" style="margin:0 0 4px">Top rated</p>${top.map(vrRow).join('')}${recent.length ? `<p class="sub" style="margin:10px 0 4px">Most recent</p>${recent.map(vrRow).join('')}` : ''}</div>`; })()}
+  <div class="st-sec"><h3>Collector titles</h3><p class="sub" style="margin:0 0 6px">The biggest shelves among The Mage’s Emporium collectors. Beat a record to take the title.</p>${crownHTML}</div>
+  ${dupHTML()}
+  <div class="st-sec"><h3>Your shelf by…</h3>
+    <div class="seg2">${Object.entries(LBL).map(([k,t]) => `<button data-by="${k}" aria-pressed="${k===statsBy}">${t}</button>`).join('')}</div>
+    ${bars}
+    ${statsBy === 'gen' ? `<p class="sub" style="margin:8px 0 0">Series can have more than one genre, so these add up past 100%.</p>` : ''}
+    ${statsBy !== 'fmt' && known < keys.length ? `<p class="sub" style="margin:8px 0 0">Based on ${knownBooks.toLocaleString()} of ${books.toLocaleString()} books (${known} of ${keys.length} series). The rest are series the shop hasn’t listed${syncing ? ' or are still being checked' : ''}.</p>` : ''}
+  </div>
+`;
+  el.querySelectorAll('[data-merge]').forEach(b => b.onclick = () => mergeSeries(b.dataset.merge.split('|')));
+  if (!crownsData && mcp) loadCrowns().then(d => { if (d && !$('#tab-stats').classList.contains('hidden')) renderStatsTab(); });
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-by]'); if (b){ statsBy = b.dataset.by; renderStatsTab(); } });
+
+/* ---------- shelf list ---------- */
+function spineHTML(i){
+  const n = Math.min(Math.max(i.span, i.max, 1), 120);
+  const stock = new Set(i.inStock.map(x => x.vol));
+  let h = ''; for (let v=1; v<=n; v++) h += `<i class="${i.set.has(v)?'o':(stock.has(v)?'s':'')}"></i>`;
+  return h;
+}
+function renderList(){
+  const q = $('#q').value.trim().toLowerCase();
+  const sort = $('#sort').value;
+  let keys = Object.keys(shelf.series).filter(k => { if (!q) return true; const s = shelf.series[k]; return s.n.toLowerCase().includes(q) || (s.loc||'').toLowerCase().includes(q) || Object.values(s.lc||{}).some(l => l.toLowerCase().includes(q)) || Object.values(s.ln||{}).some(l => l.w.toLowerCase().includes(q)); });
+  const I = Object.fromEntries(keys.map(k => [k, info(k)]));
+  const name = k => shelf.series[k].n.replace(/^(the|a)\s+/i,'');
+  const ratio = k => { const i = I[k]; const den = Math.max(i.total, i.max, 1); return i.own.length / den; };
+  keys.sort((a,b) => {
+    if (sort==='az') return name(a).localeCompare(name(b));
+    if (sort==='big') return I[b].s.v.length - I[a].s.v.length || name(a).localeCompare(name(b));
+    if (sort==='gaps') return I[b].gaps.length - I[a].gaps.length || name(a).localeCompare(name(b));
+    if (sort==='new') return (shelf.series[b].t||0) - (shelf.series[a].t||0) || name(a).localeCompare(name(b));
+    const tier = i => i.complete ? 0 : (i.total ? 1 : (i.own.length > 1 ? 2 : 3));
+    return tier(I[a]) - tier(I[b]) || ratio(b) - ratio(a) || I[b].own.length - I[a].own.length || name(a).localeCompare(name(b));
+  });
+  $('#count').textContent = keys.length ? `${keys.length} series${q?' match':''}` : '';
+  if (!Object.keys(shelf.series).length){
+    $('#list').innerHTML = mode === 'loading' ? `<div class="empty"><span class="spin"></span></div>` :
+      `<div class="empty"><h3>Your shelf is empty</h3>Tap <b>Add books</b> to scan a barcode or type a series.</div>`;
+    return;
+  }
+  if (!keys.length){ $('#list').innerHTML = `<div class="empty">Nothing on your shelf matches “${esc(q)}”.</div>`; return; }
+  const vmode = $('#view').value; const compact = vmode === 'compact'; $('#list').classList.toggle('compact', compact); $('#list').classList.toggle('shelfv', vmode === 'shelf');
+  if (vmode === 'shelf'){ const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
+    $('#list').innerHTML = keys.map(k => { const i = I[k]; const u = coverOf(k); const n = i.s.n;
+      return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}, ${i.s.v.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.s.v.length}</b></button>`; }).join(''); return; }
+  if (compact){ $('#list').innerHTML = keys.map(k => { const i = I[k]; const nTxt = i.total ? `${i.own.length}/${i.total}` : `${i.s.v.length}`;
+    return `<button class="crow" data-k="${esc(k)}"><span class="nm">${esc(i.s.n)}</span><span class="m">${nTxt}${i.gaps.length ? ` · ${i.gaps.length} gap${i.gaps.length>1?'s':''}` : ''}${i.complete ? ' · ✓' : ''}</span></button>`; }).join(''); return; }
+  $('#list').innerHTML = keys.map(k => {
+    const i = I[k]; const lang = langOf(k);
+    const chips = [];
+    if (i.complete) chips.push(`<span class="chip good">✓ Complete</span>`);
+    if (i.gaps.length) chips.push(`<span class="chip">${i.gaps.length} ${i.gaps.length===1?'gap':'gaps'}</span>`);
+    if (i.next && !i.complete && !lang) chips.push(`<span class="chip acc">Next: Vol ${i.next}</span>`);
+    if (i.inStock.length) chips.push(`<span class="chip gold">${i.inStock.length} in stock</span>`);
+    if (lang) chips.push(`<span class="chip">${lang[0].toUpperCase()+lang.slice(1)}</span>`);
+    if (isLN(k,i.s)) chips.push(`<span class="chip">Light novel</span>`);
+    if ((i.s.r||[]).length) chips.push(`<span class="chip good">Read ${i.s.r.length}/${i.s.v.length}</span>`);
+    if (i.s.st) chips.push(`<span class="chip gold">${'★'.repeat(i.s.st)}</span>`);
+    const lns = Object.values(i.s.ln||{}); const lo = lns.filter(l => l.d==='out').length, li = lns.length - lo;
+    if (lo) chips.push(`<span class="chip acc">↗ ${lo} lent</span>`); if (li) chips.push(`<span class="chip">↙ ${li} borrowed</span>`);
+    const nTxt = i.total ? `${i.own.length} / ${i.total}` : `${i.s.v.length} ${i.s.v.length===1?'vol':'vols'}`;
+    return `<button class="card" data-k="${esc(k)}">${coverHTML(k)}<div class="body"><div class="row"><h3>${esc(i.s.n)}</h3><span class="n">${nTxt}</span></div><div class="spines" aria-hidden="true">${spineHTML(i)}</div><div class="chips">${chips.join('')}</div></div></button>`;
+  }).join('');
+}
+function avgShopPrice(){ let t = 0, n = 0; live.forEach(L => (L.items||[]).forEach(p => { if (p.price){ t += p.price; n++; } })); return n ? t/n : 8.99; }
+function worthOf(k){ const s = shelf.series[k]; if (!s) return { v: 0, est: true }; const L = live.get(k); const fall = avgShopPrice();
+  if (!L || !L.items || !L.items.length) return { v: s.v.length * fall, est: true };
+  const byVol = new Map(L.items.map(p => [p.vol, p.price])); const pr = L.items.map(p => p.price).filter(Boolean); const avg = pr.length ? pr.reduce((a,b)=>a+b,0)/pr.length : fall;
+  let v = 0, guessed = 0; s.v.forEach(x => { const q = byVol.get(x); if (q) v += q; else { v += avg; guessed++; } });
+  return { v, est: guessed > 0 }; }
+function money(w){ return (w.est ? '≈ $' : '$') + Math.round(w.v).toLocaleString(); }
+function dupNorm(n){ return n.toLowerCase().replace(/\((manga|english|paperback)\)/g,' ').replace(/^(the|a|an)\s+/,'').replace(/[’']/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,''); }
+function findDups(){ const g = {}; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const key = dupNorm(s.n) + (isLN(k, s) ? '|ln' : '') + (langOf(k) ? '|' + langOf(k) : ''); (g[key] = g[key] || []).push(k); });
+  return Object.values(g).filter(a => a.length > 1).map(a => a.sort((x, y) => shelf.series[y].v.length - shelf.series[x].v.length)); }
+function dupHTML(){ const d = findDups(); if (!d.length) return `<div class="st-sec"><h3>Duplicate finder</h3><p class="sub" style="margin:0">No duplicate series on your shelf. 👍</p></div>`;
+  return `<div class="st-sec"><h3>Duplicate finder <span class="sub" style="font-weight:400">(${d.length})</span></h3><p class="sub" style="margin:0 0 6px">These look like the same series added twice. Merge keeps every volume, read mark, note and loan.</p>${d.map(a => `<div class="srow" style="cursor:default"><span>${a.map(k => `${esc(shelf.series[k].n)} <small style="display:inline">(${shelf.series[k].v.length})</small>`).join('<br>')}</span><button class="btn sm" data-merge="${esc(a.join('|'))}">Merge</button></div>`).join('')}</div>`; }
+function mergeSeries(keys){ const [t, ...rest] = keys; const T = shelf.series[t]; const prev = JSON.parse(JSON.stringify(shelf.series));
+  const uni = (a, b) => [...new Set((a||[]).concat(b||[]))].sort((x,y)=>x-y);
+  rest.forEach(k => { const S = shelf.series[k]; if (!S) return; T.v = uni(T.v, S.v); if (S.r) T.r = uni(T.r, S.r); if (S.want) T.want = uni(T.want, S.want).filter(v => !T.v.includes(v)); if (S.sell) T.sell = uni(T.sell, S.sell);
+    ['ln','cn'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); ['loc','st','rv','c','m','cond','h'].forEach(f => { if (S[f] != null && T[f] == null) T[f] = S[f]; }); delete shelf.series[k]; });
+  save(); toast(`Merged into ${T.n}`, () => { shelf.series = prev; save(); }); }
+function allVolReviews(){ const out = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; Object.entries(s.vr||{}).forEach(([v,o]) => out.push({ k, n: s.n, v: +v, st: o.st || 0, t: o.t || '', d: o.d || '' })); }); return out; }
+function vrRow(r){ return `<div class="srow" data-vrk="${esc(r.k)}"><span>${esc(r.n)} · Vol ${r.v}${r.t ? `<small>“${esc(r.t.length > 90 ? r.t.slice(0, 90) + '…' : r.t)}”</small>` : ''}</span><span class="r" style="color:#c8860a">${r.st ? '★'.repeat(r.st) : ''}</span></div>`; }
+function vrSort(a, b){ return (b.st - a.st) || (b.d > a.d ? 1 : b.d < a.d ? -1 : 0); }
+function openYear(yr){ current = null;
+  const L = shelf.log || {}, R = shelf.rl || {}; const months = Array(12).fill(0); let total = 0;
+  Object.keys(L).forEach(k => { if (k.startsWith(yr)){ months[+k.slice(5,7)-1] += L[k]; total += L[k]; } });
+  const bySer = {}; Object.keys(R).forEach(d => { if (!d.startsWith(yr)) return; R[d].forEach(t => { const k = t.split('|')[0]; bySer[k] = (bySer[k]||0) + 1; }); });
+  const top = Object.entries(bySer).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const nm = k => { const s = shelf.series[k] || (shelf.other||{})[k]; return s ? s.n : k; };
+  const t0 = new Date(+yr, 0, 1).getTime(), t1 = new Date(+yr + 1, 0, 1).getTime();
+  const added = Object.keys(shelf.series).filter(k => shelf.series[k].t >= t0 && shelf.series[k].t < t1);
+  const addedBooks = added.reduce((a,k) => a + shelf.series[k].v.length, 0);
+  const genres = {}; Object.keys(bySer).forEach(k => { const s = shelf.series[k]; ((s && s.m && s.m.g) || []).forEach(g => { genres[g] = (genres[g]||0) + bySer[k]; }); });
+  const favG = Object.entries(genres).sort((a,b)=>b[1]-a[1])[0];
+  const bestM = months.indexOf(Math.max(...months)); const mx = Math.max(1, ...months);
+  const rated = Object.keys(shelf.series).filter(k => shelf.series[k].st); const fav = rated.sort((a,b) => shelf.series[b].st - shelf.series[a].st)[0];
+  const st = streaks(); const goal = shelf.goal && shelf.goal[yr];
+  const M = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const fact = (b, s) => `<div class="fact"><b>${b}</b><small>${s}</small></div>`;
+  openSheet(`<h2>Your ${yr} in manga</h2>
+    <div class="st-sec" style="text-align:center"><div class="big">${total.toLocaleString()}</div><p class="sub" style="margin:0">volumes read${goal ? ` · goal ${goal} (${Math.min(100, Math.round(total/goal*100))}%)` : ''}</p>
+      <div class="yir">${months.map(n => `<i style="height:${Math.round(n/mx*100)}%" title="${n}"></i>`).join('')}</div><div class="yirl">${M.map(m => `<span>${m}</span>`).join('')}</div>
+      ${total ? `<p class="sub" style="margin:6px 0 0">Biggest month: ${new Date(+yr, bestM, 1).toLocaleDateString(undefined,{month:'long'})} (${months[bestM]})</p>` : ''}</div>
+    <div class="st-sec"><div class="facts">${fact(`🔥 ${st.best}`, 'longest streak (days)')}${fact(added.length, 'new series started')}${fact(addedBooks.toLocaleString(), 'books in those series')}${fact(`≈ ${(total*190).toLocaleString()}`, 'pages read (about 190 a volume)')}</div></div>
+    ${top.length ? `<div class="st-sec"><h3>Most-read series</h3>${top.map(([k,n],i) => `<div class="srow" style="cursor:default"><span>${['🥇','🥈','🥉','4.','5.'][i]} ${esc(nm(k))}</span><span class="r">${n} vol${n>1?'s':''}</span></div>`).join('')}</div>` : `<div class="st-sec"><p class="sub" style="margin:0">Log what you read (Reading → tap a day) and your year fills in here.</p></div>`}
+    ${favG ? `<div class="st-sec"><h3>Your genre of the year</h3><p style="margin:0"><b>${esc(favG[0])}</b> · ${favG[1]} volumes</p></div>` : ''}
+    ${(() => { const Y = allVolReviews().filter(r => r.d && r.d.startsWith(yr)); if (!Y.length) return ''; const S = Y.filter(r => r.st); const best = Y.slice().sort(vrSort).slice(0, 5); const fives = S.filter(r => r.st === 5).length;
+      return `<div class="st-sec"><h3>Volumes you reviewed</h3><div class="facts">${fact(Y.length, 'volume reviews written')}${fact(S.length ? (S.reduce((a,r)=>a+r.st,0)/S.length).toFixed(1) + ' ★' : '—', 'average stars')}${fact(fives, 'five-star volumes')}</div><p class="sub" style="margin:10px 0 4px">Your favorite volumes of ${yr}</p>${best.map(vrRow).join('')}</div>`; })()}
+    ${fav ? `<div class="st-sec"><h3>Top-rated on your shelf</h3><p style="margin:0">${esc(shelf.series[fav].n)} ${'★'.repeat(shelf.series[fav].st)}</p></div>` : ''}
+    <div class="row2"><button class="btn ghost" data-close>Close</button></div>`); }
+function exportShelf(){ return JSON.stringify({ app: 'my-manga-emporium', v: 1, at: new Date().toISOString(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {} }); }
+function parseVols(t){ const out = []; String(t).split(/[,;]+/).forEach(part => { const m = part.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+)/); if (m){ for (let v = +m[1]; v <= +m[2] && out.length < 500; v++) out.push(v); } else { const n = part.match(/\d+(?:\.\d+)?/); if (n) out.push(+n[0]); } }); return out; }
+function importData(text){
+  const add = {}; const put = (name, vols, extra) => { name = String(name || '').trim(); if (!name) return; const isln = /light novel|\(ln\)/i.test(name); let k = handleize(name.replace(/\(?\s*(light novel|ln)\s*\)?/ig, ' ')) + (isln ? '-ln' : '');
+    const a = add[k] = add[k] || { n: name, v: new Set(), x: {} }; vols.forEach(v => { if (v > 0 && v < 2000) a.v.add(+v); }); if (extra) Object.assign(a.x, extra); };
+  let j = null; try { j = JSON.parse(text); } catch(e){}
+  if (j && typeof j === 'object'){
+    const src = j.series || j.owned || j;
+    if (Array.isArray(src)) src.forEach(r => Array.isArray(r) ? put(r[0], (r[1]||[]).map(Number)) : put(r.n || r.name || r.title, (r.v || r.vols || []).map(Number)));
+    else Object.entries(src).forEach(([k, o]) => { if (!o || typeof o !== 'object') return; const vs = (o.v || o.vols || []).map(Number); if (j.series && j.app === 'my-manga-emporium'){ add[k] = { n: o.n, v: new Set(vs), x: o, full: true }; } else put(o.n || o.name || k, vs); });
+  } else {
+    String(text).split(/\r?\n/).forEach(line => { line = line.trim(); if (!line || /^series\b.*vol/i.test(line)) return;
+      const cells = line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+      let name = cells[0], vols = cells.slice(1).join(',');
+      const m = name.match(/^(.*?)\s*(?:vol(?:ume)?\.?|#)\s*([\d.,\s\-–]+)$/i); if (m && !vols){ name = m[1]; vols = m[2]; }
+      put(name, vols ? parseVols(vols) : [1]); });
+  }
+  let ns = 0, nb = 0;
+  Object.entries(add).forEach(([k, a]) => { const cur = shelf.series[k];
+    if (!cur){ shelf.series[k] = a.full ? Object.assign({}, a.x) : { n: a.n, v: [...a.v].sort((x,y)=>x-y), t: Date.now() }; ns++; nb += a.v.size; return; }
+    const before = cur.v.length; cur.v = [...new Set(cur.v.concat([...a.v]))].sort((x,y)=>x-y); nb += cur.v.length - before;
+    if (a.full){ ['r','st','rv','loc','want','sell','cond','c','m'].forEach(f => { if (a.x[f] != null && cur[f] == null) cur[f] = a.x[f]; }); } });
+  if (j && j.app === 'my-manga-emporium'){ ['log','rl','other','goal'].forEach(f => { if (j[f] && typeof j[f] === 'object'){ shelf[f] = Object.assign({}, j[f], shelf[f] || {}); } }); }
+  return { ns, nb };
+}
+$('#expBtn').onclick = async () => { const t = exportShelf(); try { await navigator.clipboard.writeText(t); toast(`Backup copied (${Object.keys(shelf.series).length} series). Paste it somewhere safe.`); } catch(e){ $('#impTxt').value = t; toast('Couldn’t copy automatically: the backup is in the box below. Select all and copy it.'); } };
+$('#expDl').onclick = async () => { const t = exportShelf(); const name = 'manga-shelf-' + dayKey() + '.json';
+  try { const dl = window.claude && await claude.use('downloads'); if (dl){ await dl.save({ filename: name, data: t }); return; } } catch(e){}
+  try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); } catch(e){ $('#impTxt').value = t; toast('Saving files isn’t allowed here: the backup is in the box below.'); } };
+async function doImport(text){ if (!text || !text.trim()){ $('#impMsg').textContent = 'Nothing to import yet.'; return; }
+  const prev = JSON.parse(JSON.stringify(shelf.series)); let r;
+  try { r = importData(text); } catch(e){ $('#impMsg').textContent = 'Couldn’t read that: ' + (e.message || e); return; }
+  save(); $('#impMsg').textContent = `Added ${r.ns} new series and ${r.nb} books.`; toast(`Imported: ${r.ns} new series, ${r.nb} books`, () => { shelf.series = prev; save(); });
+  $('#impTxt').value = ''; }
+$('#impBtn').onclick = () => doImport($('#impTxt').value);
+$('#snapBtn').onclick = () => buildSnap($('#snapBtn'), $('#snapMsg'));
+$('#impFile').onchange = async e => { const f = e.target.files && e.target.files[0]; if (!f) return; if (f.size > 15e6){ $('#impMsg').textContent = 'That file is too big.'; return; } await doImport(await f.text()); e.target.value = ''; };
+function coverOf(k){ const s = shelf.series[k]; if (!s) return ''; if (s.c) return s.c; const L = live.get(k); if (!L) return ''; const own = new Set(ints(s)); const it = L.items.find(p => p.img && own.has(p.vol)) || L.items.find(p => p.img); return it ? it.img : ''; }
+function coverHTML(k){ const u = coverOf(k); const n = shelf.series[k].n.replace(/^(the|a)\s+/i,'');
+  return `<span class="cover" aria-hidden="true">${u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">` : esc(n[0] || '?')}</span>`; }
+function renderAll(){ renderStats(); renderList(); try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
+$('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; const [name, how, have, need] = BADGES[+t.dataset.b];
+  current = null;
+  openSheet(`<h2>${name}</h2><p class="sub">${have >= need ? 'Earned!' : 'Not earned yet'}</p><p>${how}</p><div class="bprog"><i style="width:${Math.min(100, Math.round(have/need*100))}%"></i></div><p class="sub">${Math.min(have,need)} of ${need}${have>=need ? ' ✓' : ` · ${need-have} to go`}</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); };
+document.querySelector('.stats').onclick = e => { const t = e.target.closest('[data-stat]'); if (t) openStat(t.dataset.stat); };
+function rowList(keys, sub, right){
+  return keys.map(k => `<button class="srow" data-k="${esc(k)}"><span>${esc(shelf.series[k].n)}<small>${sub(k)}</small></span><span class="r">${right(k)}</span></button>`).join('');
+}
+function compactVols(a){ const out=[]; let i=0; while(i<a.length){ let j=i; while(j+1<a.length && a[j+1]===a[j]+1) j++; out.push(j>i ? `${a[i]}–${a[j]}` : `${a[i]}`); i=j+1; } return out.join(', '); }
+function openStat(kind){
+  current = null;
+  const keys = Object.keys(shelf.series); const I = Object.fromEntries(keys.map(k => [k, info(k)]));
+  const nm = k => shelf.series[k].n.replace(/^(the|a)\s+/i,'');
+  let html = '';
+  if (kind === 'gaps'){
+    const g = keys.filter(k => !langOf(k) && I[k].gaps.length).sort((a,b) => I[a].gaps.length - I[b].gaps.length || nm(a).localeCompare(nm(b)));
+    const n = g.reduce((s,k) => s + I[k].gaps.length, 0);
+    html = `<h2>Gaps to fill</h2><p class="sub">${n} missing volumes across ${g.length} series, fewest gaps first. Gold = in stock at the store.</p>` +
+      rowList(g, k => { const st = new Set(I[k].inStock.map(p=>p.vol)); return 'Missing Vol ' + I[k].gaps.map(v => st.has(v) ? `<b style="color:var(--gold)">${v}</b>` : v).join(', '); }, k => I[k].gaps.length);
+  } else if (kind === 'runs'){
+    const r = keys.filter(k => I[k].own.length >= 2 && !I[k].gaps.length).sort((a,b) => I[b].own.length - I[a].own.length || nm(a).localeCompare(nm(b)));
+    html = `<h2>No-gap runs</h2><p class="sub">${r.length} series where you have Vol 1 up to your latest with nothing missing.</p>` +
+      rowList(r, k => `Vol ${compactVols(I[k].own.slice().sort((a,b)=>a-b))}${I[k].complete ? ' · complete!' : (I[k].next && !langOf(k) ? ` · next is Vol ${I[k].next}` : '')}`, k => I[k].own.length);
+  } else if (kind === 'series'){
+    const all = keys.slice().sort((a,b) => nm(a).localeCompare(nm(b)));
+    const ln = all.filter(k => isLN(k, shelf.series[k])).length, fl = all.filter(k => langOf(k)).length;
+    html = `<h2>Your series</h2><p class="sub">${all.length} series · ${all.length-ln-fl} manga · ${ln} light novel · ${fl} other-language editions</p>` +
+      rowList(all, k => `Vol ${compactVols(shelf.series[k].v.slice().sort((a,b)=>a-b))}`, k => shelf.series[k].v.length);
+  } else {
+    const all = keys.slice().sort((a,b) => shelf.series[b].v.length - shelf.series[a].v.length || nm(a).localeCompare(nm(b)));
+    const tot = k => shelf.series[k].v.length; const sum = f => all.filter(f).reduce((s,k)=>s+tot(k),0);
+    const lnB = sum(k => isLN(k, shelf.series[k])), flB = sum(k => langOf(k)), allB = sum(()=>true);
+    html = `<h2>Your books</h2><p class="sub">${allB} books · ${allB-lnB-flB} manga · ${lnB} light novels · ${flB} in other languages · ${all.reduce((s,k)=>s+(shelf.series[k].r||[]).length,0)} read. Biggest series first.</p>` +
+      rowList(all.slice(0,40), k => (isLN(k, shelf.series[k]) ? 'Light novel' : langOf(k) ? langOf(k)[0].toUpperCase()+langOf(k).slice(1) : 'Manga'), k => tot(k)) +
+      (all.length > 40 ? `<p class="sub">…and ${all.length-40} more series (see “series”).</p>` : '');
+  }
+  openSheet(html + `<div class="row2"><button class="btn ghost" data-close>Close</button></div>`);
+}
+$('#q').oninput = renderList; $('#sort').onchange = () => { renderList(); ls.set('mme-sort', $('#sort').value); };
+const savedSort = ls.get('mme-sort'); if (savedSort) $('#sort').value = savedSort;
+$('#view').onchange = () => { renderList(); ls.set('mme-view', $('#view').value); };
+{ const sv = ls.get('mme-view'); if (sv) $('#view').value = sv; }
+$('#list').onclick = e => { const c = e.target.closest('.card, .crow, .sh'); if (c) openSeries(c.dataset.k); };
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x===b));
+  $('#tab-shelf').classList.toggle('hidden', b.dataset.tab!=='shelf');
+  $('#tab-finds').classList.toggle('hidden', b.dataset.tab!=='finds');
+  $('#tab-stats').classList.toggle('hidden', b.dataset.tab!=='stats');
+  $('#tab-reading').classList.toggle('hidden', b.dataset.tab!=='reading');
+  $('#tab-lists').classList.toggle('hidden', b.dataset.tab!=='lists');
+  if (b.dataset.tab==='lists') renderLists();
+  if (b.dataset.tab==='stats') renderStatsTab();
+  if (b.dataset.tab==='reading') renderReadTab();
+});
+
+/* ---------- sheet + toast ---------- */
+function openSheet(html){ $('#sheetBody').innerHTML = html; $('#scrim').classList.add('on'); $('#sheet').classList.add('on'); $('#sheet').scrollTop = 0; }
+function closeSheet(){ $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); current = null; }
+document.addEventListener('click', e => { const r = e.target.closest('[data-vrk]'); if (!r) return; e.stopPropagation(); const k = r.dataset.vrk; if (shelf.series[k]) openSeries(k); }, true);
+$('#scrim').onclick = closeSheet;
+$('#xbtn').onclick = closeSheet;
+/* swipe down on the top bar (or anywhere when scrolled to the top) to close */
+(() => { const sh = $('#sheet'); let y0 = null, dy = 0, fromHead = false;
+  sh.addEventListener('touchstart', e => { fromHead = !!e.target.closest('#sheethead'); if (fromHead || sh.scrollTop <= 0){ y0 = e.touches[0].clientY; dy = 0; sh.style.transition = 'none'; } }, { passive: true });
+  sh.addEventListener('touchmove', e => { if (y0 == null) return; dy = e.touches[0].clientY - y0; if (dy > 0 && (fromHead || sh.scrollTop <= 0)){ sh.style.transform = `translateY(${dy}px)`; if (e.cancelable) e.preventDefault(); } else if (!fromHead){ y0 = null; sh.style.transform = ''; sh.style.transition = ''; } }, { passive: false });
+  sh.addEventListener('touchend', () => { if (y0 == null) return; sh.style.transition = ''; sh.style.transform = ''; if (dy > 90) closeSheet(); y0 = null; dy = 0; });
+})();
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeSheet(); });
+let toastT;
+function toast(msg, undo){
+  $('#toastMsg').textContent = msg; const b = $('#toastBtn');
+  b.classList.toggle('hidden', !undo); b.onclick = () => { undo && undo(); $('#toast').classList.remove('on'); };
+  $('#toast').classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => $('#toast').classList.remove('on'), undo ? 5000 : 2600);
+}
+
+/* ---------- saving ---------- */
+let saving = Promise.resolve(), saveT, dirty = 0;
+function save(){
+  try { renderAll(); if (current) renderSeries(current); } catch(e){ console.error(e); }
+  if (mode === 'local'){ ls.set('mme-shelf', shelf); return; }
+  if (!docRef) return;
+  clearTimeout(saveT); dirty++;
+  saveT = setTimeout(() => {
+    const snap = JSON.parse(JSON.stringify(shelf)); const mine = dirty;
+    saving = saving.then(() => docRef.set(snap)).then(() => { $('#sync').textContent = 'Saved'; }).catch(err => { if (err && /permission|not_granted|denied/i.test(err.code || err.message || '')){ ls.set('mme-shelf', shelf); startLocal('Saved on this device'); return; } const m = 'Couldn’t save: ' + (err && err.code || '') + ' ' + (err && err.message || err); $('#sync').textContent = m; toast(m.slice(0,140)); })
+      .then(() => { if (dirty === mine) dirty = 0; });
+  }, 700);
+}
+async function shareReview(key, remove){                   // one review doc per person per series; the shop owner reads them
+  const s = shelf.series[key]; if (!dbRef || !myId || !s) return;
+  try {
+    const ref = dbRef.collection('reviews/' + myId + '/items').doc(key.slice(0, 190));
+    if (remove || (!s.st && !s.rv && !Object.keys(s.vr||{}).length)) { await ref.delete(); return; }
+    await ref.set({ user: myId, key, series: s.n, stars: s.st || null, review: s.rv || '', volumes: s.vr || {}, vols: s.v.length, at: new Date().toISOString(), posted: false });
+  } catch(e){ toast('Couldn’t share the review: ' + (e.code || e.message || e)); }
+}
+function patchSeries(key, fields){
+  const prev = JSON.parse(JSON.stringify(shelf.series[key]));
+  Object.assign(shelf.series[key], fields); Object.keys(fields).forEach(f => { if (fields[f] == null) delete shelf.series[key][f]; });
+  save(); return () => { shelf.series[key] = prev; save(); };
+}
+function setVols(key, vols, name, extra){
+  const prev = shelf.series[key] ? JSON.parse(JSON.stringify(shelf.series[key])) : null;
+  if (!vols.length){ delete shelf.series[key]; }
+  else shelf.series[key] = Object.assign({}, prev || {}, extra || {}, { n: (prev && prev.n) || name, v: [...new Set(vols)].sort((a,b)=>a-b), t: Date.now() });
+  save();
+  return () => { if (prev) shelf.series[key] = prev; else delete shelf.series[key]; save(); };
+}
+
+/* ---------- store lookups (Shopify, live) ---------- */
+/* ---------- shop snapshot: lets people without the Shopify connection see the store ---------- */
+const SNAP_URL = '';            // filled in at publish time as a fallback for signed-out viewers
+const CDN = 'https://cdn.shopify.com/s/files/1/1935/5029/';
+let SNAP = null, snapLoading = false, snapTried = 0, snapBar = new Map();
+const snapKey = (ser, ln) => handleize(baseName(ser)) + (ln ? '-ln' : '');
+function snapImg(u){ return !u ? '' : (u.startsWith('http') ? u : CDN + u); }
+function snapEntry(key){ if (!SNAP) return null; const s = shelf.series[key]; const ln = s ? isLN(key, s) : /-ln$/.test(key);
+  const c = [key, key.replace(/-light-novel$/, '-ln')]; if (s) c.push(snapKey(s.n, ln)); for (const k of c){ if (SNAP.s[k]) return [k, SNAP.s[k]]; } return null; }
+function snapItems(e){ return (e.i || []).map(x => ({ vol: x[0], price: x[1], inv: x[2], handle: x[3], img: snapImg(x[4]), title: e.n + (e.ln ? ' Light Novel' : '') + ' Vol ' + x[0], ser: e.n, sv: e.t || 0, isbn: x[5] || '' })); }
+async function loadSnap(){
+  if (SNAP || snapLoading || Date.now() - snapTried < 60e3) return SNAP; snapLoading = true; snapTried = Date.now();
+  let url = null;
+  try { if (dbRef){ const m = await dbRef.doc('snap/meta').get(); if (m.exists){ const d = m.data(); url = d.id ? '/_blob/' + d.id : d.url; } } } catch(e){}
+  if (!url && !window.claude){ try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.snap) url = j.snap; } } catch(e){} }
+  if (!url && SNAP_URL) url = SNAP_URL;
+  if (url){ try { const r = await fetch(url); if (r.ok){ SNAP = await r.json(); } } catch(e){} }
+  if (SNAP){ snapBar = new Map(); Object.entries(SNAP.s).forEach(([k, e]) => (e.i||[]).forEach(x => { if (x[5]) snapBar.set(String(x[5]), [k, x[0]]); }));
+    if (!crownsData && SNAP.cr) crownsData = SNAP.cr; if (!preorders && SNAP.pre) preorders = SNAP.pre.map(x => ({ handle: x[0], title: x[1], ser: x[2], vol: x[3], rd: x[4], ln: !!x[5], price: x[6], img: snapImg(x[7]) }));
+    if (!mcp) applySnap(); }
+  snapLoading = false; return SNAP; }
+function applySnap(){ if (!SNAP) return; Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const hit = snapEntry(k); if (!hit) return; const e = hit[1]; const items = snapItems(e);
+    live.set(k, { at: Date.now(), v2: 1, items, total: e.t || 0, snap: SNAP.at });
+    const s = shelf.series[k]; if (e.m && !s.m) s.m = { a: e.m.aud || '', g: e.m.gen ? String(e.m.gen).split(/,\s*/).filter(Boolean) : [], au: e.m.au || '', p: e.m.pub || '' };
+    if (!s.c){ const own = new Set(ints(s)); const it = items.find(p => p.img && own.has(p.vol)) || items.find(p => p.img); if (it) s.c = it.img; } });
+  renderAll(); renderFinds(); if (current) renderSeries(current); }
+function snapAge(){ if (!SNAP || !SNAP.at) return ''; const h = Math.round((Date.now() - new Date(SNAP.at)) / 36e5); return h < 1 ? 'just now' : h < 48 ? h + ' h ago' : Math.round(h/24) + ' days ago'; }
+async function buildSnap(btn, msg){
+  if (!mcp){ msg.textContent = 'Building the snapshot needs your Shopify connection.'; return; }
+  const assets = await claude.use('assets').catch(() => null); if (!assets){ msg.textContent = 'Only the app’s owner can publish the snapshot.'; return; }
+  btn.disabled = true; const S = {}; const ids = {}; let after = null, n = 0;
+  try {
+    do { const d = await gql(`{products(first:250${after ? `, after:${JSON.stringify(after)}` : ''}, query:"status:active AND (product_type:Manga OR product_type:'Light Novel')"){pageInfo{hasNextPage endCursor} nodes{id ${PFIELDS} bc:variants(first:1){nodes{barcode}}}}}`);
+      d.products.nodes.forEach(p => { const q = mapProd(p); if (q.vol == null || !q.ser || (q.lang && q.lang !== 'english')) return; const ln = /light novel/i.test(q.type);
+        const k = snapKey(q.ser, ln); const e = S[k] = S[k] || { n: q.ser, ln: ln ? 1 : 0, t: 0, i: [] }; e.t = Math.max(e.t, q.sv || 0);
+        const v = Math.round(q.vol); const ex = e.i.find(x => x[0] === v); const row = [v, q.price || 0, q.inv > 0 ? q.inv : 0, q.handle, (q.img || '').replace(CDN, ''), (p.bc && p.bc.nodes[0] && p.bc.nodes[0].barcode || '').replace(/\D/g,'')];
+        if (!ex) e.i.push(row); else if ((row[2] > 0 && ex[2] <= 0) || ((row[2] > 0) === (ex[2] > 0) && row[1] < ex[1])) e.i[e.i.indexOf(ex)] = row;
+        if (!ids[k] || v < ids[k][1]) ids[k] = [p.id, v]; n++; });
+      msg.textContent = `Reading the catalog… ${n.toLocaleString()} books`; after = d.products.pageInfo.hasNextPage ? d.products.pageInfo.endCursor : null; } while (after);
+    Object.values(S).forEach(e => { e.i.sort((a,b) => a[0]-b[0]); const firstImg = e.i.find(x => x[4]); e.i.forEach(x => { if (x !== firstImg && !(x[2] > 0)) x[4] = ''; }); });
+    const list = Object.entries(ids); let done = 0;
+    for (let i = 0; i < list.length; i += 50){ const chunk = list.slice(i, i + 50);
+      const d = await gql(`{nodes(ids:${JSON.stringify(chunk.map(x => x[1][0]))}){... on Product{id ${IFIELDS}}}}`);
+      d.nodes.forEach((q, j) => { if (!q) return; const k = chunk[j][0]; const m = { au: mval(q.au), gen: mval(q.gen) || mval(q.g1), th: mval(q.th), aud: mval(q.aud), age: mval(q.age), sp: mval(q.sp), cn: mval(q.cn), gr: mval(q.gr), an: mval(q.an), at: mval(q.at), ss: mval(q.ss), ov: mval(q.ov), os: mval(q.os), tk: mval(q.tk), pub: q.vendor || '' };
+        Object.keys(m).forEach(f => { if (!m[f]) delete m[f]; }); if (Object.keys(m).length) S[k].m = m; });
+      done += chunk.length; msg.textContent = `Reading series details… ${done.toLocaleString()} of ${list.length.toLocaleString()}`; }
+    let cr = null; try { cr = await loadCrowns(); } catch(e){}
+    let pre = []; try { preorders = null; await loadPreorders(); pre = (preorders || []).map(p => [p.handle, p.title, p.ser, p.vol, p.rd, p.ln ? 1 : 0, p.price, (p.img||'').replace(CDN,'')]); } catch(e){}
+    const snap = { v: 1, at: new Date().toISOString(), cr, pre, s: S };
+    const body = JSON.stringify(snap); msg.textContent = `Uploading ${(body.length/1e6).toFixed(1)} MB…`;
+    const up = await assets.upload(new Blob([body], { type: 'application/json' }));
+    await dbRef.doc('snap/meta').set({ id: up.id, at: snap.at, series: Object.keys(S).length, books: n });
+    SNAP = snap; msg.textContent = `Snapshot published: ${Object.keys(S).length.toLocaleString()} series, ${n.toLocaleString()} books. Everyone using the app now sees this.`;
+  } catch(e){ msg.textContent = 'Snapshot failed: ' + (e.code || e.message || e); }
+  btn.disabled = false; }
+async function gql(query){
+  if (!mcp) throw { code:'no_mcp' };
+  const r = await mcp.callTool('Shopify', 'graphql_query', { query }, { cache: { staleTime: 6*3600e3, gcTime: 24*3600e3 } });
+  let p = r.payload; if (typeof p === 'string'){ try{ p = JSON.parse(p); }catch(e){} }
+  if (!p || !p.data) throw { code:'bad_payload', message: typeof p === 'string' ? p.slice(0,140) : 'No data' };
+  return p.data;
+}
+const PFIELDS = `handle title productType status totalInventory featuredMedia{preview{image{url(transform:{maxWidth:160})}}} priceRangeV2{minVariantPrice{amount}} vol:metafield(namespace:"custom",key:"volume"){value} sv:metafield(namespace:"custom",key:"series_volumes"){value} ser:metafield(namespace:"custom",key:"series"){value} lang:metafield(namespace:"custom",key:"language"){value}`;
+const MFIELDS = `vendor ser:metafield(namespace:"custom",key:"series"){value} gen:metafield(namespace:"custom",key:"genres"){value} g1:metafield(namespace:"custom",key:"genre"){value} aud:metafield(namespace:"custom",key:"audience"){value} au:metafield(namespace:"custom",key:"author"){value}`;
+const STOP = new Set(['the','and','with','for','from','that','this','manga','light','novel','edition','vol','volume','omnibus','collector','japanese','spanish','french','italian','german','chinese']);
+function baseName(n){ return n.replace(/\([^)]*\)/g,' ').replace(/\s+/g,' ').trim(); }
+function mapProd(p){
+  return { vol: p.vol ? +p.vol.value : null, inv: p.totalInventory|0, price: p.priceRangeV2 ? +p.priceRangeV2.minVariantPrice.amount : null,
+    handle: p.handle, title: p.title, type: p.productType, ser: p.ser ? p.ser.value : '', sv: p.sv ? +p.sv.value : 0, lang: p.lang ? String(p.lang.value).toLowerCase() : '',
+    img: p.featuredMedia && p.featuredMedia.preview && p.featuredMedia.preview.image ? p.featuredMedia.preview.image.url : '',
+    pub: p.vendor || '', aud: p.aud ? p.aud.value : '', au: p.au ? p.au.value : '', g1: p.g1 ? p.g1.value : '', gen: (() => { try { return p.gen ? JSON.parse(p.gen.value) : []; } catch(e){ return []; } })() };
+}
+async function lookupSeries(key, force){
+  const s = shelf.series[key]; if (!s || langOf(key)) return null;
+  if (!mcp){ if (!SNAP) await loadSnap(); const hit = snapEntry(key); if (!hit) return null; const out = { at: Date.now(), v2: 1, items: snapItems(hit[1]), total: hit[1].t || 0, snap: SNAP.at }; live.set(key, out); return out; }
+  const c = live.get(key); if (c && c.v2 && (s.m || metaTried.has(key + '#')) && !force && Date.now() - c.at < 6*3600e3) return c;
+  metaTried.add(key + '#');
+  const ln = isLN(key, s);
+  const words = baseName(s.n).split(/[^A-Za-z0-9]+/).filter(w => w.length >= 3 && !STOP.has(w.toLowerCase())).slice(0,2);
+  if (!words.length) return null;
+  const q = words.map(w => `title:${w}*`).join(' AND ') + ` AND status:active AND product_type:'${ln ? 'Light Novel' : 'Manga'}'`;
+  const data = await gql(`{products(first:250, query:${JSON.stringify(q)}){nodes{${PFIELDS}}}}`);
+  const targets = new Set([handleize(baseName(s.n)), key.replace(/-ln$|-light-novel$/,'')]);
+  const items = data.products.nodes.map(mapProd).filter(p => p.vol != null && targets.has(handleize(p.ser)) && (!p.lang || p.lang === 'english'));
+  // keep the best copy per volume: in-stock first, then cheapest
+  const by = new Map();
+  items.forEach(p => { const v = Math.round(p.vol); const cur = by.get(v); if (!cur || (p.inv>0 && cur.inv<=0) || (p.inv>0) === (cur.inv>0) && p.price < cur.price) by.set(v, Object.assign(p,{vol:v})); });
+  const total = Math.max(0, ...items.map(p => p.sv || 0));
+  const out = { at: Date.now(), v2: 1, items: [...by.values()].sort((a,b)=>a.vol-b.vol), total };
+  let m0 = null;
+  if (items.length && (!s.m || force)){
+    try { const md = await gql(`{products(first:15, query:${JSON.stringify(q)}){nodes{${MFIELDS}}}}`);
+      m0 = md.products.nodes.map(mapProd).find(p => targets.has(handleize(p.ser)) && (p.aud || p.gen.length || p.au)) || null; } catch(e){}
+  }
+  if (m0){ const m = { a: m0.aud || '', g: m0.gen.length ? m0.gen : (m0.g1 ? [m0.g1] : []), au: m0.au || '', p: m0.pub || '' };
+    if (JSON.stringify(s.m||null) !== JSON.stringify(m)) { s.m = m; metaDirty = true; } }
+  live.set(key, out); persistLive();
+  return out;
+}
+function persistLive(){ const o = {}; live.forEach((v,k) => { o[k] = v; }); ls.set('mme-live', o); }
+(() => { const o = ls.get('mme-live'); if (o) Object.entries(o).forEach(([k,v]) => { if (v && Date.now() - v.at < 24*3600e3) live.set(k, v); }); })();
+
+function errText(e){
+  const c = e && e.code;
+  if (c === 'no_mcp') return 'Store lookups work when this page is open in Claude.';
+  if (c === 'needs_reauth') return 'Reconnect Shopify in Claude Settings → Connectors to see store stock.';
+  if (c === 'server_not_connected') return 'Add the Shopify connector in Claude Settings → Connectors to see store stock.';
+  if (c === 'not_in_manifest' || c === 'approval_required') return 'Store lookups need your OK — tap “Check store” again and allow Shopify.';
+  if (c === 'server_unavailable' || c === 'rate_limited') return 'The store didn’t answer just now. Try again in a minute.';
+  return 'Couldn’t check the store' + (e && e.message ? ': ' + e.message : '.');
+}
+
+/* ---------- series detail ---------- */
+let detV = null, current = null, tapMode = null, loanDir = 'out', loanWho = '', cnCond = '', cnNote = '';
+function openSeries(key){ detV = null; tapMode = null; current = key; renderSeries(key); loadAbout(key); loadInfo(key); $('#scrim').classList.add('on'); $('#sheet').classList.add('on'); $('#sheet').scrollTop = 0;
+  if (!langOf(key) && mcp){ const c = live.get(key); if (!c || Date.now() - c.at > 6*3600e3) loadLive(key); } }
+let liveState = {};
+function collHandle(key){ const s = shelf.series[key]; if (s.h) return s.h; return 'series-' + key.replace(/-ln$/, '-light-novel'); }
+async function loadAbout(key){
+  if (about.has(key) || !mcp || langOf(key)) return;
+  about.set(key, { loading: true });
+  const h = collHandle(key);
+  try {
+    const d = await gql(`{c:collectionByIdentifier(identifier:{handle:${JSON.stringify(h)}}){title handle description ra:metafield(namespace:"custom",key:"read_alikes"){references(first:6){nodes{... on Collection{title handle}}}}}}`);
+    let desc = '', ra = [];
+    if (d.c){ desc = (d.c.description || '').replace(/Every volume we (have|carry)[\s\S]*$/i, '').trim(); ra = d.c.ra && d.c.ra.references ? d.c.ra.references.nodes.filter(n => n.handle) : []; }
+    if (!desc){                                     // fall back to the volume 1 listing's blurb
+      const L = live.get(key); const it = L && L.items.find(p => p.vol === 1) || (L && L.items[0]);
+      if (it){ const p = await gql(`{p:productByIdentifier(identifier:{handle:${JSON.stringify(it.handle)}}){descriptionHtml}}`); const m = p.p && p.p.descriptionHtml.match(/<p>(?!\s*<)([\s\S]*?)<\/p>\s*$/); if (m) desc = m[1].replace(/<[^>]+>/g, ''); }
+    }
+    about.set(key, { desc, ra, handle: d.c ? d.c.handle : '' });
+  } catch(e){ about.set(key, { desc: '', ra: [], err: true }); }
+  if (current === key) renderSeries(key);
+}
+const sinfo = new Map();
+const IFIELDS = `vendor au:metafield(namespace:"custom",key:"author"){value} gen:metafield(namespace:"custom",key:"genres"){value} g1:metafield(namespace:"custom",key:"genre"){value} th:metafield(namespace:"custom",key:"themes"){value} aud:metafield(namespace:"custom",key:"audience"){value} age:metafield(namespace:"custom",key:"age_rating"){value} sp:metafield(namespace:"custom",key:"spice_level"){value} cn:metafield(namespace:"custom",key:"content_notes"){value} gr:metafield(namespace:"custom",key:"gentle_read"){value} an:metafield(namespace:"custom",key:"has_anime"){value} at:metafield(namespace:"custom",key:"anime_title"){value} ss:metafield(namespace:"custom",key:"series_status"){value} ov:metafield(namespace:"custom",key:"original_volumes"){value} os:metafield(namespace:"custom",key:"original_status"){value} tk:metafield(namespace:"custom",key:"mages_take"){value}`;
+function mval(x){ if (!x || x.value == null) return ''; const v = String(x.value); if (v[0] === '['){ try { return JSON.parse(v).join(', '); } catch(e){} } return v; }
+async function loadInfo(key){
+  if (sinfo.has(key) || langOf(key)) return;
+  if (!mcp){ const hit = snapEntry(key); if (hit && hit[1].m){ sinfo.set(key, hit[1].m); if (current === key) renderSeries(key); } return; }
+  const L = live.get(key); if (!L || !L.items || !L.items.length) return;
+  sinfo.set(key, { loading: true });
+  const cand = L.items.slice().sort((a,b) => a.vol - b.vol).slice(0, 3);
+  let best = null;
+  try { for (const it of cand){ const d = await gql(`{p:productByIdentifier(identifier:{handle:${JSON.stringify(it.handle)}}){${IFIELDS}}}`); const q = d.p; if (!q) continue;
+      const o = { au: mval(q.au), gen: mval(q.gen) || mval(q.g1), th: mval(q.th), aud: mval(q.aud), age: mval(q.age), sp: mval(q.sp), cn: mval(q.cn), gr: mval(q.gr), an: mval(q.an), at: mval(q.at), ss: mval(q.ss), ov: mval(q.ov), os: mval(q.os), tk: mval(q.tk), pub: q.vendor || '' };
+      const score = Object.values(o).filter(Boolean).length; if (!best || score > best.score) best = Object.assign(o, { score }); if (score >= 8) break; } } catch(e){}
+  sinfo.set(key, best || {});
+  if (current === key) renderSeries(key);
+}
+function spiceTxt(v){ const n = parseInt(v, 10); if (!isNaN(n)) return n <= 0 ? 'None' : '🌶️'.repeat(Math.min(n, 5)) + ` (${n}/5)`; return v; }
+function infoHTML(key){
+  const o = sinfo.get(key); if (!o || o.loading) return '';
+  const rows = [];
+  const add = (t, v) => { if (v) rows.push(`<dt>${t}</dt><dd>${esc(v)}</dd>`); };
+  add('Author', o.au); add('Publisher', o.pub); add('Genres', o.gen); add('Themes', o.th); add('Audience', o.aud); add('Age rating', o.age);
+  if (o.sp !== '') add('Spice', spiceTxt(o.sp));
+  add('Content notes', o.cn);
+  if (/true/i.test(o.gr)) add('Gentle read', 'Yes');
+  if (/true/i.test(o.an)) add('Anime', o.at || 'Yes');
+  const st = [o.ss, o.ov ? `${o.ov} volumes in Japan` + (o.os ? ` (${o.os})` : '') : ''].filter(Boolean).join(' · '); add('Series status', st);
+  if (!rows.length && !o.tk) return '';
+  return `<dl class="igrid">${rows.join('')}</dl>${o.tk ? `<p style="margin-top:10px"><b>The Mage's take:</b> ${esc(o.tk)}</p>` : ''}`;
+}
+function aboutHTML(key){
+  const a = about.get(key); if (!a || a.loading) return mcp && !langOf(key) ? `<details class="about"><summary>About this series</summary><p class="sub">Loading…</p></details>` : '';
+  if (!a.desc && !a.ra.length && !infoHTML(key)) return '';
+  const ownByHandle = {}; Object.keys(shelf.series).forEach(k => { ownByHandle[collHandle(k)] = k; });
+  const chips = a.ra.map(r => ownByHandle[r.handle] ? `<button class="own" data-open="${esc(ownByHandle[r.handle])}">📚 ${esc(r.title)}</button>` : `<a href="${STORE}/collections/${encodeURIComponent(r.handle)}" target="_blank" rel="noopener">${esc(r.title)} ↗</a>`).join('');
+  return `<details class="about"${sinfo.get(key) && !sinfo.get(key).loading ? '' : ''}><summary>About this series</summary>${infoHTML(key)}${a.desc ? `<p>${esc(a.desc)}</p>` : ''}${chips ? `<p class="sub" style="margin:12px 0 0">If you like this, try</p><div class="ra">${chips}</div><p class="sub" style="margin:6px 0 0">📚 = on your shelf</p>` : ''}${a.handle ? `<p style="margin-top:10px"><a href="${STORE}/collections/${encodeURIComponent(a.handle)}" target="_blank" rel="noopener">See the series at the shop ↗</a></p>` : ''}</details>`;
+}
+async function loadLive(key, force){
+  liveState[key] = 'loading'; if (current===key) renderSeries(key);
+  try { await lookupSeries(key, force); liveState[key] = 'ok'; loadInfo(key); }
+  catch(e){ liveState[key] = e; }
+  renderAll(); if (current===key) renderSeries(key);
+}
+function volBadges(s, v, own, stock){ let h = ''; const L = loanOf(s, v);
+  if ((s.r||[]).includes(v)) h += '<i class="bd br" style="background:#2f9e5f">✓</i>';
+  if (L) h += `<i class="bd tr" style="background:${L.d==='out' ? 'var(--accent)' : '#1d5aae'}">${L.d==='out' ? '↗' : '↙'}</i>`;
+  if ((s.cn||{})[v]) h += '<i class="bd tl" style="background:#8a6d3b">✎</i>';
+  if ((s.want||[]).includes(v)) h += '<i class="bd bl" style="background:#d9417a">♥</i>';
+  else if ((s.sell||[]).includes(v)) h += '<i class="bd bl" style="background:#2f9e5f">$</i>';
+  if (stock && !own) h += '<i class="dot"></i>';
+  return h; }
+function volDetailHTML(key, v){ const s = shelf.series[key]; if (!s) return ''; const own = s.v.includes(v); const R = shelf.rl || {};
+  const days = Object.keys(R).filter(d => (R[d]||[]).includes(key + '|' + v)).sort(); const L = loanOf(s, v); const n = (s.cn||{})[v] || {};
+  const it = (live.get(key) || { items: [] }).items.find(p => p.vol === v); const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const rd = (s.r||[]).includes(v); const ck = (id, on, label, dis) => `<label class="toggle" style="margin:6px 0"><input type="checkbox" id="${id}"${on?' checked':''}${dis?' disabled':''}><span>${label}</span></label>`;
+  return `<div class="vpop" data-detclose><div class="st-sec vpopc" role="dialog" aria-label="Vol ${v} details"><button class="iconbtn vpx" data-detclose aria-label="Close">✕</button><h3 style="margin:0 0 4px;padding-right:40px">${esc(s.n)} · Vol ${v}</h3>
+  ${it ? `<p class="sub" style="margin:0 0 6px">At the shop: $${(it.price||0).toFixed(2)} · ${it.inv > 0 ? 'in stock' : 'sold out'}</p>` : ''}
+  ${ck('pvOwn', own, '■ Owned')}
+  ${ck('pvRead', rd, '✓ Read' + (days.length ? ' <small class="sub">(' + days.map(fmt).join(', ') + ')</small>' : ''))}
+  <div class="locrow" style="margin:0 0 4px;align-items:center"><span class="sub" style="margin:0;white-space:nowrap">Read on</span><input type="date" id="pvDate" max="${dayKey()}" value="${days.length ? days[days.length-1] : ''}"><button class="btn ghost sm" type="button" data-pvnodate>No date</button></div><p class="sub" style="margin:0 0 4px">Leave the date empty to mark it read without a date.</p>
+  ${ck('pvWant', (s.want||[]).includes(v), '♥ On my wishlist')}
+  ${ck('pvSell', (s.sell||[]).includes(v), '$ On my sell list')}
+  <div class="locrow" style="margin:8px 0 0"><select id="pvLoan" aria-label="Loan" style="flex:1"><option value="">Not on loan</option><option value="out"${L && L.d==='out'?' selected':''}>↗ Lent to…</option><option value="in"${L && L.d==='in'?' selected':''}>↙ Borrowed from…</option></select><input id="pvWho" placeholder="Name" value="${esc(L ? L.w : '')}" list="whol2" style="flex:1"><datalist id="whol2">${loanNames().map(x => `<option value="${esc(x)}">`).join('')}</datalist></div>
+  <select id="pvCond" aria-label="Condition" style="width:100%;margin-top:8px"><option value="">Condition…</option>${['Like new','Very good','Good','Fair','Worn','Damaged','Ex-library','Signed','First printing'].map(c => `<option${n.c===c ? ' selected' : ''}>${c}</option>`).join('')}</select>
+  <textarea id="pvNote" class="rv" rows="3" style="min-height:64px;margin-top:8px" placeholder="Notes for this volume (condition details, where it lives, gift from…)">${esc(n.t || '')}</textarea>
+  <h4 style="margin:12px 0 4px">Your review of Vol ${v}</h4><div class="stars" id="pvStars" data-val="${(s.vr||{})[v] && s.vr[v].st || 0}">${[1,2,3,4,5].map(k => `<button type="button" data-pvstar="${k}" class="${((s.vr||{})[v] && s.vr[v].st || 0) >= k ? 'on' : ''}" aria-label="${k} star${k>1?'s':''}">★</button>`).join('')}</div>
+  <textarea id="pvRv" class="rv" rows="2" style="min-height:52px;margin-top:6px" placeholder="What did you think of this volume?">${esc((s.vr||{})[v] && s.vr[v].t || '')}</textarea>
+  <div class="row2" style="margin:10px 0 0"><button class="btn sm" data-pvsave="${v}">Save</button><button class="btn ghost sm" data-detclose>Cancel</button></div></div></div>`; }
+function renderSeries(key){
+  { const s0 = shelf.series[key]; if (s0 && s0.lc){ const cn = Object.assign({}, s0.cn); Object.entries(s0.lc).forEach(([v,l]) => { const o = Object.assign({}, cn[v]); o.t = [o.t, 'Lives at ' + l].filter(Boolean).join(' · '); cn[v] = o; }); s0.cn = cn; delete s0.lc; setTimeout(save, 0); } }
+  const s = shelf.series[key];
+  if (!s){ $('#sheetBody').innerHTML = `<p class="sub">This series is no longer on your shelf.</p><button class="btn ghost" data-close>Close</button>`; return; }
+  const i = info(key); const lang = langOf(key);
+  const stockBy = new Map(i.inStock.map(x => [x.vol, x]));
+  const n = Math.max(i.span, i.max, 1);
+  let tiles = ''; for (let v=1; v<=n; v++) tiles += `<button class="vol${i.set.has(v)?' o':''}${stockBy.has(v)?' s':''}${(s.r||[]).includes(v)?' rd':''}${loanOf(s,v)?(loanOf(s,v).d==='out'?' lo':' li'):''}${(s.want||[]).includes(v)?' wt':''}${(s.sell||[]).includes(v)?' sl':''}${(s.cn||{})[v]?' cn':''}" data-v="${v}" aria-pressed="${tapMode==='read' ? (s.r||[]).includes(v) : tapMode==='loan' ? !!loanOf(s,v) : tapMode==='want' ? (s.want||[]).includes(v) : tapMode==='sell' ? (s.sell||[]).includes(v) : i.set.has(v)}" aria-label="Volume ${v}${i.set.has(v)?', owned':''}${(s.r||[]).includes(v)?', read':''}${loanOf(s,v)?(loanOf(s,v).d==='out'?', lent to ':', borrowed from ')+esc(loanOf(s,v).w):''}${stockBy.has(v)?', in stock at the store':''}">${v}${volBadges(s, v, i.set.has(v), stockBy.has(v))}</button>`;
+  const odd = s.v.filter(x => !Number.isInteger(x) || x <= 0);
+  const st = liveState[key];
+  let store = '';
+  if (lang) store = `<p class="note">${lang[0].toUpperCase()+lang.slice(1)} editions are imports — ask the shop about these.</p>`;
+  else if (!mcp && !live.get(key)) store = `<p class="note">${SNAP ? 'The shop doesn’t list this series yet.' : 'Loading the store…'}</p>`;
+  else if (st === 'loading') store = `<p class="sub"><span class="spin"></span>&nbsp; Checking the store…</p>`;
+  else if (st && st !== 'ok') store = `<p class="note">${esc(errText(st))}</p><div class="row2"><button class="btn ghost sm" data-refresh>Try again</button></div>`;
+  else if (live.get(key)){
+    store = i.inStock.length ? i.inStock.map(p => `<div class="prod"><img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t">Vol ${p.vol}<small>${esc(p.title)}</small></div><span class="price">$${(p.price||0).toFixed(2)}</span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Buy</a></div>`).join('')
+      : `<p class="sub">None of your missing volumes are in stock right now.</p>`;
+    store += mcp ? `<div class="row2"><button class="btn ghost sm" data-refresh>Refresh stock</button></div>` : (SNAP ? `<p class="sub" style="margin:8px 0 0">Stock as of ${snapAge()}.</p>` : '');
+  }
+  $('#sheetBody').innerHTML = `
+    <div class="shead">${coverHTML(key)}<div><h2>${esc(s.n)}</h2>
+    <p class="sub" style="margin-bottom:0">${i.s.v.length} owned${i.total ? ` of ${i.total}` : ''}${i.gaps.length ? ` · missing ${i.gaps.length > 12 ? i.gaps.length + ' volumes' : 'Vol ' + i.gaps.join(', ')}` : ''}${i.complete ? ' · complete!' : ''}</p>${lang ? '' : `<p class="sub" style="margin:2px 0 0">Worth <b class="worth">${money(worthOf(key))}</b> at shop prices${worthOf(key).est ? ' (estimate)' : ''}</p>`}</div></div>
+    <div class="seg" style="margin-top:12px" role="radiogroup" aria-label="What tapping a volume does"><button data-mode="own" aria-selected="${tapMode==='own'}">Own<i class="mi" style="color:var(--accent)">■</i></button><button data-mode="read" aria-selected="${tapMode==='read'}">Read<i class="mi" style="color:#2f9e5f">✓</i></button><button data-mode="loan" aria-selected="${tapMode==='loan'}">Loan<i class="mi" style="color:var(--accent)">↗ ↙</i></button><button data-mode="want" aria-selected="${tapMode==='want'}">Want<i class="mi" style="color:#d9417a">♥</i></button><button data-mode="sell" aria-selected="${tapMode==='sell'}">Sell<i class="mi" style="color:#2f9e5f">$</i></button><button data-mode="note" aria-selected="${tapMode==='note'}">Note<i class="mi" style="color:#8a6d3b">✎</i></button></div>
+    ${tapMode==='note' ? `<div class="loanbar" style="display:block"><select id="cnCond" aria-label="Condition" style="width:100%"><option value="">Condition…</option>${['Like new','Very good','Good','Fair','Worn','Damaged','Ex-library','Signed','First printing'].map(c => `<option${cnCond===c?' selected':''}>${c}</option>`).join('')}</select></div><textarea id="cnNote" class="rv" rows="3" style="min-height:70px;margin-top:8px" placeholder="Notes: where it lives, signed, gift from…, anything">${esc(cnNote)}</textarea><p class="sub" style="margin:6px 0 0"><b>One volume:</b> leave these empty and tap a volume to see and edit everything about it. <b>Many at once:</b> pick a condition and/or write a note here, then tap each volume it applies to.</p>` : ''}
+    ${tapMode==='want' ? `<p class="sub" style="margin:8px 0 0">Tap volumes you want to add them to your wishlist. ${i.gaps.length || i.next ? `<button class="btn ghost sm" data-wantall>Want all missing</button>` : ''}</p>` : ''}
+    ${tapMode==='sell' ? `<p class="sub" style="margin:8px 0 0">Tap owned volumes to add them to your sell / clear-out list. <button class="btn ghost sm" data-sellall>Sell the whole series</button></p>` : ''}
+    ${tapMode==='loan' ? `<div class="loanbar"><div class="seg2" style="margin:0"><button data-ldir="out" aria-pressed="${loanDir==='out'}">↗ I lent it to</button><button data-ldir="in" aria-pressed="${loanDir==='in'}">↙ I borrowed it from</button></div><input id="loanWho" list="whol" placeholder="Name" value="${esc(loanWho)}" autocomplete="off"><datalist id="whol">${loanNames().map(n => `<option value="${esc(n)}">`).join('')}</datalist></div><p class="sub" style="margin:6px 0 0">Type a name, then tap volumes. Tap again when it comes back.</p>` : ''}
+    ${!tapMode ? `<p class="sub" style="margin:8px 0 0">Tap a volume to see and edit everything about it. Pick a mode above to change many volumes quickly.</p>` : ''}
+    <div class="vols" id="vols">${tiles}</div>
+    ${(tapMode==='note' || !tapMode) && detV != null ? volDetailHTML(key, detV) : ''}
+    ${odd.length ? `<p class="sub">Also: Vol ${odd.join(', ')}</p>` : ''}
+    ${aboutHTML(key)}
+    <div class="legend"><span><i style="background:var(--accent)"></i>Owned</span><span><i style="background:var(--bg);border:1px solid var(--line)"></i>Missing</span><span><i style="background:var(--gold)"></i>In stock at the store</span><span><b style="color:var(--good)">✓</b> Read</span><span><b style="color:var(--accent)">↗</b> Lent out</span><span><b style="color:#1d5aae">↙</b> Borrowed</span><span><b style="color:#d9417a">♥</b> Want</span><span><b style="color:#2f9e5f">$</b> Selling</span><span><b style="color:#8a6d3b">✎</b> Note</span></div>
+    ${loansHTML(s)}
+    ${Object.keys(s.cn||{}).length ? `<div class="sec"><h4>✎ Notes</h4>${Object.entries(s.cn).sort((a,b)=>a[0]-b[0]).map(([v,o]) => `<div class="srow" style="cursor:default"><span>Vol ${v}<small>${esc([o.c, o.t].filter(Boolean).join(' · '))}</small></span><button class="btn ghost sm" data-unnote="${v}" aria-label="Remove the note on Vol ${v}">×</button></div>`).join('')}</div>` : ''}
+    ${tapMode==='read' ? `<div class="locrow" style="align-items:center"><span class="sub" style="margin:0;white-space:nowrap">Read on</span><input type="date" id="readDate" max="${dayKey()}" value="${readDate || dayKey()}"></div>` : ''}
+    ${tapMode==='read' && i.own.length ? `<div class="row2"><button class="btn ghost sm" data-readall>Mark all owned as read</button></div>` : ''}
+    <div class="sec"><h4>Your review of the whole series</h4><p class="sub" style="margin:0 0 6px">For one volume, tap it (with no mode selected) and review it there.</p><div class="stars" role="radiogroup" aria-label="Rating">${[1,2,3,4,5].map(n => `<button data-star="${n}" class="${(s.st||0)>=n?'on':''}" aria-label="${n} star${n>1?'s':''}">★</button>`).join('')}</div>
+    <textarea class="rv" id="rv" placeholder="${shelf.share ? 'What did you think? (shared with the shop)' : 'What did you think? (only you see this)'}">${esc(s.rv||'')}</textarea>
+    <label class="toggle"><input type="checkbox" id="shareRv" ${shelf.share ? 'checked' : ''}><span>Share my reviews with The Mage's Emporium so they can post them on the website (applies to all your reviews; turn off anytime)</span></label>
+    <div class="row2"><button class="btn sm" data-saverv>Save review</button></div></div>
+    <div class="sec"><h4>Grab your missing volumes</h4>${store}</div>
+    <div class="row2" style="margin-top:22px">${i.complete ? (s.fin && !(live.get(key)||{}).total ? `<button class="btn ghost" data-unfin>Not finished after all</button>` : '') : `<button class="btn ghost" data-more>Add volumes past ${n}</button>${!i.total && i.own.length && !i.gaps.length ? `<button class="btn ghost" data-fin>Series is finished at Vol ${i.max}</button>` : ''}`}<button class="btn ghost" data-remove>Remove series</button><button class="btn ghost" data-close>Close</button></div>`;
+}
+$('#sheetBody').onclick = e => { try { sheetClick(e); } catch(err){ toast('Something went wrong: ' + (err && err.message || err)); } };
+function sheetClick(e){
+  if (e.target.classList && e.target.classList.contains('vpop')){ detV = null; if (current) renderSeries(current); return; }
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.classList.contains('srow')) return openSeries(t.dataset.k);
+  if (t.classList.contains('skin')) return chooseSkin(t.dataset.skin);
+  if (t.dataset.open) return openSeries(t.dataset.open);
+  if (t.hasAttribute('data-close')) return closeSheet();
+  if (!current) return;
+  const key = current, s = shelf.series[key];
+  if ($('#cnCond')) cnCond = $('#cnCond').value; if ($('#cnNote')) cnNote = $('#cnNote').value.trim();
+  if (t.dataset.mode){ tapMode = tapMode === t.dataset.mode ? null : t.dataset.mode; detV = null; return renderSeries(key); }
+  if (t.dataset.v && !tapMode){ detV = +t.dataset.v; return renderSeries(key); }
+  { const rdEl = $('#readDate'); if (rdEl && rdEl.value) readDate = rdEl.value === dayKey() ? null : rdEl.value; }
+  if (t.dataset.ldir){ loanDir = t.dataset.ldir; const w = $('#loanWho'); if (w) loanWho = w.value.trim(); return renderSeries(key); }
+  if (t.hasAttribute('data-saveloc')){ const txt = $('#locIn').value.trim(); const undo = patchSeries(key, { loc: txt || null }); toast(txt ? `Location saved: ${txt}` : 'Location cleared', undo); return; }
+  if (t.dataset.back){ const v = +t.dataset.back; const ln = Object.assign({}, s.ln); delete ln[v]; const undo = patchSeries(key, { ln: Object.keys(ln).length ? ln : null }); toast(`Vol ${v} marked returned`, undo); return; }
+  if (t.hasAttribute('data-wantall')){ const i = info(key); const miss = i.gaps.concat(i.total ? Array.from({length: Math.max(0, i.total - i.max)}, (_, j) => i.max + j + 1) : (i.next ? [i.next] : [])); const undo = patchSeries(key, { want: [...new Set((s.want||[]).concat(miss))].sort((a,b)=>a-b) }); if (shelf.alert) syncAlerts(); toast(`Added ${miss.length} to your wishlist`, undo); return; }
+  if (t.hasAttribute('data-sellall')){ const undo = patchSeries(key, { sell: ints(s).slice() }); toast(`Whole series added to your sell list`, undo); return; }
+  if (t.dataset.v && (tapMode === 'want' || tapMode === 'sell')){
+    const v = +t.dataset.v; const f = tapMode; const a = s[f] || []; const has = a.includes(v);
+    if (f === 'sell' && !has && !s.v.includes(v)){ toast(`You don't own Vol ${v}`); return; }
+    if (f === 'want' && !has && s.v.includes(v)){ toast(`You already own Vol ${v}`); return; }
+    const na = has ? a.filter(x => x !== v) : a.concat(v).sort((a,b)=>a-b); const undo = patchSeries(key, { [f]: na.length ? na : null });
+    if (f === 'want' && shelf.alert) syncAlerts();
+    toast(`${has ? 'Removed' : 'Added'} Vol ${v} ${f==='want' ? (has?'from':'to')+' your wishlist' : (has?'from':'to')+' your sell list'}`, undo); return; }
+  if (t.dataset.v && tapMode === 'note'){
+    const v = +t.dataset.v;
+    if (!s.v.includes(v) && ($('#cnCond') && $('#cnCond').value || $('#cnNote') && $('#cnNote').value.trim())){ toast(`You don't own Vol ${v}`); return; }
+    cnCond = ($('#cnCond') ? $('#cnCond').value : cnCond); cnNote = ($('#cnNote') ? $('#cnNote').value.trim() : cnNote);
+    if (!cnCond && !cnNote){ detV = detV === v ? null : v; return renderSeries(key); }
+    const cn = Object.assign({}, s.cn); cn[v] = Object.assign({}, cnCond ? { c: cnCond } : {}, cnNote ? { t: cnNote } : {}); detV = null;
+    const undo = patchSeries(key, { cn: Object.keys(cn).length ? cn : null }); toast(cn[v] ? `Vol ${v}: ${[cn[v].c, cn[v].t].filter(Boolean).join(' · ')}` : `Vol ${v} note cleared`, undo); return; }
+  if (t.dataset.v && tapMode === 'loan' && loanDir === 'at'){ loanDir = 'out'; return renderSeries(key); }
+  if (false){
+    const v = +t.dataset.v; const w = ($('#loanWho') ? $('#loanWho').value : loanWho).trim(); loanWho = w; const lc = Object.assign({}, s.lc);
+    if (lc[v] && (!w || lc[v] === w)){ delete lc[v]; const undo = patchSeries(key, { lc: Object.keys(lc).length ? lc : null }); toast(`Vol ${v} location cleared`, undo); return; }
+    if (!w){ toast('Type where it lives first'); const el = $('#loanWho'); if (el) el.focus(); return; }
+    lc[v] = w; const undo = patchSeries(key, { lc }); toast(`Vol ${v} lives at ${w}`, undo); return; }
+  if (t.dataset.v && tapMode === 'loan'){
+    const v = +t.dataset.v; const ln = Object.assign({}, s.ln); const w = ($('#loanWho') ? $('#loanWho').value : loanWho).trim(); loanWho = w;
+    if (ln[v]){ const was = ln[v]; delete ln[v]; const undo = patchSeries(key, { ln: Object.keys(ln).length ? ln : null }); toast(`Vol ${v} ${was.d==='out' ? 'back from' : 'returned to'} ${was.w}`, undo); return; }
+    if (!w){ toast('Type a name first'); const el = $('#loanWho'); if (el) el.focus(); return; }
+    ln[v] = { d: loanDir, w, at: dayKey() }; const undo = patchSeries(key, { ln }); toast(`Vol ${v} ${loanDir==='out' ? 'lent to' : 'borrowed from'} ${w}`, undo); return;
+  }
+  if (t.dataset.star){ const n = +t.dataset.star; const undo = patchSeries(key, { st: s.st === n ? null : n }); if (shelf.share) shareReview(key); toast(s.st ? `Rated ${n}★` : 'Rating cleared', undo); return; }
+  if (t.hasAttribute('data-saverv')){ const txt = $('#rv').value.trim(); const undo = patchSeries(key, { rv: txt || null }); if (shelf.share) shareReview(key); toast(txt ? (shelf.share ? 'Review saved and shared with the shop' : 'Review saved') : 'Review cleared', undo); return; }
+  if (t.hasAttribute('data-readall')){ { const nv = info(key).own.filter(v => !(s.r||[]).includes(v)); logRead(nv.length, key, nv); } const undo = patchSeries(key, { r: [...new Set((s.r||[]).concat(info(key).own))].sort((a,b)=>a-b) }); toast('Marked all as read', undo); return; }
+  if (t.dataset.v && tapMode === 'read'){
+    const v = +t.dataset.v; const r = s.r || []; const has = r.includes(v); logRead(has ? -1 : 1, key, [v]);
+    const undo = patchSeries(key, { r: has ? (r.length > 1 ? r.filter(x => x !== v) : null) : r.concat(v).sort((a,b)=>a-b) });
+    toast(`${has ? 'Unmarked' : 'Read'} Vol ${v}${!has && readDate ? ' on ' + readDate : ''}`, undo); return;
+  }
+  if (t.dataset.v){
+    const v = +t.dataset.v; const has = s.v.includes(v);
+    const undo = setVols(key, has ? s.v.filter(x => x !== v) : s.v.concat(v), s.n);
+    toast(`${has ? 'Removed' : 'Added'} Vol ${v}`, undo);
+    if (!shelf.series[key]) closeSheet();
+  } else if (t.hasAttribute('data-refresh')) loadLive(key, true);
+  else if (t.hasAttribute('data-remove')){ const box = document.createElement('div'); box.className = 'st-sec'; box.style.cssText = 'margin-top:14px;border:2px solid #c0392b;box-shadow:none';
+    box.innerHTML = `<h3 style="margin:0 0 6px;color:#c0392b">Remove ${esc(s.n)}?</h3><p style="margin:0 0 10px">Are you sure you want to remove this series? It deletes all ${s.v.length} ${s.v.length===1?'volume':'volumes'} and every read mark, note, loan, rating and review for the books in this series.</p><div class="row2" style="margin:0"><button class="btn sm" data-remove-yes style="background:#c0392b;border-color:#c0392b;color:#fff">Yes, remove it</button><button class="btn ghost sm" data-remove-no>Keep it</button></div>`;
+    const old = $('#sheetBody .rmconfirm'); if (old) old.remove(); box.classList.add('rmconfirm'); t.closest('.row2').after(box); box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  else if (t.hasAttribute('data-remove-no')){ const b = t.closest('.rmconfirm'); if (b) b.remove(); }
+  else if (t.hasAttribute('data-remove-yes')){ const nm = s.n; const undo = setVols(key, [], nm); closeSheet(); toast(`Removed ${nm}`, undo); }
+  else if (t.hasAttribute('data-more')){ openAdd('type', { name: s.n, key }); }
+  else if (t.hasAttribute('data-detclose')){ detV = null; renderSeries(key); }
+  else if (t.hasAttribute('data-pvnodate')){ const d = $('#pvDate'); if (d) d.value = ''; }
+  else if (t.dataset.pvstar){ const box = $('#pvStars'); const k = +t.dataset.pvstar; const cur = +box.dataset.val; const nv = cur === k ? 0 : k; box.dataset.val = nv; box.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.pvstar <= nv)); }
+  else if (t.dataset.pvsave){ const v = +t.dataset.pvsave; const prevS = JSON.parse(JSON.stringify(s)); const prevLog = JSON.parse(JSON.stringify(shelf.log || {})), prevRl = JSON.parse(JSON.stringify(shelf.rl || {}));
+    const own = $('#pvOwn').checked, rd = $('#pvRead').checked, day = $('#pvDate').value, want = $('#pvWant').checked, sell = $('#pvSell').checked, ld = $('#pvLoan').value, who = $('#pvWho').value.trim(), c = $('#pvCond').value, tx = $('#pvNote').value.trim();
+    if (ld && !who){ toast('Type a name for the loan'); $('#pvWho').focus(); return; }
+    const tog = (arr, on) => { const a = (arr||[]).filter(x => x !== v); if (on) a.push(v); a.sort((x,y)=>x-y); return a.length ? a : undefined; };
+    s.v = own ? [...new Set(s.v.concat(v))].sort((x,y)=>x-y) : s.v.filter(x => x !== v);
+    const wasRead = (s.r||[]).includes(v); s.r = tog(s.r, rd); if (!s.r) delete s.r;
+    const R = shelf.rl || (shelf.rl = {}); const had = Object.keys(R).filter(d => (R[d]||[]).includes(key + '|' + v));
+    if (rd && day && !had.includes(day)){ had.forEach(d => logRead(-1, key, [v], d)); logRead(1, key, [v], day); }
+    else if (rd && !day){ had.forEach(d => logRead(-1, key, [v], d)); }
+    else if (!rd && wasRead){ had.forEach(d => logRead(-1, key, [v], d)); }
+    { const vst = +$('#pvStars').dataset.val || 0, vtx = $('#pvRv').value.trim(); const vr = Object.assign({}, s.vr); if (vst || vtx){ const old = vr[v] || {}; const same = (old.st||0) === vst && (old.t||'') === vtx; vr[v] = Object.assign({}, vst ? { st: vst } : {}, vtx ? { t: vtx } : {}, { d: same && old.d ? old.d : new Date().toLocaleDateString('en-CA') }); } else delete vr[v]; if (Object.keys(vr).length) s.vr = vr; else delete s.vr; }
+    s.want = tog(s.want, want && !own); if (!s.want) delete s.want; s.sell = tog(s.sell, sell && own); if (!s.sell) delete s.sell;
+    const ln = Object.assign({}, s.ln); if (ld) ln[v] = { d: ld, w: who, at: (ln[v] && ln[v].d === ld && ln[v].w === who) ? ln[v].at : dayKey() }; else delete ln[v]; if (Object.keys(ln).length) s.ln = ln; else delete s.ln;
+    const cn = Object.assign({}, s.cn); if (c || tx) cn[v] = Object.assign({}, c ? { c } : {}, tx ? { t: tx } : {}); else delete cn[v]; if (Object.keys(cn).length) s.cn = cn; else delete s.cn;
+    detV = null; if (!s.v.length && !(s.want||[]).length){ shelf.series[key] = s; }
+    save(); if (shelf.alert && want) syncAlerts(); if (shelf.share) shareReview(key);
+    toast(`Vol ${v} saved`, () => { shelf.series[key] = prevS; shelf.log = prevLog; shelf.rl = prevRl; save(); }); }
+  else if (t.dataset.editnote){ const o = (s.cn||{})[t.dataset.editnote] || {}; cnCond = o.c || ''; cnNote = o.t || ''; renderSeries(key); const el = $('#cnNote'); if (el) el.focus(); }
+  else if (t.dataset.unnote){ detV = null; const v = t.dataset.unnote; const cn = Object.assign({}, s.cn); delete cn[v]; const undo = patchSeries(key, { cn: Object.keys(cn).length ? cn : null }); toast(`Vol ${v} note removed`, undo); }
+  else if (t.hasAttribute('data-fin')){ const undo = patchSeries(key, { fin: info(key).max }); toast(`Marked complete at Vol ${info(key).max} 🎉`, undo); }
+  else if (t.hasAttribute('data-unfin')){ const undo = patchSeries(key, { fin: null }); toast('Marked as still going', undo); }
+};
+
+/* ---------- add books ---------- */
+let addTab = 'scan';
+$('#fab').onclick = () => openAdd(addTab);
+function openAdd(tab, pre){
+  addTab = tab; current = null;
+  openSheet(`<h2>Add books</h2><p class="sub">Scan the barcode on the back, search the store, or type it in.</p>
+  <div class="seg" role="tablist"><button data-at="scan" aria-selected="${tab==='scan'}">Scan</button><button data-at="search" aria-selected="${tab==='search'}">Search</button><button data-at="type" aria-selected="${tab==='type'}">Type it</button></div>
+  <div id="addBody"></div>`);
+  renderAdd(pre);
+}
+function renderAdd(pre){
+  const b = $('#addBody'); if (!b) return;
+  if (addTab === 'scan'){
+    b.innerHTML = `<label class="drop"><input id="shot" type="file" accept="image/*" capture="environment"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 8v8M10 8v8M13 8v8M16 8v8"/></svg><b>Snap the barcode</b><span class="sub">Fill the photo with the barcode, in good light.</span></label>
+    <label class="field" style="margin-top:14px"><span>Or type the ISBN</span><input id="isbn" inputmode="numeric" placeholder="978…"></label>
+    <button class="btn" id="isbnGo">Look it up</button><div id="scanOut" style="margin-top:14px"></div>`;
+    $('#shot').onchange = e => { const f = e.target.files[0]; if (f) scanFile(f); };
+    $('#isbnGo').onclick = () => lookupIsbn($('#isbn').value.replace(/\D/g,''));
+  } else if (addTab === 'search'){
+    b.innerHTML = `<div class="tools"><input id="sq" type="search" placeholder="Series name, e.g. Frieren"><button class="btn" id="sgo">Search</button></div><div id="sout"></div>`;
+    $('#sgo').onclick = searchStore; $('#sq').onkeydown = e => { if (e.key==='Enter') searchStore(); };
+  } else {
+    b.innerHTML = `<label class="field"><span>Series</span><input id="tn" list="tnl" placeholder="Series name" value="${esc(pre && pre.name || '')}"></label>
+    <datalist id="tnl">${Object.values(shelf.series).map(s => `<option value="${esc(s.n)}">`).join('')}</datalist>
+    <label class="field"><span>Volumes</span><input id="tv" placeholder="e.g. 1-5, 7, 9"></label>
+    <button class="btn" id="tgo">Add to my shelf</button>`;
+    $('#tgo').onclick = () => {
+      const name = $('#tn').value.trim(); const vols = parseVols($('#tv').value);
+      if (!name || !vols.length) return toast('Add a series name and at least one volume');
+      const existing = Object.keys(shelf.series).find(k => shelf.series[k].n.toLowerCase() === name.toLowerCase());
+      const key = existing || handleize(name);
+      const prev = shelf.series[key] ? shelf.series[key].v : [];
+      const undo = setVols(key, prev.concat(vols), name);
+      closeSheet(); toast(`Added ${vols.length} to ${name}`, undo);
+    };
+  }
+}
+$('#sheetBody').addEventListener('change', e => {
+  if (e.target.id !== 'shareRv') return;
+  shelf.share = e.target.checked; save();
+  Object.keys(shelf.series).forEach(k => { if (shelf.series[k].st || shelf.series[k].rv) shareReview(k, !shelf.share); });
+  toast(shelf.share ? 'Your reviews will be shared with the shop' : 'Reviews are private again and were removed from the shop’s inbox');
+});
+$('#sheetBody').addEventListener('click', e => { const t = e.target.closest('[data-at]'); if (!t) return; addTab = t.dataset.at; document.querySelectorAll('[data-at]').forEach(x => x.setAttribute('aria-selected', x===t)); renderAdd(); });
+
+function prodRow(p, i){
+  const key = (p.ser ? handleize(p.ser) : handleize(p.title)) + (p.type === 'Light Novel' ? '-ln' : '');
+  const owned = shelf.series[key] && shelf.series[key].v.includes(p.vol);
+  return `<div class="prod"><img src="${esc(p.img)}" alt="" onerror="this.style.visibility='hidden'"><div class="t">${esc(p.title)}<small>${p.inv>0 ? `In stock · $${(p.price||0).toFixed(2)}` : 'Out of stock'}</small></div>${owned ? '<span class="chip good">On shelf</span>' : `<button class="btn sm" data-addp="${i}">Add</button>`}</div>`;
+}
+let found = [];
+function wireAdds(el){ el.onclick = e => { const t = e.target.closest('[data-addp]'); if (!t) return; addProduct(found[+t.dataset.addp]); t.outerHTML = '<span class="chip good">Added</span>'; }; }
+function addProduct(p){
+  const ln = p.type === 'Light Novel';
+  const sname = p.ser || p.title.replace(/\s+Vol(ume)?\.?\s*\d+.*$/i,'');
+  const key = handleize(sname) + (ln ? '-ln' : '');
+  const name = sname + (ln && !/light novel/i.test(sname) ? ' (Light Novel)' : '');
+  const vol = p.vol != null ? Math.round(p.vol) : 1;
+  const prev = shelf.series[key] ? shelf.series[key].v : [];
+  const undo = setVols(key, prev.concat(vol), name);
+  toast(`Added ${name} Vol ${vol}`, undo);
+}
+async function lookupIsbn(code){
+  const out = $('#scanOut'); if (!out) return;
+  if (!/^\d{10,13}$/.test(code)) { out.innerHTML = `<p class="note">That doesn’t look like an ISBN. It’s the 13 digits starting with 978 or 979 under the barcode.</p>`; return; }
+  if (!mcp){ await loadSnap(); const b = snapBar.get(code.length === 10 ? '978' + code.slice(0,9) + (() => { const x = '978' + code.slice(0,9); let t = 0; for (let i = 0; i < 12; i++) t += (+x[i]) * (i % 2 ? 3 : 1); return (10 - t % 10) % 10; })() : code);
+    if (!b){ out.innerHTML = `<p class="note">ISBN ${code} isn’t in the shop’s catalog yet. Add it with “Type it”.</p>`; return; }
+    const e = SNAP.s[b[0]]; found = snapItems(e).filter(p => p.vol === b[1]).map(p => Object.assign(p, { type: e.ln ? 'Light Novel' : 'Manga' }));
+    out.innerHTML = `<p class="sub">ISBN ${code}</p>` + found.slice(0,1).map(prodRow).join(''); wireAdds(out); return; }
+  out.innerHTML = `<p class="sub"><span class="spin"></span>&nbsp; Looking up ${code}…</p>`;
+  try {
+    const d = await gql(`{products(first:5, query:${JSON.stringify('barcode:' + code)}){nodes{${PFIELDS}}}}`);
+    found = d.products.nodes.map(mapProd).sort((a,b) => (b.inv>0) - (a.inv>0));
+    if (!found.length){ out.innerHTML = `<p class="note">ISBN ${code} isn’t in the store’s catalog yet. Add it with “Type it”.</p>`; return; }
+    out.innerHTML = `<p class="sub">ISBN ${code}</p>` + found.slice(0,1).map(prodRow).join('');
+    wireAdds(out);
+  } catch(e){ out.innerHTML = `<p class="note">${esc(errText(e))}</p>`; }
+}
+async function searchStore(){
+  const out = $('#sout'); const q = $('#sq').value.trim(); if (!q) return;
+  if (!mcp){ await loadSnap(); if (!SNAP){ out.innerHTML = `<p class="note">The store list isn’t available yet. Use “Type it”.</p>`; return; }
+    const ws = q.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 2);
+    const hits = Object.values(SNAP.s).filter(e => ws.every(w => e.n.toLowerCase().includes(w))).slice(0, 8);
+    found = hits.flatMap(e => snapItems(e).map(p => Object.assign(p, { type: e.ln ? 'Light Novel' : 'Manga' }))).slice(0, 60);
+    out.innerHTML = found.length ? found.map(prodRow).join('') : `<p class="note">Nothing found for “${esc(q)}”. Try fewer words, or use “Type it”.</p>`; wireAdds(out); return; }
+  out.innerHTML = `<p class="sub"><span class="spin"></span>&nbsp; Searching…</p>`;
+  const words = q.split(/[^A-Za-z0-9]+/).filter(w => w.length >= 2).slice(0,3);
+  try {
+    const d = await gql(`{products(first:40, sortKey:TITLE, query:${JSON.stringify(words.map(w=>`title:${w}*`).join(' AND ') + " AND status:active AND (product_type:Manga OR product_type:'Light Novel')")}){nodes{${PFIELDS}}}}`);
+    found = d.products.nodes.map(mapProd).filter(p => p.vol != null || /vol/i.test(p.title) === false);
+    found.sort((a,b) => (a.ser||a.title).localeCompare(b.ser||b.title) || (a.vol||0) - (b.vol||0));
+    out.innerHTML = found.length ? found.map(prodRow).join('') : `<p class="note">Nothing found for “${esc(q)}”. Try fewer words, or use “Type it”.</p>`;
+    wireAdds(out);
+  } catch(e){ out.innerHTML = `<p class="note">${esc(errText(e))}</p>`; }
+}
+
+/* barcode decoding: native BarcodeDetector first, ZXing as the fallback */
+let zx = null;
+function loadZX(){ if (zx) return zx; zx = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js'; s.onload = () => res(window.ZXing); s.onerror = () => { zx = null; rej(new Error('scanner failed to load')); }; document.head.appendChild(s); }); return zx; }
+async function scanFile(file){
+  const out = $('#scanOut'); out.innerHTML = `<p class="sub"><span class="spin"></span>&nbsp; Reading the barcode…</p>`;
+  try {
+    const bmp = await createImageBitmap(file);
+    const sizes = [1600, 1000];
+    let code = null;
+    if ('BarcodeDetector' in window){
+      try { const det = new BarcodeDetector({ formats:['ean_13','ean_8','upc_a','upc_e'] }); const r = await det.detect(bmp); if (r[0]) code = r[0].rawValue; } catch(e){}
+    }
+    if (!code){
+      const ZX = await loadZX();
+      const hints = new Map(); hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A]); hints.set(ZX.DecodeHintType.TRY_HARDER, true);
+      const reader = new ZX.BrowserMultiFormatReader(hints);
+      for (const max of sizes){
+        const sc = Math.min(1, max / Math.max(bmp.width, bmp.height));
+        const c = document.createElement('canvas'); c.width = Math.round(bmp.width*sc); c.height = Math.round(bmp.height*sc);
+        c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+        try { const r = await reader.decodeFromImageUrl(c.toDataURL('image/jpeg', .92)); code = r.getText(); break; } catch(e){}
+      }
+    }
+    if (!code){ out.innerHTML = `<p class="note">Couldn’t read a barcode in that photo. Try again closer, flatter and brighter — or type the ISBN.</p>`; return; }
+    $('#isbn').value = code; lookupIsbn(code);
+  } catch(e){ out.innerHTML = `<p class="note">Couldn’t read that photo (${esc(e.message||'error')}). Type the ISBN instead.</p>`; }
+}
+
+/* ---------- store finds ---------- */
+let findsList = [], syncing = false;
+const STOPCODES = ['needs_reauth','server_not_connected','not_in_manifest','approval_required','no_mcp','not_granted','capability_disabled'];
+async function syncStore(force){
+  if (syncing) return;
+  if (!mcp){ await loadSnap(); if (SNAP){ applySnap(); $('#findProg').textContent = `Store snapshot from ${snapAge()}`; $('#findsNote').textContent = ''; } else $('#findsNote').textContent = 'The store list isn’t available yet. Ask the shop to publish its snapshot.'; return; }
+  const keys = Object.keys(shelf.series).filter(k => !langOf(k) && (force || !live.get(k) || !live.get(k).v2 || (!shelf.series[k].m && !metaTried.has(k) && metaTried.add(k)) || Date.now() - live.get(k).at > 6*3600e3));
+  if (!keys.length){ renderFinds(); return; }
+  syncing = true; const btn = $('#findBtn'); btn.disabled = true;
+  const total = keys.length; let done = 0, err = null, fails = 0, last = 0;
+  const work = async () => { while (keys.length){ const k = keys.shift();
+    try { await lookupSeries(k, force); } catch(e){ fails++; err = e; if (STOPCODES.includes(e.code)) keys.length = 0; }
+    done++; $('#findProg').textContent = `Checking the store… ${done} of ${total}`;
+    if (done - last >= 15){ last = done; renderFinds(); renderAll(); } } };
+  await Promise.all([work(), work(), work(), work()]);
+  syncing = false; btn.disabled = false; btn.textContent = 'Check again';
+  $('#findProg').textContent = err && STOPCODES.includes(err.code) ? '' : `All ${Object.keys(shelf.series).filter(k=>!langOf(k)).length} series checked${fails ? ` (${fails} couldn’t be checked)` : ''}`;
+  if (err && STOPCODES.includes(err.code)) $('#findsNote').textContent = errText(err);
+  let newCovers = 0; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s.c){ const u = coverOf(k); if (u){ s.c = u; newCovers++; } } });
+  if (newCovers || metaDirty){ metaDirty = false; save(); }
+  renderFinds(); renderAll(); if (current) renderSeries(current);
+}
+$('#findBtn').onclick = () => syncStore(true);
+function renderFinds(){
+  findsList = [];
+  Object.keys(shelf.series).forEach(k => { const i = info(k); i.inStock.forEach(p => findsList.push({ k, n: i.s.n, gap: p.vol < i.max, p })); });
+  findsList.sort((a,b) => (b.gap - a.gap) || a.n.localeCompare(b.n) || a.p.vol - b.p.vol);
+  renderLists();
+  const tb = document.querySelector('[data-tab="finds"]'); tb.textContent = findsList.length ? `Finds (${findsList.length})` : 'Finds';
+  const el = $('#finds');
+  if (!findsList.length){ el.innerHTML = live.size ? `<div class="empty">Nothing you're missing is in stock among the series checked so far.</div>` : ''; return; }
+  const total = findsList.reduce((s,f) => s + (f.p.price||0), 0);
+  el.innerHTML = `<p class="count">${findsList.length} volumes waiting for you · $${total.toFixed(2)} total</p>` + findsList.map(f => `<div class="find"><img src="${esc(f.p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b>${esc(f.n)} Vol ${f.p.vol}</b><small>${f.gap ? 'Fills a gap' : 'Next in the series'}</small></div><span class="price">$${(f.p.price||0).toFixed(2)}</span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener">Buy</a></div>`).join('');
+}
+
+/* ---------- wishlist + sell list ---------- */
+const BUY = { good: 2.5, low: 1 }; let listView = 'want';
+function wantPayload(){ const W = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const vols = (s.want||[]).filter(v => !s.v.includes(v)); if (vols.length) W.push({ key: k, series: s.n, vols }); }); return W; }
+let alertT = null;
+function syncAlerts(){ clearTimeout(alertT); alertT = setTimeout(async () => { if (!dbRef || !myId) return; try { const ref = dbRef.collection('alerts').doc(myId);
+  if (!shelf.alert) { await ref.delete(); return; }
+  await ref.set({ user: myId, email: (shelf.contact||{}).email || '', want: wantPayload(), at: new Date().toISOString() }); } catch(e){ toast('Couldn’t update stock alerts: ' + (e.code || e.message || e)); } }, 1500); }
+function renderLists(){
+  const el = $('#lists'); if (!el) return;
+  const W = [], S = [];
+  Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const L = live.get(k); const pr = new Map(L ? L.items.map(p => [p.vol, p]) : []);
+    (s.want||[]).filter(v => !s.v.includes(v)).forEach(v => W.push({ k, n: s.n, v, p: pr.get(v) }));
+    (s.sell||[]).filter(v => s.v.includes(v)).forEach(v => S.push({ k, n: s.n, v, low: !!langOf(k) || s.cond === 'low' })); });
+  W.sort((a,b) => a.n.localeCompare(b.n) || a.v - b.v); S.sort((a,b) => a.n.localeCompare(b.n) || a.v - b.v);
+  const grp = (arr) => { const m = new Map(); arr.forEach(x => { if (!m.has(x.k)) m.set(x.k, []); m.get(x.k).push(x); }); return [...m.entries()]; };
+  const inStock = W.filter(x => x.p && x.p.inv > 0); const wTot = inStock.reduce((a,x) => a + (x.p.price||0), 0);
+  const sTot = S.reduce((a,x) => a + (x.low ? BUY.low : BUY.good), 0);
+  const giftTxt = `My manga wishlist:\n` + grp(W).map(([k,a]) => `${a[0].n}: Vol ${compactVols(a.map(x=>x.v))}`).join('\n') + `\n\nFind them at The Mage's Emporium: ${STORE}`;
+  const sellTxt = `Hi! I'd like to sell these to The Mage's Emporium:\n` + grp(S).map(([k,a]) => `${a[0].n}: Vol ${compactVols(a.map(x=>x.v))}${a[0].low ? ' (foreign / ex-library / damaged)' : ''}`).join('\n') + `\n\n${S.length} books, app estimate $${sTot.toFixed(2)}.`;
+  const wantHTML = `
+  <div class="st-sec"><h3>♥ Wishlist <span class="sub" style="font-weight:400">(${W.length})</span></h3>
+    ${W.length ? `${inStock.length ? `<p class="sub" style="margin:0 0 6px">${inStock.length} in stock now · $${wTot.toFixed(2)}</p>` : ''}${grp(W).map(([k,a]) => `<button class="srow" data-k="${esc(k)}"><span>${esc(a[0].n)}<small>Vol ${compactVols(a.map(x=>x.v))}</small></span><span class="r">${a.filter(x => x.p && x.p.inv > 0).length ? `<span class="chip gold">${a.filter(x => x.p && x.p.inv > 0).length} in stock</span>` : a.length}</span></button>`).join('')}
+      <div class="st-sec" style="background:var(--surface-2);box-shadow:none;margin:12px 0 0"><h3 style="font-size:15px">🔔 Back-in-stock emails</h3>
+        <p class="sub" style="margin:0 0 6px">The shop's website emails you the moment a wishlisted book comes into stock. Tap a volume, then tap <b>Add to Wishlist</b> on its page (sign in to your shop account first).</p>
+        ${W.filter(x => x.p && x.p.handle).slice(0,30).map(x => `<a class="chip" style="display:inline-block;margin:0 6px 6px 0;text-decoration:none" href="${STORE}/products/${encodeURIComponent(x.p.handle)}" target="_blank" rel="noopener">${esc(x.n)} ${x.v}${x.p.inv > 0 ? ' · in stock' : ''}</a>`).join('') || '<p class="sub" style="margin:0">None of these are listed at the shop yet. Check back as the shop adds them.</p>'}</div>
+      <div class="row2"><button class="btn ghost sm" data-copy="gift">Copy gift list</button></div><p class="sub" style="margin:4px 0 0">Send it to family so they know exactly what to buy.</p>`
+    : `<p class="sub" style="margin:0">Open a series, switch to “Want ♥”, and tap the volumes you want. Or tap “Want all missing”.</p>`}</div>
+`;
+  const sellHTML = `<div class="st-sec"><h3>$ Sell / clear-out list <span class="sub" style="font-weight:400">(${S.length})</span></h3>
+    ${S.length ? `<p class="sub" style="margin:0 0 6px">The Mage's Emporium pays <b>$2.50</b> per English book in good or better condition and <b>$1</b> for foreign-language, ex-library or damaged copies.</p>
+      ${grp(S).map(([k,a]) => `<div class="srow" style="cursor:default"><span>${esc(a[0].n)} <button class="vx" data-unsellall="${esc(k)}" aria-label="Remove ${esc(a[0].n)} from the sell list"><b>× all</b></button><small>${a.map(x => `<button class="vx" data-unsell="${esc(k)}|${x.v}" aria-label="Remove Vol ${x.v} from the sell list">Vol ${x.v} <b>×</b></button>`).join('')}</small></span><span class="r">${langOf(k) ? 'Foreign · $1' : `<select data-cond="${esc(k)}" aria-label="Condition"><option value="good"${a[0].low?'':' selected'}>Good · $2.50</option><option value="low"${a[0].low?' selected':''}>Damaged / ex-library · $1</option></select>`}</span></div>`).join('')}
+      <p style="margin:10px 0 0"><b>Estimated trade-in: $${sTot.toFixed(2)}</b> for ${S.length} ${S.length===1?'book':'books'}</p><p class="sub" style="margin:2px 0 0">Final offer is confirmed when the shop sees the books.</p>
+      <div class="st-sec" style="background:var(--surface-2);box-shadow:none;margin:12px 0 0"><h3 style="font-size:15px">Get a quote from The Mage's Emporium</h3>
+        <div class="locrow"><input id="qName" placeholder="Your name" value="${esc((shelf.contact||{}).name||'')}" autocomplete="name"></div>
+        <div class="locrow"><input id="qEmail" type="email" placeholder="Email for the quote" value="${esc((shelf.contact||{}).email||'')}" autocomplete="email"></div>
+        <div class="locrow"><input id="qNote" placeholder="Anything else? (pickup, shipping, condition notes)"></div>
+        <div class="row2"><button class="btn sm" data-quote>Submit for a quote</button></div>
+        ${(shelf.quotes||[]).length ? `<p class="sub" style="margin:6px 0 0">Sent ${shelf.quotes.length} ${shelf.quotes.length===1?'request':'requests'}, last on ${shelf.quotes[shelf.quotes.length-1].slice(0,10)}. The shop will email you.</p>` : ''}</div>
+      <div class="row2"><button class="btn ghost sm" data-copy="sell">Copy list</button><button class="btn ghost sm" data-sold>Sold — remove from shelf</button></div>`
+    : `<p class="sub" style="margin:0">Clearing out? Open a series, switch to “Sell $”, and tap volumes (or “Sell the whole series”). You'll get a trade-in estimate here.</p>`}</div>`;
+  el.innerHTML = listView === 'want' ? wantHTML : listView === 'sell' ? sellHTML : loanStatsHTML();
+  document.querySelectorAll('#listNav [data-ln]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ln === listView));
+  el._gift = giftTxt; el._sell = sellTxt;
+}
+document.addEventListener('change', e => { if (e.target.id === 'alertOn'){ if (e.target.checked){ const em = ($('#alertEmail').value || '').trim(); if (!/^\S+@\S+\.\S+$/.test(em)){ e.target.checked = false; toast('Type your email, then tap Save'); return; } shelf.contact = Object.assign({}, shelf.contact, { email: em }); shelf.alert = true; } else delete shelf.alert; save(); syncAlerts(); return; }
+  const c = e.target.closest('[data-cond]'); if (c){ const k = c.dataset.cond; if (shelf.series[k]){ if (c.value === 'low') shelf.series[k].cond = 'low'; else delete shelf.series[k].cond; save(); renderLists(); } } });
+document.addEventListener('click', async e => {
+  const c = e.target.closest('[data-copy]'); if (c){ const t = $('#lists')['_' + c.dataset.copy]; try { await navigator.clipboard.writeText(t); toast('Copied'); } catch(err){ openSheet(`<h2>Copy this</h2><textarea class="rv" readonly>${esc(t)}</textarea><button class="btn ghost" data-close>Close</button>`); } return; }
+  const ln = e.target.closest('[data-ln]'); if (ln){ listView = ln.dataset.ln; renderLists(); return; }
+  const rt = e.target.closest('[data-ret]'); if (rt){ const [k, v] = rt.dataset.ret.split('|'); const s = shelf.series[k]; if (s && s.ln){ const prev = JSON.parse(JSON.stringify(s.ln)); delete s.ln[v]; if (!Object.keys(s.ln).length) delete s.ln; save(); toast(`Vol ${v} is back`, () => { s.ln = prev; save(); }); } return; }
+  const ra = e.target.closest('[data-retall]'); if (ra){ const [w, d] = ra.dataset.retall.split('|'); const prev = JSON.parse(JSON.stringify(shelf.series)); let n = 0;
+    Object.values(shelf.series).forEach(s => { if (!s.ln) return; Object.keys(s.ln).forEach(v => { if (s.ln[v].w === w && s.ln[v].d === d){ delete s.ln[v]; n++; } }); if (!Object.keys(s.ln).length) delete s.ln; });
+    save(); toast(`${n} ${n===1?'book':'books'} back from ${w}`, () => { shelf.series = prev; save(); }); return; }
+  const as = e.target.closest('[data-alertsave]'); if (as){ const em = $('#alertEmail').value.trim(); if (!/^\S+@\S+\.\S+$/.test(em)){ toast('Type a valid email'); return; } shelf.contact = Object.assign({}, shelf.contact, { email: em }); shelf.alert = true; save(); syncAlerts(); toast(dbRef ? 'Stock alerts on' : 'Saved on this device (sign in to send alerts to the shop)'); return; }
+  const qt = e.target.closest('[data-quote]'); if (qt){ const name = $('#qName').value.trim(), em = $('#qEmail').value.trim(), note = $('#qNote').value.trim();
+    if (!name || !/^\S+@\S+\.\S+$/.test(em)){ toast('Add your name and email so the shop can reply'); return; }
+    shelf.contact = Object.assign({}, shelf.contact, { name, email: em });
+    const items = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const vols = (s.sell||[]).filter(v => s.v.includes(v)); if (vols.length) items.push({ key: k, series: s.n, vols, cond: langOf(k) ? 'foreign' : (s.cond === 'low' ? 'damaged/ex-library' : 'good') }); });
+    const count = items.reduce((a,x) => a + x.vols.length, 0); const est = items.reduce((a,x) => a + x.vols.length * (x.cond === 'good' ? BUY.good : BUY.low), 0);
+    if (!dbRef || !myId){ location.href = `mailto:themagesemporium@gmail.com?subject=${encodeURIComponent('Quote request: ' + count + ' books')}&body=${encodeURIComponent($('#lists')._sell + '\n\n' + name + ' · ' + em + (note ? '\n' + note : ''))}`; return; }
+    qt.disabled = true; qt.textContent = 'Sending…';
+    try { const id = Date.now().toString(36); await dbRef.collection('quotes/' + myId + '/items').doc(id).set({ user: myId, name, email: em, note, items, count, estimate: Math.round(est*100)/100, at: new Date().toISOString(), status: 'new' });
+      shelf.quotes = (shelf.quotes || []).concat(new Date().toISOString()); save(); toast(`Sent! The Mage's Emporium will email ${em} with a quote.`);
+    } catch(err){ qt.disabled = false; qt.textContent = 'Submit for a quote'; toast('Couldn’t send: ' + (err.code || err.message || err)); }
+    return; }
+  const ux = e.target.closest('[data-unsell]'); if (ux){ const [k, v] = ux.dataset.unsell.split('|'); const s = shelf.series[k]; if (s){ const prev = (s.sell||[]).slice(); s.sell = prev.filter(x => x !== +v); if (!s.sell.length) delete s.sell; save(); renderLists(); toast(`Vol ${v} removed from the sell list`, () => { s.sell = prev; save(); renderLists(); }); } return; }
+  const ua = e.target.closest('[data-unsellall]'); if (ua){ const k = ua.dataset.unsellall; const s = shelf.series[k]; if (s){ const prev = (s.sell||[]).slice(); delete s.sell; save(); renderLists(); toast(`${s.n} removed from the sell list`, () => { s.sell = prev; save(); renderLists(); }); } return; }
+  const sd = e.target.closest('[data-sold]'); if (sd){ const prev = JSON.parse(JSON.stringify(shelf.series)); let n = 0;
+    Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s.sell) return; n += s.sell.length; s.v = s.v.filter(v => !s.sell.includes(v)); if (s.r) s.r = s.r.filter(v => !s.sell.includes(v)); delete s.sell; if (!s.v.length) delete shelf.series[k]; });
+    save(); toast(`Removed ${n} sold ${n===1?'book':'books'} from your shelf`, () => { shelf.series = prev; save(); }); }
+});
+
+/* ---------- boot ---------- */
+renderAll(); renderFinds();
+async function boot(){
+  const C = window.claude;
+  if (!C || !C.use){ startLocal('Saved on this device only'); return; }
+  const timer = setTimeout(() => { if (mode === 'loading') startLocal('Couldn’t reach your saved shelf — using this device'); }, 10000);
+  C.use('mcp').then(m => { mcp = m; if (current) renderSeries(current); maybeSync(); }).catch(() => {});
+  const [db, user] = await Promise.all([C.use('db').catch(()=>null), C.use('user').catch(()=>null)]);
+  if (!db || !user){ clearTimeout(timer); startLocal('Sign in to Claude to keep your shelf in sync'); return; }
+  const id = await user.id(); dbRef = db; myId = id;
+  if (await user.can('data.write').catch(() => null) === false){ clearTimeout(timer); startLocal('Saved on this device'); return; }
+  docRef = db.collection('data/users/' + id).doc('shelf');
+  user.isOwner().then(o => { if (o) { const el = $('#snapTools'); if (el) el.classList.remove('hidden'); } }).catch(() => {});
+  docRef.onSnapshot(snap => {
+    clearTimeout(timer); mode = 'db';
+    const d = snap.exists ? snap.data() : null;
+    if (d && d.series && !dirty && !(snap.metadata && snap.metadata.hasPendingWrites)) { shelf = { series: JSON.parse(JSON.stringify(d.series)) }; if (d.share) shelf.share = true; if (d.log) shelf.log = JSON.parse(JSON.stringify(d.log)); if (d.rl) shelf.rl = JSON.parse(JSON.stringify(d.rl)); if (d.other) shelf.other = JSON.parse(JSON.stringify(d.other)); ['contact','alert','quotes'].forEach(f => { if (d[f] != null) shelf[f] = JSON.parse(JSON.stringify(d[f])); }); if (d.goal) shelf.goal = d.goal; if (d.skin){ shelf.skin = d.skin; applySkin(d.skin); ls.set('mme-skin', d.skin); } }
+    $('#sync').textContent = `${Object.keys(shelf.series).length} series · synced`;
+    renderAll(); renderFinds(); if (current) renderSeries(current); maybeSync();
+  }, err => { clearTimeout(timer); startLocal('Sync paused (' + (err.code||'error') + ') — using this device'); });
+}
+let synced = false;
+function maybeSync(){ if (!mcp){ setTimeout(() => { if (!mcp) loadSnap().then(() => { if (SNAP) applySnap(); }); }, 1500); return; }
+  if (synced || mode !== 'db' || !Object.keys(shelf.series).length) return; synced = true; syncStore(false); }
+function startLocal(msg){ mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
+boot();
+})();
+</script>
+</body>
+</html>
