@@ -348,6 +348,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
   <section id="tab-lists" class="hidden"><div class="seg2" id="listNav" style="margin:0 0 10px"><button data-ln="want" aria-pressed="true">♥ Wishlist</button><button data-ln="sell" aria-pressed="false">$ Sell list</button><button data-ln="loans" aria-pressed="false">↗ Loans</button></div><div id="lists" class="lists"></div></section>
   <section id="tab-reading" class="hidden"><div id="readBody"></div></section>
   <section id="tab-stats" class="hidden"><div id="statsBody"></div>
+    <div class="st-sec hidden" id="acctBox"></div>
     <div class="st-sec io"><h3>Back up or bring in a collection</h3>
       <p class="sub" style="margin:0 0 8px">Save a backup of your whole shelf, or bring books in from a backup, a list from another app, or a file the shop sends you. Imports add to what you have; nothing is removed.</p>
       <div class="row2" style="margin:0 0 10px"><button class="btn sm" id="expBtn">Copy my backup</button><button class="btn ghost sm" id="expDl">Save backup file</button></div>
@@ -888,7 +889,7 @@ function toast(msg, undo){
 let saving = Promise.resolve(), saveT, dirty = 0;
 function save(){
   try { renderAll(); if (current) renderSeries(current); } catch(e){ console.error(e); }
-  if (mode === 'local'){ ls.set('mme-shelf', shelf); return; }
+  if (mode === 'local'){ ls.set('mme-shelf', shelf); acctQueue(); return; }
   if (!docRef) return;
   clearTimeout(saveT); dirty++;
   saveT = setTimeout(() => {
@@ -1511,7 +1512,90 @@ async function boot(){
 let synced = false;
 function maybeSync(){ if (!mcp){ setTimeout(() => { if (!mcp) loadSnap().then(() => { if (SNAP) applySnap(); }); }, 1500); return; }
   if (synced || mode !== 'db' || !Object.keys(shelf.series).length) return; synced = true; syncStore(false); }
-function startLocal(msg){ mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
+/* ---------- store-account sync (hosted app): shelf saved in the customer's account, compressed, split over mme.shelf0-7 ---------- */
+const ACCT = { client: '', auth: 'https://shopify.com/authentication/19355029/oauth/authorize', token: 'https://shopify.com/authentication/19355029/oauth/token', logout: 'https://shopify.com/authentication/19355029/logout', api: 'https://shopify.com/19355029/account/customer/api/2026-10/graphql' };
+const PARTS = 8, CHUNK = 125000;
+let acct = ls.get('mme-acct') || null, acctT = null, acctBusy = false, acctMsg = '';
+const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const rnd = n => b64u(crypto.getRandomValues(new Uint8Array(n)));
+const redirectUri = () => location.origin + '/';
+async function acctLogin(){
+  const v = rnd(32), st = rnd(16), nonce = rnd(16); const ch = b64u(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)));
+  try { sessionStorage.setItem('mme-pkce', JSON.stringify({ v, st })); } catch(e){} ls.set('mme-pkce', { v, st });
+  const q = new URLSearchParams({ client_id: ACCT.client, response_type: 'code', redirect_uri: redirectUri(), scope: 'openid email customer-account-api:full', state: st, nonce, code_challenge: ch, code_challenge_method: 'S256' });
+  location.href = ACCT.auth + '?' + q; }
+async function acctToken(body){ const r = await fetch(ACCT.token, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(body) });
+  if (!r.ok) throw new Error('login ' + r.status); const j = await r.json();
+  acct = Object.assign({}, acct || {}, { at: j.access_token, rt: j.refresh_token || (acct && acct.rt), exp: Date.now() + (j.expires_in || 3600) * 1000 - 60e3, idt: j.id_token || (acct && acct.idt) }); ls.set('mme-acct', acct); return acct; }
+async function acctCallback(){
+  const u = new URL(location.href); const code = u.searchParams.get('code'), st = u.searchParams.get('state'); if (!code) return false;
+  history.replaceState(null, '', location.pathname); const pk = ls.get('mme-pkce'); ls.set('mme-pkce', null);
+  if (!pk || pk.st !== st){ acctMsg = 'Login didn’t finish. Please try again.'; return false; }
+  try { await acctToken({ grant_type: 'authorization_code', client_id: ACCT.client, redirect_uri: redirectUri(), code, code_verifier: pk.v }); acct.fresh = 1; return true; }
+  catch(e){ acctMsg = 'Login didn’t finish (' + e.message + '). Please try again.'; return false; } }
+async function acctAccess(){ if (!acct || !acct.at) return null; if (Date.now() < acct.exp) return acct.at;
+  if (!acct.rt){ acctOut(true); return null; }
+  try { await acctToken({ grant_type: 'refresh_token', client_id: ACCT.client, refresh_token: acct.rt }); return acct.at; } catch(e){ acctOut(true); return null; } }
+async function acctGql(query, variables){ const t = await acctAccess(); if (!t) throw new Error('signed out');
+  const r = await fetch(ACCT.api, { method: 'POST', headers: { 'content-type': 'application/json', authorization: t }, body: JSON.stringify({ query, variables }) });
+  const j = await r.json(); if (j.errors) throw new Error(j.errors[0].message); return j.data; }
+async function gzB64(str){ const cs = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip')); const buf = new Uint8Array(await new Response(cs).arrayBuffer());
+  let out = ''; for (let i = 0; i < buf.length; i += 0x8000) out += String.fromCharCode(...buf.subarray(i, i + 0x8000)); return btoa(out); }
+async function unGzB64(b){ const bin = atob(b); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
+const MF = Array.from({ length: PARTS }, (_, i) => `m${i}:metafield(namespace:"mme",key:"shelf${i}"){value}`).join(' ');
+async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress} ${MF}}}`); const c = d.customer;
+  acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
+  let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
+  if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share }; }
+async function acctPush(){ if (!acct || !acct.cid) return; const b = await gzB64(JSON.stringify(shelfBody()));
+  if (b.length > PARTS * CHUNK) throw new Error('shelf too big to save to your account');
+  const mfs = []; for (let i = 0; i < PARTS; i++) mfs.push({ ownerId: acct.cid, namespace: 'mme', key: 'shelf' + i, type: 'json', value: JSON.stringify(b.slice(i * CHUNK, (i + 1) * CHUNK)) });
+  const d = await acctGql(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{field message}}}`, { m: mfs });
+  const er = d.metafieldsSet.userErrors; if (er && er.length) throw new Error(er[0].message);
+  acct.saved = Date.now(); ls.set('mme-acct', acct); ls.set('mme-dirty', 0); }
+function acctQueue(){ if (!acct || !acct.at) return; ls.set('mme-dirty', 1); clearTimeout(acctT); acctT = setTimeout(acctSave, 2500); }
+async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true;
+  try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
+  acctBusy = false; renderAcct(); }
+function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
+function applyBody(o){ shelf = { series: o.series || {} }; ['log','rl','other','goal'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
+function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
+  Object.entries(b.series || {}).forEach(([k, S]) => { const T = out.series[k]; if (!T){ out.series[k] = S; return; }
+    T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
+    ['ln','cn','vr'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); Object.keys(S).forEach(f => { if (T[f] == null) T[f] = S[f]; }); });
+  ['log'].forEach(f => { out[f] = Object.assign({}, b[f] || {}); Object.entries(a[f] || {}).forEach(([d, n]) => { out[f][d] = Math.max(n, out[f][d] || 0); }); });
+  out.rl = Object.assign({}, b.rl || {}); Object.entries(a.rl || {}).forEach(([d, l]) => { out.rl[d] = [...new Set((out.rl[d] || []).concat(l))]; });
+  out.other = Object.assign({}, b.other || {}, a.other || {}); out.goal = Object.assign({}, b.goal || {}, a.goal || {}); return out; }
+async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy = true; $('#sync').textContent = 'Syncing with your account…';
+  try { const cloud = await acctPull(); const local = shelfBody(); const nl = shelfCount(local), nc = shelfCount(cloud); const dirty = ls.get('mme-dirty');
+    if (!nc){ acctBusy = false; if (nl) await acctPush(); }
+    else if (!nl || (!dirty && !acct.fresh)){ applyBody(cloud); acctBusy = false; }
+    else if (acct.fresh){ acctBusy = false; delete acct.fresh; ls.set('mme-acct', acct); askMerge(local, cloud); return; }
+    else { applyBody(combine(local, cloud)); acctBusy = false; await acctPush(); }
+    delete acct.fresh; ls.set('mme-acct', acct); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; acctMsg = '';
+  } catch(e){ acctBusy = false; $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t reach your account: ' + e.message; }
+  renderAll(); renderFinds(); if (current) renderSeries(current); renderAcct(); }
+function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your store account already has a saved shelf, and this device has one too. Which should we keep?</p>
+  <div class="srow" style="cursor:default"><span>Saved in your account<small>${shelfCount(cloud)} series${cloud.at ? ' · ' + new Date(cloud.at).toLocaleDateString() : ''}</small></span></div>
+  <div class="srow" style="cursor:default"><span>On this device<small>${shelfCount(local)} series</small></span></div>
+  <div class="row2" style="flex-wrap:wrap"><button class="btn" data-mrg="both">Combine both (recommended)</button><button class="btn ghost" data-mrg="cloud">Use my account’s shelf</button><button class="btn ghost" data-mrg="local">Use this device’s shelf</button></div>`);
+  $('#sheetBody').querySelectorAll('[data-mrg]').forEach(b => b.onclick = async () => { const w = b.dataset.mrg; const prev = JSON.parse(JSON.stringify(shelf));
+    applyBody(w === 'cloud' ? cloud : w === 'local' ? local : combine(local, cloud)); closeSheet(); renderAll(); renderFinds();
+    try { await acctPush(); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; } catch(e){ acctMsg = 'Couldn’t save to your account: ' + e.message; }
+    renderAcct(); toast(w === 'both' ? 'Shelves combined' : 'Shelf chosen', () => { shelf = prev; save(); }); }); }
+function acctOut(expired){ acct = null; ls.set('mme-acct', null); acctMsg = expired ? 'Your login expired. Log in again to keep syncing.' : ''; $('#sync').textContent = 'Saved on this device only'; renderAcct(); }
+function renderAcct(){ const el = $('#acctBox'); if (!el) return; if (!ACCT.client || window.claude){ el.classList.add('hidden'); return; } el.classList.remove('hidden');
+  if (acct && acct.at) el.innerHTML = `<h3>Your account</h3><p class="sub" style="margin:0 0 8px">Signed in${acct.email ? ' as <b>' + esc(acct.email) + '</b>' : ''}. Your shelf saves to your Mage’s Emporium account and follows you to any device you log in on.${acct.saved ? ' Last saved ' + new Date(acct.saved).toLocaleString() + '.' : ''}</p>${acctMsg ? `<p class="sub" style="color:#b3261e;margin:0 0 8px">${esc(acctMsg)}</p>` : ''}<div class="row2"><button class="btn sm" id="acctSyncBtn">Sync now</button><button class="btn ghost sm" id="acctOutBtn">Log out</button></div>`;
+  else el.innerHTML = `<h3>Keep your shelf on every device</h3><p class="sub" style="margin:0 0 8px">Log in with your Mage’s Emporium store account (the same one you use at checkout). Your shelf saves to your account, so it’s safe if you change phones and shows up on your computer too. No password: Shopify emails you a code.</p>${acctMsg ? `<p class="sub" style="color:#b3261e;margin:0 0 8px">${esc(acctMsg)}</p>` : ''}<button class="btn sm" id="acctInBtn">Log in or create an account</button>`;
+  const i = $('#acctInBtn'); if (i) i.onclick = acctLogin; const s2 = $('#acctSyncBtn'); if (s2) s2.onclick = acctSync;
+  const o = $('#acctOutBtn'); if (o) o.onclick = async () => { if (ls.get('mme-dirty')) { try { await acctPush(); } catch(e){} } const idt = acct && acct.idt; acctOut(false); if (idt) location.href = ACCT.logout + '?' + new URLSearchParams({ id_token_hint: idt, post_logout_redirect_uri: redirectUri() }); }; }
+let acctBooted = false;
+async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted = true; try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.acct) ACCT.client = j.acct; } } catch(e){}
+  if (!ACCT.client){ renderAcct(); return; } await acctCallback(); renderAcct(); if (acct && acct.at) acctSync();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && acct && acct.at && !ls.get('mme-dirty')) acctSync(); else if (document.visibilityState === 'hidden' && acct && ls.get('mme-dirty')){ clearTimeout(acctT); acctSave(); } }); }
+function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
 boot();
 })();
 </script>
