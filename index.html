@@ -1145,8 +1145,13 @@ async function openCart(){ if (!cart || !cart.id) return; openSheet(`<h2>🛒 Yo
 document.addEventListener('click', e => { const b = e.target.closest('[data-cart]'); if (b){ e.preventDefault(); addToCart(b.dataset.cart, b); } });
 /* ---------- wishlist alerts: wanted volumes that are in stock ---------- */
 function wantedInStock(){ const out = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s.want || !s.want.length) return; const L = live.get(k); if (!L) return; L.items.forEach(p => { if (p.inv > 0 && s.want.includes(p.vol) && !s.v.includes(p.vol)) out.push({ k, n: s.n, p }); }); }); return out; }
-function wishAlert(){ const w = wantedInStock(); const seen = new Set(shelf.seenW || []); const fresh = w.filter(x => !seen.has(x.p.handle));
-  if (fresh.length){ toast(`🔔 ${fresh.length === 1 ? fresh[0].n + ' Vol ' + fresh[0].p.vol + ' is' : fresh.length + ' books from your wishlist are'} back in stock! See Finds.`); shelf.seenW = [...new Set([...seen, ...fresh.map(x => x.p.handle)])].slice(-500); save(); } }
+// only books that were sold out the last time the app looked and are in stock now (the first look just remembers them)
+function wishAlert(){ const st = Object.assign({}, shelf.wst || {}); const fresh = []; let ch = false;
+  Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s.want || !s.want.length) return; const L = live.get(k); if (!L || !L.fresh) return;
+    L.items.forEach(p => { if (!s.want.includes(p.vol) || s.v.includes(p.vol)) return; const now = p.inv > 0 ? 1 : 0; const was = st[p.handle];
+      if (was === 0 && now === 1) fresh.push({ n: s.n, p }); if (was !== now){ st[p.handle] = now; ch = true; } }); });
+  if (ch){ shelf.wst = st; delete shelf.seenW; save(); }
+  if (fresh.length) toast(`🔔 ${fresh.length === 1 ? fresh[0].n + ' Vol ' + fresh[0].p.vol + ' is' : fresh.length + ' books from your wishlist are'} back in stock! See Finds.`); }
 async function lookupSeries(key, force){
   const s = shelf.series[key]; if (!s || langOf(key)) return null;
   if (!mcp){ if (!SNAP) await loadSnap(); const hit = snapEntry(key); if (!hit) return null; const prevL = live.get(key); if (prevL && prevL.fresh && Date.now() - prevL.at < 10*60e3) return prevL; const out = { at: Date.now(), v2: 1, items: snapItems(hit[1]), total: hit[1].t || 0, snap: SNAP.at }; live.set(key, out); liveStock(key, out); return out; }
@@ -1570,7 +1575,7 @@ function renderFinds(){
   if (!findsList.length){ el.innerHTML = live.size ? `<div class="empty">Nothing you're missing is in stock among the series checked so far.</div>` : ''; return; }
   const total = findsList.reduce((s,f) => s + (f.p.price||0), 0);
   const WI = new Set(wantedInStock().map(x => x.p.handle)); findsList.sort((a, b) => (WI.has(b.p.handle) - WI.has(a.p.handle)));
-  el.innerHTML = (WI.size ? `<div class="verdict next" style="text-align:left;margin:0 0 10px"><b>🔔 ${WI.size} from your wishlist ${WI.size === 1 ? 'is' : 'are'} in stock!</b> They’re at the top.</div>` : '') + `<p class="count">${findsList.length} volumes waiting for you · $${total.toFixed(2)} total</p>` + findsList.map(f => `<div class="find"><img src="${esc(f.p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(f.n)} Vol ${f.p.vol}</a></b><small>${WI.has(f.p.handle) ? '♥ On your wishlist' : f.gap ? 'Fills a gap' : 'Next in the series'}</small></div><span class="price">$${(f.p.price||0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(f.p.handle)}">🛒 Add</button></div>`).join('');
+  el.innerHTML = (WI.size ? `<div class="verdict next" style="text-align:left;margin:0 0 10px"><b>♥ ${WI.size} of these ${WI.size === 1 ? 'is' : 'are'} on your wishlist</b>, so they’re at the top.</div>` : '') + `<p class="count">${findsList.length} volumes waiting for you · $${total.toFixed(2)} total</p>` + findsList.map(f => `<div class="find"><img src="${esc(f.p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(f.n)} Vol ${f.p.vol}</a></b><small>${WI.has(f.p.handle) ? '♥ On your wishlist' : f.gap ? 'Fills a gap' : 'Next in the series'}</small></div><span class="price">$${(f.p.price||0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(f.p.handle)}">🛒 Add</button></div>`).join('');
 }
 
 /* ---------- wishlist + sell list ---------- */
@@ -1711,7 +1716,7 @@ async function acctPull(){ const d = await acctGql(`{customer{id firstName email
   acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.mkt = c.emailAddress ? c.emailAddress.marketingState : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
-function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null }; }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null }; }
 // copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
 function siteMirror(){ const owned = {}; let tb = 0;
   Object.entries(shelf.series).forEach(([k, s]) => { const hit = SNAP ? snapEntry(k) : null; const key = hit ? hit[0] : k; const vs = ints(s);
@@ -1732,14 +1737,14 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; ['log','rl','other','goal'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; ['log','rl','other','goal'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
   Object.entries(b.series || {}).forEach(([k, S]) => { const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
     ['ln','cn','vr'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); Object.keys(S).forEach(f => { if (T[f] == null) T[f] = S[f]; }); });
   ['log'].forEach(f => { out[f] = Object.assign({}, b[f] || {}); Object.entries(a[f] || {}).forEach(([d, n]) => { out[f][d] = Math.max(n, out[f][d] || 0); }); });
   out.rl = Object.assign({}, b.rl || {}); Object.entries(a.rl || {}).forEach(([d, l]) => { out.rl[d] = [...new Set((out.rl[d] || []).concat(l))]; });
-  out.other = Object.assign({}, b.other || {}, a.other || {}); out.goal = Object.assign({}, b.goal || {}, a.goal || {}); out.friends = Object.assign({}, b.friends || {}, a.friends || {}); return out; }
+  out.other = Object.assign({}, b.other || {}, a.other || {}); out.goal = Object.assign({}, b.goal || {}, a.goal || {}); out.friends = Object.assign({}, b.friends || {}, a.friends || {}); out.wst = Object.assign({}, b.wst || {}, a.wst || {}); return out; }
 async function acctOrders(force){
   if (!acct || !acct.at) return; const o = shelf.orders || {}; if (!force && o.checked && Date.now() - o.checked < 6*3600e3) return;
   if (!SNAP) await loadSnap(); if (!SNAP) return;
