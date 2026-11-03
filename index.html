@@ -415,6 +415,7 @@ const ls = { get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){
 let shelf = { series:{} };
 let BADGES = [];   // {key:{n, v:[numbers], h?, t?}}
 let docRef = null, mcp = null, mode = 'loading', dbRef = null, myId = null;
+let holds = (() => { try { return JSON.parse(localStorage.getItem('mme-holds')); } catch(e){ return null; } })();
 const about = new Map();   // key -> {at, desc, ra:[{title,handle}]}
 let metaDirty = false, crownsData = null; const metaTried = new Set();
 const live = new Map();       // key -> {at, items:[{vol,inv,price,handle,title,img}], total}
@@ -544,7 +545,7 @@ function renderStats(){
   const shown = BADGES.map((b, i) => [b, i]).filter(([b]) => !b[4] || b[2] >= b[3]); const secret = BADGES.filter(b => b[4] && b[2] < b[3]).length;
   const earnedN = BADGES.filter(b => b[2] >= b[3]).length, openA = !!ls.get('mme-achopen');
   const emo = b => b[0].slice(0, b[0].indexOf(' '));
-  $('#achWrap').innerHTML = `<div style="display:flex;gap:8px;margin-top:12px"><button class="badge" data-gofriends style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">👯 Friends</button><button class="badge" data-share style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">📸 Share my shelf</button></div><div class="achhead"><button class="achtl" data-achtog aria-expanded="${openA}">🏅 Achievements · ${earnedN} of ${shown.length} <span style="opacity:.75;font-weight:600">${openA ? 'Hide ▴' : 'Show all ▾'}</span></button></div>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
+  $('#achWrap').innerHTML = (holds ? `<button class="badge" data-goholds style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">📦 ${holds.items.length} ${holds.items.length === 1 ? 'book' : 'books'} on hold for you</button>` : '') + `<div style="display:flex;gap:8px;margin-top:12px"><button class="badge" data-gofriends style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">👯 Friends</button><button class="badge" data-share style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">📸 Share my shelf</button></div><div class="achhead"><button class="achtl" data-achtog aria-expanded="${openA}">🏅 Achievements · ${earnedN} of ${shown.length} <span style="opacity:.75;font-weight:600">${openA ? 'Hide ▴' : 'Show all ▾'}</span></button></div>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
   $('#badges').classList.toggle('hid', !openA);
   $('#badges').innerHTML = shown.map(([b, i]) => `<button class="badge${b[2]>=b[3]?'':' off'}" data-b="${i}">${b[0]}</button>`).join('') + (secret ? `<button class="badge off" data-b="secret">🔒 ${secret} secret</button>` : '');
 }
@@ -1316,6 +1317,7 @@ function renderSeries(key){
     ${odd.length ? `<p class="sub">Also: Vol ${odd.join(', ')}</p>` : ''}
     ${aboutHTML(key)}
     <div class="legend"><span><i style="background:var(--accent)"></i>Owned</span><span><i style="background:var(--bg);border:1px solid var(--line)"></i>Missing</span><span><i style="background:var(--gold)"></i>In stock at the store</span><span><b style="color:var(--good)">✓</b> Read</span><span><b style="color:var(--accent)">↗</b> Lent out</span><span><b style="color:#1d5aae">↙</b> Borrowed</span><span><b style="color:#d9417a">♥</b> Want</span><span><b style="color:#2f9e5f">$</b> Selling</span><span><b style="color:#8a6d3b">✎</b> Note</span></div>
+    ${(() => { const H = holds ? holds.items.filter(h => normName(h.s) === normName(s.n)) : []; return H.length ? `<div class="sec"><h4>📦 On hold for you</h4><p class="sub" style="margin:0">${H.map(h => h.v != null ? 'Vol ' + h.v : esc(h.t || '')).join(', ')}: set aside for you at The Mage’s Emporium (yours once paid).</p></div>` : ''; })()}
     ${loansHTML(s)}
     ${Object.keys(s.cn||{}).length ? `<div class="sec"><h4>✎ Notes</h4>${Object.entries(s.cn).sort((a,b)=>a[0]-b[0]).map(([v,o]) => `<div class="srow" style="cursor:default"><span>Vol ${v}<small>${esc([o.c, o.t].filter(Boolean).join(' · '))}</small></span><button class="btn ghost sm" data-unnote="${v}" aria-label="Remove the note on Vol ${v}">×</button></div>`).join('')}</div>` : ''}
     ${tapMode==='read' ? `<div class="locrow" style="align-items:center"><span class="sub" style="margin:0;white-space:nowrap">Read on</span><input type="date" id="readDate" max="${dayKey()}" value="${readDate || dayKey()}"></div>` : ''}
@@ -1619,7 +1621,8 @@ function renderLists(){
         ${(shelf.quotes||[]).length ? `<p class="sub" style="margin:6px 0 0">Sent ${shelf.quotes.length} ${shelf.quotes.length===1?'request':'requests'}, last on ${shelf.quotes[shelf.quotes.length-1].slice(0,10)}. The shop will email you.</p>` : ''}</div>
       <div class="row2"><button class="btn ghost sm" data-copy="sell">Copy list</button><button class="btn ghost sm" data-sold>Sold — remove from shelf</button></div>`
     : `<p class="sub" style="margin:0">Clearing out? Open a series, switch to “Sell $”, and tap volumes (or “Sell the whole series”). You'll get a trade-in estimate here.</p>`}</div>`;
-  el.innerHTML = listView === 'want' ? wantHTML : listView === 'sell' ? sellHTML : listView === 'friends' ? friendsHTML() : loanStatsHTML();
+  const nav = $('#listNav'); if (nav){ let hb = nav.querySelector('[data-ln=holds]'); if (holds && !hb){ hb = document.createElement('button'); hb.dataset.ln = 'holds'; nav.insertBefore(hb, nav.firstChild); } if (hb){ if (!holds){ hb.remove(); if (listView === 'holds') listView = 'want'; } else hb.textContent = '📦 Holds (' + holds.items.length + ')'; } }
+  el.innerHTML = listView === 'holds' && holds ? holdsHTML() : listView === 'want' ? wantHTML : listView === 'sell' ? sellHTML : listView === 'friends' ? friendsHTML() : loanStatsHTML();
   document.querySelectorAll('#listNav [data-ln]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ln === listView));
   el._gift = giftTxt; el._sell = sellTxt;
 }
@@ -1712,7 +1715,8 @@ async function gzB64(str){ const cs = new Blob([str]).stream().pipeThrough(new C
 async function unGzB64(b){ const bin = atob(b); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
   return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
 const MF = Array.from({ length: PARTS }, (_, i) => `m${i}:metafield(namespace:"mme",key:"shelf${i}"){value}`).join(' ');
-async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress marketingState} ${MF}}}`); const c = d.customer;
+async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress marketingState} hd:metafield(namespace:"custom",key:"app_holds"){value} ${MF}}}`); const c = d.customer;
+  try { const hv = c.hd && c.hd.value ? JSON.parse(c.hd.value) : null; holds = hv && hv.items && hv.items.length ? hv : null; ls.set('mme-holds', holds); } catch(e){}
   acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.mkt = c.emailAddress ? c.emailAddress.marketingState : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
@@ -1799,7 +1803,7 @@ async function forgetAll(){ const y = $('#forgetYes'); if (y){ y.disabled = true
     closeSheet(); const idt = acct && acct.idt; acctOut(false); renderAll(); renderFinds(); toast('Your app data was deleted');
     if (idt) setTimeout(() => { location.href = ACCT.logout + '?' + new URLSearchParams({ id_token_hint: idt, post_logout_redirect_uri: redirectUri() }); }, 1500); }
   catch(e){ if (y){ y.disabled = false; y.textContent = 'Yes, delete everything'; } toast('Couldn’t delete: ' + e.message); } }
-function acctOut(expired){ acct = null; ls.set('mme-acct', null); acctMsg = expired ? 'Your login expired. Log in again to keep syncing.' : ''; $('#sync').textContent = 'Saved on this device only'; renderAcct(); }
+function acctOut(expired){ acct = null; ls.set('mme-acct', null); holds = null; ls.set('mme-holds', null); acctMsg = expired ? 'Your login expired. Log in again to keep syncing.' : ''; $('#sync').textContent = 'Saved on this device only'; renderAcct(); }
 function renderAcct(){ const el = $('#acctBox'); if (!el) return; const hb = $('#acctHdr'); if (!ACCT.client || window.claude){ el.classList.add('hidden'); if (hb){ hb.classList.remove('hidden'); hb.classList.add('ghost'); hb.textContent = '⤓ Backup'; hb.onclick = () => openAcct('io'); } return; } el.classList.remove('hidden');
   if (hb){ const on = acct && acct.at; hb.classList.remove('hidden'); hb.classList.toggle('ghost', !!on); hb.textContent = on ? '👤 ' + (acct.name || 'Account') : 'Log in'; hb.title = on ? 'Signed in' + (acct.email ? ' as ' + acct.email : '') : 'Log in or back up your shelf';
     hb.onclick = () => openAcct(); }
@@ -1899,13 +1903,13 @@ async function scanVerdict(raw){ const out = $('#scanRes'); if (!out) return; co
   const b = snapBar.get(code); let html = '';
   if (b){ const [sk, vol] = b; const e = SNAP.s[sk]; const it = (e.i || []).find(x => x[0] === vol) || []; const img = it[4] ? snapImg(it[4]) : ''; const nm = e.n + (e.ln ? ' (Light Novel)' : '');
     const key = shelfKeyFor(sk); const S = key ? shelf.series[key] : null; const own = S ? ints(S) : []; const max = own.length ? Math.max(...own) : 0; const want = S && (S.want || []).includes(vol);
-    let cls, icon, big, sub;
+    let cls, icon, big, sub; const held = holds && holds.items.some(h => normName(h.s) === normName(e.n) && h.v === vol);
     if (own.includes(vol)){ cls = 'own'; icon = '✅'; big = 'You own this one'; sub = `You have ${own.length} of ${nm}.`; }
     else if (S && vol === max + 1){ cls = 'next'; icon = '⭐'; big = 'Next one you need!'; sub = `You have up to Vol ${max}.`; }
     else if (S && vol < max){ cls = 'gap'; icon = '🧩'; big = 'Fills a gap!'; sub = `You’re missing this one. You have ${own.length} volumes, up to Vol ${max}.`; }
     else if (S){ cls = 'ser'; icon = '📚'; big = 'You collect this series'; sub = `But you only have up to Vol ${max}, so this skips ahead.`; }
     else { cls = 'new'; icon = '✨'; big = 'New series for you'; sub = `Nothing from ${nm} on your shelf yet.`; }
-    html = `<div class="verdict ${cls}">${img ? `<img src="${img}" alt="">` : ''}<div style="font-size:30px">${icon}</div><div class="big">${big}</div><div><b>${esc(nm)} · Vol ${vol}</b></div><div style="font-size:14px;margin-top:4px">${esc(sub)}${want ? ' ♥ It’s on your wishlist.' : ''}</div></div>
+    html = `<div class="verdict ${cls}">${img ? `<img src="${img}" alt="">` : ''}<div style="font-size:30px">${icon}</div><div class="big">${big}</div><div><b>${esc(nm)} · Vol ${vol}</b></div><div style="font-size:14px;margin-top:4px">${esc(sub)}${want ? ' ♥ It’s on your wishlist.' : ''}${held ? ' 📦 The Mage’s Emporium is holding this one for you.' : ''}</div></div>
       <div class="row2" style="justify-content:center;flex-wrap:wrap">${own.includes(vol) ? '' : `<button class="btn" id="scanAdd">＋ Add to my shelf</button>${want ? '' : `<button class="btn ghost" id="scanWant">♥ Add to wishlist</button>`}`}</div>` + again;
     out.innerHTML = html;
     const sAdd = $('#scanAdd'); if (sAdd) sAdd.onclick = () => { const k2 = key || sk; const prev = shelf.series[k2] ? shelf.series[k2].v : []; const undo = setVols(k2, prev.concat(vol), nm); if (shelf.series[k2].want) shelf.series[k2].want = shelf.series[k2].want.filter(x => x !== vol); save(); toast(`Added ${nm} Vol ${vol}`, undo); sAdd.outerHTML = '<span class="chip good">Added ✓</span>'; const w = $('#scanWant'); if (w) w.remove(); };
@@ -1941,8 +1945,12 @@ function liveLink(){ return 'https://app.themagesemporium.com/#live=' + liveF.me
 async function liveFromHash(){ const m = location.hash.match(/#live=([a-z0-9]+)/); if (m){ ls.set('mme-livecode', m[1]); history.replaceState(null, '', location.pathname); }
   const code = ls.get('mme-livecode'); if (!code || !FRIENDS_API) return;
   if (!acct || !acct.at){ setTimeout(() => toast('Log in (top right) to see your friend’s shelf. Your request is waiting.'), 900); return; }
-  try { const r = await fapi('/request', { code }); ls.set('mme-livecode', null); toast(r.st === 'ok' ? `👯 You can see ${r.name}’s shelf` : `👯 Request sent! ${r.name} needs to approve it.`); listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); liveLoad(); }
-  catch(e){ ls.set('mme-livecode', null); toast('Couldn’t open that invite: ' + e.message); } }
+  let name = 'your friend', st = null; try { const pk = await fapi('/peek', { code }); if (pk.self){ ls.set('mme-livecode', null); toast('That’s your own invite link 🙂'); return; } name = pk.name; st = pk.st; } catch(e){ if (/turned off/.test(e.message)){ ls.set('mme-livecode', null); toast('That invite link was turned off.'); return; } }
+  if (st === 'ok'){ ls.set('mme-livecode', null); toast(`👯 You can already see ${name}’s collection`); goFriends(); return; }
+  openSheet(`<h2>👯 Would you like to view ${esc(name)}’s collection?</h2><p>${esc(name)} invited you to see their manga shelf. If you say yes, ${esc(name)} gets a request to approve, and then their shelf shows up in your Friends, always up to date.</p><p class="sub">This doesn’t share your shelf with them.</p><div class="row2"><button class="btn" id="invYes">Yes, view it</button><button class="btn ghost" id="invNo">No thanks</button></div>`);
+  $('#invYes').onclick = async () => { $('#invYes').disabled = true; try { const r = await fapi('/request', { code }); ls.set('mme-livecode', null); closeSheet(); toast(r.st === 'ok' ? `👯 You can see ${r.name}’s collection` : `👯 Request sent! ${r.name} just needs to approve it.`); goFriends(); } catch(e){ ls.set('mme-livecode', null); closeSheet(); toast('Couldn’t open that invite: ' + e.message); } };
+  $('#invNo').onclick = () => { ls.set('mme-livecode', null); closeSheet(); toast('Invitation declined'); }; }
+function goFriends(){ listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); liveLoad(); }
 function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
   return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out }; }
 async function friendShare(){ track('friend-share'); const pk = friendPack(); let nm = pk.name;
@@ -1958,8 +1966,15 @@ function friendAdd(pk){ if (!pk || pk.app !== 'mme-friend' || !pk.s) { toast('Th
   const id = (pk.name || 'friend').toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'friend'; shelf.friends[id] = { name: pk.name || 'Friend', at: pk.at || Date.now(), s: pk.s }; friendSel = id; save();
   toast(`👯 Added ${pk.name || 'your friend'}’s shelf (${Object.keys(pk.s).length} series)`); listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); }
 async function friendFromHash(){ const m = location.hash.match(/#f=([A-Za-z0-9_-]+)/); if (!m) return; history.replaceState(null, '', location.pathname);
-  try { let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; const pk = JSON.parse(await unGzB64(b)); setTimeout(() => friendAdd(pk), 600); } catch(e){ toast('That friend link didn’t open. Ask them to send it again.'); } }
+  try { let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; const pk = JSON.parse(await unGzB64(b)); setTimeout(() => { const nm = pk.name || 'your friend'; openSheet(`<h2>👯 Would you like to view ${esc(nm)}’s collection?</h2><p>${esc(nm)} sent you a copy of their shelf (${Object.keys(pk.s || {}).length} series). It’ll show up in your Friends so you can compare.</p><div class="row2"><button class="btn" id="invYes">Yes, add it</button><button class="btn ghost" id="invNo">No thanks</button></div>`); $('#invYes').onclick = () => { closeSheet(); friendAdd(pk); }; $('#invNo').onclick = () => { closeSheet(); toast('Invitation declined'); }; }, 600); } catch(e){ toast('That friend link didn’t open. Ask them to send it again.'); } }
 function friendKey(fk, f){ if (shelf.series[fk]) return fk; const n = normName(f.n); return Object.keys(shelf.series).find(k => normName(shelf.series[k].n) === n) || null; }
+function holdsHTML(){ const it = holds.items; const by = {}; it.forEach(x => { (by[x.s] = by[x.s] || []).push(x); });
+  const tot = it.reduce((a, x) => a + (+x.p || 0), 0);
+  return `<div class="st-sec"><h3>📦 On hold for you <span class="sub" style="font-weight:400">(${it.length})</span></h3>
+    <p class="sub" style="margin:0 0 8px">The Mage’s Emporium is setting these aside for you. They become yours once they’re paid for, so they aren’t counted on your shelf yet.${holds.updated ? ` Updated ${esc(holds.updated)}.` : ''}</p>
+    ${Object.entries(by).sort((a, b) => a[0].localeCompare(b[0])).map(([n, a]) => `<div class="srow" style="cursor:default"><span>${esc(n)}<small>${a.sort((x, y) => (x.v || 0) - (y.v || 0)).map(x => (x.v != null ? 'Vol ' + x.v : esc(x.t || '')) + (x.p ? ' · $' + (+x.p).toFixed(2) : '')).join(', ')}</small></span><span class="r">${a.length}</span></div>`).join('')}
+    ${tot ? `<p style="margin:8px 0 0"><b>Total: $${tot.toFixed(2)}</b></p>` : ''}${holds.note ? `<p class="sub" style="margin:6px 0 0">${esc(holds.note)}</p>` : ''}
+    <p class="sub" style="margin:8px 0 0">Questions about your holds? <a href="#" data-feedback>Message us</a>.</p></div>`; }
 function friendsHTML(){ const F = Object.assign({}, shelf.friends || {}); const ids = Object.keys(F);
   let h = `<div class="st-sec"><h3>👯 Friends</h3><p class="sub" style="margin:0 0 8px">Swap shelves with a friend to see what you both have, what you can borrow from each other, and gift ideas from their wishlist.</p>
     <div class="row2" style="flex-wrap:wrap"><button class="btn sm" data-fshare>📤 Send my shelf to a friend</button><label class="btn ghost sm" style="cursor:pointer">📥 Add a friend’s file<input type="file" id="fFile" accept=".json,application/json" hidden></label></div>
@@ -1998,7 +2013,8 @@ function friendsHTML(){ const F = Object.assign({}, shelf.friends || {}); const 
   h += sec('💞 You both collect', '', both.sort((a, b) => b[1] - a[1]), x => row(x[0], x[1] + ' volumes in common'), 'No series in common yet.');
   h += sec('✨ Only they have', 'Series to try.', theirsOnly.sort((a, b) => b[1] - a[1]), x => row(x[0], x[1] + ' volumes'), 'You have everything they have!');
   return h; }
-document.addEventListener('click', e => { if (e.target.closest('[data-gofriends]')){ listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); liveLoad(); document.querySelector('#tab-lists').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+document.addEventListener('click', e => { if (e.target.closest('[data-goholds]')){ listView = 'holds'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); document.querySelector('#tab-lists').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  if (e.target.closest('[data-gofriends]')){ listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); liveLoad(); document.querySelector('#tab-lists').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
   if (e.target.closest('[data-fshare]')){ friendShare(); return; } const s2 = e.target.closest('[data-fsel]'); if (s2){ friendSel = s2.dataset.fsel; renderLists(); return; }
   const d = e.target.closest('[data-fdel]'); if (d){ const id = d.dataset.fdel; const prev = shelf.friends[id]; delete shelf.friends[id]; friendSel = null; save(); renderLists(); toast('Friend removed', () => { shelf.friends[id] = prev; save(); renderLists(); }); } });
 document.addEventListener('click', async e => { const t = e.target.closest('[data-liveon],[data-liveoff],[data-liveok],[data-liverev],[data-liveunf],[data-livesend],[data-liveask],[data-liveans]'); if (!t) return;
