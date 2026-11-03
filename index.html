@@ -1125,7 +1125,7 @@ function cartChip(){ const b = $('#cartHdr'); if (!b) return; const n = cart && 
 async function vidFor(handle){ for (const L of live.values()){ const it = (L.items || []).find(p => p.handle === handle && p.vid); if (it) return it.vid; }
   const j = await sfq(`{p:product(handle:${JSON.stringify(handle)}){variants(first:1){nodes{id availableForSale}}}}`); const v = j.data && j.data.p && j.data.p.variants.nodes[0]; return v ? v.id : null; }
 const CF = 'id checkoutUrl totalQuantity cost{totalAmount{amount}} lines(first:100){nodes{id quantity merchandise{... on ProductVariant{id product{title handle featuredImage{url(transform:{maxWidth:120})}}}}}}';
-async function addToCart(handle, btn){ if (window.claude){ window.open(STORE + '/products/' + encodeURIComponent(handle), '_blank'); return; }
+async function addToCart(handle, btn){ track('add-to-cart'); if (window.claude){ window.open(STORE + '/products/' + encodeURIComponent(handle), '_blank'); return; }
   if (btn){ btn.disabled = true; btn.textContent = 'Adding…'; }
   try { const vid = await vidFor(handle); if (!vid) throw new Error('not found'); let j;
     if (cart && cart.id){ j = await sfq(`mutation($c:ID!,$l:[CartLineInput!]!){cartLinesAdd(cartId:$c,lines:$l){cart{${CF}} userErrors{message}}}`, { c: cart.id, l: [{ merchandiseId: vid, quantity: 1 }] }); j = j.data && j.data.cartLinesAdd; }
@@ -1595,7 +1595,7 @@ function renderLists(){
   const wantHTML = `
   <div class="st-sec"><h3>♥ Wishlist <span class="sub" style="font-weight:400">(${W.length})</span></h3>
     ${(() => { const n = Object.keys(shelf.series).reduce((a, k) => { if (langOf(k)) return a; const i = info(k); const w = new Set(i.s.want || []); return a + i.gaps.filter(v => !w.has(v)).length; }, 0); return n ? `<p style="margin:0 0 10px"><button class="btn sm" data-wantgaps>♥ Add all ${n} missing ${n === 1 ? 'volume' : 'volumes'} (gaps) to my wishlist</button></p>` : ''; })()}
-    ${W.length ? `${inStock.length ? `<p class="sub" style="margin:0 0 6px">${inStock.length} in stock now · $${wTot.toFixed(2)}</p>` : ''}${grp(W).map(([k,a]) => `<button class="srow" data-k="${esc(k)}"><span>${esc(a[0].n)}<small>Vol ${compactVols(a.map(x=>x.v))}</small></span><span class="r">${a.filter(x => x.p && x.p.inv > 0).length ? `<span class="chip gold">${a.filter(x => x.p && x.p.inv > 0).length} in stock</span>` : a.length}</span></button>`).join('')}
+    ${W.length ? `${inStock.length ? `<p class="sub" style="margin:0 0 6px">${inStock.length} in stock now · $${wTot.toFixed(2)}</p>` : ''}${grp(W).map(([k,a]) => `<div class="srow" style="cursor:default"><span><button class="vx" data-k="${esc(k)}" style="font-weight:700;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-align:left">${esc(a[0].n)}</button> <button class="vx" data-unwantall="${esc(k)}" aria-label="Remove ${esc(a[0].n)} from the wishlist"><b>× all</b></button><small>${a.map(x => `<button class="vx" data-unwant="${esc(k)}|${x.v}" aria-label="Remove Vol ${x.v} from the wishlist">Vol ${x.v}${x.p && x.p.inv > 0 ? ' ✨' : ''} <b>×</b></button>`).join('')}</small></span><span class="r">${a.filter(x => x.p && x.p.inv > 0).length ? `<span class="chip gold">${a.filter(x => x.p && x.p.inv > 0).length} in stock</span>` : a.length}</span></div>`).join('')}
       <div class="st-sec" style="background:var(--surface-2);box-shadow:none;margin:12px 0 0"><h3 style="font-size:15px">🔔 Back-in-stock emails</h3>
         <p class="sub" style="margin:0 0 6px">The shop's website emails you the moment a wishlisted book comes into stock. Tap a volume, then tap <b>Add to Wishlist</b> on its page (sign in to your shop account first).</p>
         ${W.filter(x => x.p && x.p.handle).slice(0,30).map(x => `<a class="chip" style="display:inline-block;margin:0 6px 6px 0;text-decoration:none" href="${STORE}/products/${encodeURIComponent(x.p.handle)}" target="_blank" rel="noopener">${esc(x.n)} ${x.v}${x.p.inv > 0 ? ' · in stock' : ''}</a>`).join('') || '<p class="sub" style="margin:0">None of these are listed at the shop yet. Check back as the shop adds them.</p>'}<p style="margin:6px 0 0"><a class="btn ghost sm" href="${STORE}/apps/wishlist" target="_blank" rel="noopener">♥ Open my shop wishlist</a></p></div>
@@ -1642,6 +1642,8 @@ document.addEventListener('click', async e => {
       shelf.quotes = (shelf.quotes || []).concat(new Date().toISOString()); save(); toast(`Sent! The Mage's Emporium will email ${em} with a quote.`);
     } catch(err){ qt.disabled = false; qt.textContent = 'Submit for a quote'; toast('Couldn’t send: ' + (err.code || err.message || err)); }
     return; }
+  const uw = e.target.closest('[data-unwant]'); if (uw){ const [k, v] = uw.dataset.unwant.split('|'); const s = shelf.series[k]; if (s){ const prev = (s.want||[]).slice(); s.want = prev.filter(x => x !== +v); if (!s.want.length) delete s.want; if (!s.v.length && !s.want) delete shelf.series[k]; save(); renderLists(); toast(`Vol ${v} removed from your wishlist`, () => { shelf.series[k] = s; s.want = prev; save(); renderLists(); }); } return; }
+  const uwa = e.target.closest('[data-unwantall]'); if (uwa){ const k = uwa.dataset.unwantall; const s = shelf.series[k]; if (s){ const prev = (s.want||[]).slice(); delete s.want; if (!s.v.length) delete shelf.series[k]; save(); renderLists(); toast(`${s.n} removed from your wishlist`, () => { shelf.series[k] = s; s.want = prev; save(); renderLists(); }); } return; }
   const ux = e.target.closest('[data-unsell]'); if (ux){ const [k, v] = ux.dataset.unsell.split('|'); const s = shelf.series[k]; if (s){ const prev = (s.sell||[]).slice(); s.sell = prev.filter(x => x !== +v); if (!s.sell.length) delete s.sell; save(); renderLists(); toast(`Vol ${v} removed from the sell list`, () => { s.sell = prev; save(); renderLists(); }); } return; }
   const ua = e.target.closest('[data-unsellall]'); if (ua){ const k = ua.dataset.unsellall; const s = shelf.series[k]; if (s){ const prev = (s.sell||[]).slice(); delete s.sell; save(); renderLists(); toast(`${s.n} removed from the sell list`, () => { s.sell = prev; save(); renderLists(); }); } return; }
   const sd = e.target.closest('[data-sold]'); if (sd){ const prev = JSON.parse(JSON.stringify(shelf.series)); let n = 0;
@@ -1680,7 +1682,7 @@ let acct = ls.get('mme-acct') || null, acctT = null, acctBusy = false, acctMsg =
 const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const rnd = n => b64u(crypto.getRandomValues(new Uint8Array(n)));
 const redirectUri = () => location.origin + '/';
-async function acctLogin(){
+async function acctLogin(){ track('login-start');
   const v = rnd(32), st = rnd(16), nonce = rnd(16); const ch = b64u(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)));
   try { sessionStorage.setItem('mme-pkce', JSON.stringify({ v, st })); } catch(e){} ls.set('mme-pkce', { v, st });
   const q = new URLSearchParams({ client_id: ACCT.client, response_type: 'code', redirect_uri: redirectUri(), scope: 'openid email customer-account-api:full', state: st, nonce, code_challenge: ch, code_challenge_method: 'S256' });
@@ -1838,7 +1840,7 @@ function drawCard(d){ const W = 1080, H = 1920, c = document.createElement('canv
   pill('track yours free → ' + d.site, H-70, 'rgba(255,255,255,.9)', ORG, 32, '800');
   return c; }
 let cardFile = null;
-async function shareCard(){ try { await document.fonts.ready; } catch(e){}
+async function shareCard(){ track('share-card'); try { await document.fonts.ready; } catch(e){}
   const d = cardData(); openSheet(`<h2>Share your collection</h2><label class="sub" for="cardName" style="display:block;margin:0 0 4px">Name on the picture</label><input id="cardName" value="${esc(d.name)}" placeholder="Your first name (or leave empty)" autocomplete="off" style="width:100%;margin:0 0 10px">
     <img id="cardImg" alt="Your collector stats picture" style="width:100%;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.18)">
     <div class="row2" style="margin-top:10px"><button class="btn" id="cardShare">Share</button><button class="btn ghost" id="cardSave">Save image</button><button class="btn ghost" data-close>Close</button></div>
@@ -1870,7 +1872,7 @@ async function startCam(){ stopCam(); const vid = $('#scanVid'); if (!vid) retur
   try { const ZX = await loadZX(); const hints = new Map(); hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A]);
     scanReader = new ZX.BrowserMultiFormatReader(hints, 250); scanReader.decodeFromStream(scanStream, vid, (r) => { if (r && !scanBusy) hit(r.getText()); }); }
   catch(e){ $('#scanRes').innerHTML = `<p class="note">The barcode reader couldn’t load${navigator.onLine ? '' : ' while offline'}. Type the ISBN below.</p>`; } }
-function hit(code){ if (scanBusy) return; scanBusy = true; try { navigator.vibrate && navigator.vibrate(60); } catch(e){} stopCam(); scanVerdict(code); }
+function hit(code){ if (scanBusy) return; scanBusy = true; track('scan'); try { navigator.vibrate && navigator.vibrate(60); } catch(e){} stopCam(); scanVerdict(code); }
 function stopCam(){ try { scanReader && scanReader.reset(); } catch(e){} scanReader = null; if (scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; } }
 async function scanVerdict(raw){ const out = $('#scanRes'); if (!out) return; const code = isbn13(raw); $('#scanBox').style.display = 'none';
   const again = `<div class="row2" style="justify-content:center"><button class="btn" id="scanNext">📷 Scan another</button></div>`;
@@ -1900,11 +1902,16 @@ document.addEventListener('click', e => { if (e.target.closest('[data-scanmode]'
 function netState(){ const off = !navigator.onLine; let b = $('#offbar'); if (off && !b){ b = document.createElement('div'); b.id = 'offbar'; b.className = 'offbar'; b.textContent = 'You’re offline. Everything still works and saves on this phone; it syncs when you’re back online.'; document.body.prepend(b); } else if (!off && b) b.remove(); }
 window.addEventListener('offline', netState); window.addEventListener('online', () => { netState(); if (acct && acct.at){ if (ls.get('mme-dirty')) acctSave(); else acctSync(); } });
 if (!window.claude && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+// privacy-friendly visit counter (GoatCounter: no cookies, no personal data) on the hosted app only
+const GC = 'https://themagesemporium.goatcounter.com/count';
+function track(ev){ try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: ev, title: ev, event: true }); } catch(e){} }
+if (!window.claude && location.hostname === 'app.themagesemporium.com'){ window.goatcounter = { path: (matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? '/home-screen-app' : '/browser' };
+  const gs = document.createElement('script'); gs.async = true; gs.src = 'https://gc.zgo.at/count.js'; gs.dataset.goatcounter = GC; document.head.appendChild(gs); }
 /* ---------- friends: swap shelves by link or file, then compare ---------- */
 let friendSel = null;
 function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
   return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out }; }
-async function friendShare(){ const pk = friendPack(); let nm = pk.name;
+async function friendShare(){ track('friend-share'); const pk = friendPack(); let nm = pk.name;
   if (!nm){ nm = prompt('Your first name (so your friend knows whose shelf this is):', '') || ''; nm = nm.trim(); if (nm){ shelf.card = Object.assign({}, shelf.card, { name: nm }); save(); pk.name = nm; } }
   const json = JSON.stringify(pk); const b = (await gzB64(json)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); const url = (window.claude ? 'https://app.themagesemporium.com/' : location.origin + location.pathname.replace(/[^/]*$/, '')) + '#f=' + b;
   const text = `${nm ? nm + '’s' : 'My'} manga shelf on My Manga Emporium. Open it to compare our collections!`;
