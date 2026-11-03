@@ -348,7 +348,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
 
   <section id="tab-lists" class="hidden"><div class="seg2" id="listNav" style="margin:0 0 10px"><button data-ln="want" aria-pressed="true">♥ Wishlist</button><button data-ln="sell" aria-pressed="false">$ Sell list</button><button data-ln="loans" aria-pressed="false">↗ Loans</button></div><div id="lists" class="lists"></div></section>
   <section id="tab-reading" class="hidden"><div id="readBody"></div></section>
-  <section id="tab-stats" class="hidden"><div class="st-sec hidden" id="acctBox"></div><div id="statsBody"></div>
+  <section id="tab-stats" class="hidden"><div class="st-sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><h3 style="margin:0">📸 Share your shelf</h3><p class="sub" style="margin:2px 0 0">A picture for Instagram stories with your rank, stats and top series</p></div><button class="btn gold sm" id="shareCard">Share</button></div><div class="st-sec hidden" id="acctBox"></div><div id="statsBody"></div>
     <div class="st-sec io"><h3>Back up or bring in a collection</h3>
       <p class="sub" style="margin:0 0 8px">Save a backup of your whole shelf, or bring books in from a backup, a list from another app, or a file the shop sends you. Imports add to what you have; nothing is removed.</p>
       <div class="row2" style="margin:0 0 10px"><button class="btn sm" id="expBtn">Copy my backup</button><button class="btn ghost sm" id="expDl">Save backup file</button></div>
@@ -1603,6 +1603,42 @@ let acctBooted = false;
 async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted = true; try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.acct) ACCT.client = j.acct; } } catch(e){}
   if (!ACCT.client){ renderAcct(); return; } await acctCallback(); renderAcct(); if (acct && acct.at) acctSync();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && acct && acct.at && !ls.get('mme-dirty')) acctSync(); else if (document.visibilityState === 'hidden' && acct && ls.get('mme-dirty')){ clearTimeout(acctT); acctSave(); } }); }
+/* ---------- share card (Instagram story size) ---------- */
+function loadImg(src){ return new Promise(res => { if (!src) return res(null); const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = src; setTimeout(() => res(null), 6000); }); }
+async function makeCard(){
+  const W = 1080, H = 1920, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  const cs = getComputedStyle(document.documentElement); const ac = (cs.getPropertyValue('--accent') || '#e8505b').trim() || '#e8505b', gold = (cs.getPropertyValue('--gold') || '#f6a623').trim() || '#f6a623';
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#1d2b5a'); bg.addColorStop(1, '#3b1d4f'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 60; i++){ g.fillStyle = `rgba(255,255,255,${Math.random()*0.5+0.1})`; g.beginPath(); g.arc(Math.random()*W, Math.random()*H, Math.random()*2.5+0.5, 0, 7); g.fill(); }
+  const keys = Object.keys(shelf.series); let books = 0, readN = 0, done = 0; keys.forEach(k => { const i = info(k); books += i.s.v.length; readN += (i.s.r||[]).length; if (i.total && i.own.length >= i.total) done++; });
+  let r = 0; while (r+1 < RANKS.length && books >= RANKS[r+1][0]) r++;
+  const name = (acct && acct.name) || '';
+  g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = '600 46px Figtree, system-ui, sans-serif'; g.fillText(name ? name + '’s manga shelf' : 'My manga shelf', W/2, 150);
+  g.fillStyle = gold; g.font = '700 34px Figtree, system-ui, sans-serif'; g.fillText('COLLECTOR RANK', W/2, 250);
+  g.fillStyle = '#fff'; g.font = '800 120px Fraunces, Georgia, serif'; g.fillText(RANKS[r][1], W/2, 380, W - 120);
+  const stat = (x, n, l) => { g.fillStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.roundRect(x - 150, 440, 300, 190, 28); g.fill(); g.fillStyle = '#fff'; g.font = '800 78px Figtree, system-ui, sans-serif'; g.fillText(Number(n).toLocaleString(), x, 545); g.font = '600 32px Figtree, system-ui, sans-serif'; g.fillStyle = 'rgba(255,255,255,.8)'; g.fillText(l, x, 595); };
+  stat(W/2 - 330, books, 'books'); stat(W/2, keys.length, 'series'); stat(W/2 + 330, readN, 'read');
+  const top = keys.map(k => ({ k, s: shelf.series[k] })).sort((a, b) => b.s.v.length - a.s.v.length).slice(0, 6);
+  g.fillStyle = gold; g.font = '700 34px Figtree, system-ui, sans-serif'; g.fillText('BIGGEST SERIES', W/2, 720);
+  const cw = 270, ch = 405, gap = 30, x0 = (W - (cw*3 + gap*2)) / 2, y0 = 760;
+  const imgs = await Promise.all(top.map(t => loadImg(t.s.c || '')));
+  top.forEach((t, i) => { const x = x0 + (i % 3) * (cw + gap), y = y0 + Math.floor(i / 3) * (ch + 70);
+    g.save(); g.beginPath(); g.roundRect(x, y, cw, ch, 18); g.clip();
+    if (imgs[i]){ const im = imgs[i]; const sc = Math.max(cw / im.width, ch / im.height); g.drawImage(im, x + (cw - im.width*sc)/2, y + (ch - im.height*sc)/2, im.width*sc, im.height*sc); }
+    else { g.fillStyle = [ac, gold, '#4a90d9', '#2f9e5f', '#7b5ea7'][i % 5]; g.fillRect(x, y, cw, ch); g.fillStyle = '#fff'; g.font = '800 120px Fraunces, Georgia, serif'; g.fillText((t.s.n[0] || '?').toUpperCase(), x + cw/2, y + ch/2 + 40); }
+    g.restore(); g.fillStyle = '#fff'; g.font = '600 26px Figtree, system-ui, sans-serif'; let nm = t.s.n; while (g.measureText(nm).width > cw && nm.length > 4) nm = nm.slice(0, -2); if (nm !== t.s.n) nm = nm.trim() + '…';
+    g.fillText(nm, x + cw/2, y + ch + 34); g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '500 24px Figtree, system-ui, sans-serif'; g.fillText(t.s.v.length + (t.s.v.length === 1 ? ' vol' : ' vols'), x + cw/2, y + ch + 62); });
+  const earned = (BADGES || []).filter(b => b[2] >= b[3]).map(b => b[0]).slice(0, 6);
+  if (earned.length){ g.fillStyle = 'rgba(255,255,255,.9)'; g.font = '600 34px Figtree, system-ui, sans-serif'; const line1 = earned.slice(0, 3).join('   '), line2 = earned.slice(3).join('   '); g.fillText(line1, W/2, 1735, W - 80); if (line2) g.fillText(line2, W/2, 1785, W - 80); }
+  g.fillStyle = gold; g.font = '700 36px Figtree, system-ui, sans-serif'; g.fillText('app.themagesemporium.com', W/2, 1850); g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '500 28px Figtree, system-ui, sans-serif'; g.fillText('Track your manga with The Mage’s Emporium', W/2, 1890);
+  return cv; }
+async function shareCard(btn){ btn.disabled = true; const old = btn.textContent; btn.textContent = 'Making…';
+  try { const cv = await makeCard(); const blob = await new Promise(r => cv.toBlob(r, 'image/png')); const file = new File([blob], 'my-manga-shelf.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })){ try { await navigator.share({ files: [file], title: 'My manga shelf' }); } catch(e){} }
+    else { const url = URL.createObjectURL(blob); openSheet(`<h2>Your shelf picture</h2><p class="sub">Press and hold the picture to save it, then post it to Instagram.</p><img src="${url}" alt="My manga shelf" style="width:100%;border-radius:12px"><div class="row2"><a class="btn" href="${url}" download="my-manga-shelf.png">Download</a><button class="btn ghost" data-close>Close</button></div>`); }
+  } catch(e){ toast('Couldn’t make the picture: ' + (e.message || e)); }
+  btn.disabled = false; btn.textContent = old; }
+document.addEventListener('click', e => { const b = e.target.closest('#shareCard'); if (b) shareCard(b); });
 function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
 boot();
 })();
