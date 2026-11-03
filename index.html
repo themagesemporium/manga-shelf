@@ -113,6 +113,15 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .badge{border:0;color:inherit;font-family:inherit}
 .badge.off{opacity:.45}
 .achhead{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.scanv{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:14px;overflow:hidden}
+.scanv video{width:100%;height:100%;object-fit:cover}
+.scanv i{position:absolute;left:12%;right:12%;top:46%;height:3px;background:#ff5a36;box-shadow:0 0 12px #ff5a36;border-radius:3px;animation:scanl 1.6s ease-in-out infinite alternate}
+@keyframes scanl{from{transform:translateY(-38px)}to{transform:translateY(38px)}}
+.verdict{border-radius:16px;padding:16px;margin:10px 0;text-align:center}
+.verdict .big{font-size:26px;font-weight:800;line-height:1.2;margin:4px 0}
+.verdict.own{background:#e5f4e4;color:#1e4620}.verdict.next{background:#fff3c4;color:#5a3d06}.verdict.gap{background:#ffe6d6;color:#7a2e0e}.verdict.ser{background:#e7f1fb;color:#173b6b}.verdict.new{background:#efedff;color:#3b2a86}.verdict.unk{background:#f0efec;color:#333}
+.verdict img{width:84px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.2);margin:4px auto 6px;display:block}
+.offbar{background:#3b3b3b;color:#fff;font-size:12.5px;text-align:center;padding:4px 8px}
 .achtl{padding:0;border:0;background:none;color:inherit;font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-align:left}
 .achemo{display:flex;flex-wrap:wrap;gap:2px 4px;margin-top:6px;font-size:19px;line-height:1.35;cursor:pointer}
 .achemo i{font-style:normal}.achemo i.off{opacity:.28;filter:grayscale(1)}
@@ -331,6 +340,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
   </nav>
 
   <section id="tab-shelf">
+    <button class="btn" data-scanmode style="width:100%;margin:0 0 10px;font-size:16px">📷 Scan a book: do I own it?</button>
     <div class="tools">
       <input id="q" type="search" placeholder="Search series, shelves or names" autocomplete="off">
       <select id="sort" aria-label="Sort">
@@ -369,6 +379,12 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       <textarea id="impTxt" placeholder="Fruits Basket, 1-12&#10;Spy x Family Vol 3&#10;Bungo Stray Dogs (Light Novel), 1, 2, 4"></textarea>
       <div class="row2"><button class="btn sm" id="impBtn">Add to my shelf</button></div>
       <p class="sub" id="impMsg" style="margin:6px 0 0"></p>
+    </div>
+    <div class="st-sec" id="photoBox"><h3>📸 Send us photos instead</h3>
+      <p class="sub" style="margin:0 0 8px">Big collection? Take photos of your shelves with the spines readable and email them to us. We’ll add every book to your shelf for you.</p>
+      <ol class="sub" style="margin:0 0 8px;padding-left:20px"><li>Log in first, so we know which account to fill.</li><li>Tap the button below. It opens an email to us.</li><li>Attach your photos (as many emails as you need) and send.</li></ol>
+      <p class="sub" style="margin:0 0 10px"><b>Photos have to be processed by hand, so it can take a few days.</b> You’ll get an email when your shelf is ready.</p>
+      <a class="btn sm" id="photoMail" href="mailto:themagesemporium@gmail.com" target="_top">✉️ Email my collection photos</a>
     </div></div>
     <div class="st-sec hidden" id="snapTools"><h3>Shop snapshot (owner only)</h3>
       <p class="sub" style="margin:0 0 8px">People without your Shopify connection (like Katie) see the store from this snapshot: stock, prices, covers, series details and pre-orders. Refresh it after big listing days.</p>
@@ -934,9 +950,9 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 });
 
 /* ---------- sheet + toast ---------- */
-function parkAcct(){ const hold = $('#acctHold'); ['#acctBox','#ioBox'].forEach(id => { const n = $('#sheetBody').querySelector(id); if (n && hold) hold.appendChild(n); }); }
-function openSheet(html){ parkAcct(); $('#sheetBody').innerHTML = html; $('#scrim').classList.add('on'); $('#sheet').classList.add('on'); $('#sheet').scrollTop = 0; }
-function closeSheet(){ parkAcct(); $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); current = null; }
+function parkAcct(){ const hold = $('#acctHold'); ['#acctBox','#ioBox','#photoBox'].forEach(id => { const n = $('#sheetBody').querySelector(id); if (n && hold) hold.appendChild(n); }); }
+function openSheet(html){ try { stopCam(); } catch(e){} parkAcct(); $('#sheetBody').innerHTML = html; $('#scrim').classList.add('on'); $('#sheet').classList.add('on'); $('#sheet').scrollTop = 0; }
+function closeSheet(){ try { stopCam(); } catch(e){} parkAcct(); $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); current = null; }
 document.addEventListener('click', e => { const r = e.target.closest('[data-vrk]'); if (!r) return; e.stopPropagation(); const k = r.dataset.vrk; if (shelf.series[k]) openSeries(k); }, true);
 $('#scrim').onclick = closeSheet;
 $('#xbtn').onclick = closeSheet;
@@ -1699,9 +1715,12 @@ function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your
     applyBody(w === 'cloud' ? cloud : w === 'local' ? local : combine(local, cloud)); closeSheet(); renderAll(); renderFinds();
     try { await acctPush(); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; } catch(e){ acctMsg = 'Couldn’t save to your account: ' + e.message; }
     renderAcct(); toast(w === 'both' ? 'Shelves combined' : 'Shelf chosen', () => { shelf = prev; save(); }); }); }
+function photoMailto(){ const em = acct && acct.email || ''; const subj = 'Collection photos for My Manga Emporium' + (em ? ' (' + em + ')' : '');
+  const body = 'Hi! Here are photos of my manga collection for the app.\n\nMy store account email: ' + (em || '(please add the email you log in with)') + '\n\nAttach your photos to this email. Spines should be readable. Anything else we should know (other-language editions, box sets, books that are not on the shelf in the photo)?\n\n';
+  return 'mailto:themagesemporium@gmail.com?' + 'subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body); }
 function openAcct(focus){ current = null; openSheet(`<h2>${ACCT.client && !window.claude ? 'Account & backup' : 'Backup'}</h2><div id="acctSlot"></div><p style="margin:10px 0 4px;font-size:14px"><a class="helpLink" href="help.html" target="_top" style="font-weight:600">❓ How to use the app</a> &nbsp;·&nbsp; <a href="https://themagesemporium.com" target="_top" style="font-weight:600">🛍️ Back to the shop</a></p><div class="row2" style="margin-top:6px"><button class="btn ghost" data-close>Close</button></div>`);
   if (window.claude) document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium');
-  const slot = $('#acctSlot'); renderAcct(); slot.appendChild($('#acctBox')); slot.appendChild($('#ioBox'));
+  const slot = $('#acctSlot'); renderAcct(); slot.appendChild($('#acctBox')); slot.appendChild($('#ioBox')); slot.appendChild($('#photoBox')); $('#photoMail').href = photoMailto();
   if (focus === 'io') setTimeout(() => $('#ioBox').scrollIntoView({ block: 'start', behavior: 'smooth' }), 50); }
 document.addEventListener('click', e => { const t = e.target.closest('[data-achtog]'); if (t){ ls.set('mme-achopen', !ls.get('mme-achopen')); renderStats(); } const m = e.target.closest('#dupBox [data-merge]'); if (m) mergeSeries(m.dataset.merge.split('|')); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-openacct]'); if (b) openAcct(b.dataset.openacct); });
@@ -1772,8 +1791,59 @@ async function shareCard(){ try { await document.fonts.ready; } catch(e){}
     if (mob && navigator.canShare && navigator.canShare({ files: [cardFile] })){ navigator.share({ files: [cardFile] }).catch(() => {}); return; }
     const u = URL.createObjectURL(cardFile), a = document.createElement('a'); a.href = u; a.download = 'my-manga-collection.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }; }
 document.addEventListener('click', e => { const b = e.target.closest('#shareCard, [data-share]'); if (b) shareCard(); });
+/* ---------- scan mode: point the camera at a barcode, get a big answer ---------- */
+let scanStream = null, scanReader = null, scanBusy = false;
+function isbn13(code){ code = String(code).replace(/[^0-9Xx]/g, ''); if (code.length === 10){ const x = '978' + code.slice(0, 9); let t = 0; for (let i = 0; i < 12; i++) t += (+x[i]) * (i % 2 ? 3 : 1); return x + ((10 - t % 10) % 10); } return code; }
+function shelfKeyFor(snapK){ return Object.keys(shelf.series).find(k => { if (k === snapK) return true; const h = snapEntry(k); return h && h[0] === snapK; }) || null; }
+async function openScan(){ await loadSnap().catch(() => {});
+  openSheet(`<h2>📷 Do I own it?</h2><p class="sub" style="margin:0 0 8px">Point the camera at the barcode on the back of the book.</p>
+    <div class="scanv" id="scanBox"><video id="scanVid" playsinline muted autoplay></video><i></i></div>
+    <div id="scanRes"></div>
+    <div class="tools" style="margin-top:8px"><input id="scanIsbn" inputmode="numeric" placeholder="…or type the ISBN" autocomplete="off"><button class="btn" id="scanGo">Check</button></div>
+    <div class="row2" style="margin-top:8px"><button class="btn ghost" data-close>Done</button></div>`);
+  $('#scanGo').onclick = () => { const v = $('#scanIsbn').value.trim(); if (v) scanVerdict(v); };
+  startCam(); }
+async function startCam(){ stopCam(); const vid = $('#scanVid'); if (!vid) return; $('#scanBox').style.display = '';
+  try { scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } }, audio: false }); vid.srcObject = scanStream; await vid.play().catch(() => {}); }
+  catch(e){ $('#scanBox').style.display = 'none'; $('#scanRes').innerHTML = `<p class="note">The camera isn’t available (${esc(e.name || 'blocked')}). Allow camera access for this site, or type the ISBN below.</p>`; return; }
+  scanBusy = false; const det = ('BarcodeDetector' in window) ? new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a'] }) : null;
+  if (det){ const loop = async () => { if (!scanStream || scanBusy) return; try { const r = await det.detect(vid); const c = r.find(x => /^97[89]\d{10}$/.test(x.rawValue)) || r[0]; if (c){ hit(c.rawValue); return; } } catch(e){} requestAnimationFrame(loop); }; loop(); return; }
+  try { const ZX = await loadZX(); const hints = new Map(); hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.EAN_8, ZX.BarcodeFormat.UPC_A]);
+    scanReader = new ZX.BrowserMultiFormatReader(hints, 250); scanReader.decodeFromStream(scanStream, vid, (r) => { if (r && !scanBusy) hit(r.getText()); }); }
+  catch(e){ $('#scanRes').innerHTML = `<p class="note">The barcode reader couldn’t load${navigator.onLine ? '' : ' while offline'}. Type the ISBN below.</p>`; } }
+function hit(code){ if (scanBusy) return; scanBusy = true; try { navigator.vibrate && navigator.vibrate(60); } catch(e){} stopCam(); scanVerdict(code); }
+function stopCam(){ try { scanReader && scanReader.reset(); } catch(e){} scanReader = null; if (scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; } }
+async function scanVerdict(raw){ const out = $('#scanRes'); if (!out) return; const code = isbn13(raw); $('#scanBox').style.display = 'none';
+  const again = `<div class="row2" style="justify-content:center"><button class="btn" id="scanNext">📷 Scan another</button></div>`;
+  const b = snapBar.get(code); let html = '';
+  if (b){ const [sk, vol] = b; const e = SNAP.s[sk]; const it = (e.i || []).find(x => x[0] === vol) || []; const img = it[4] ? snapImg(it[4]) : ''; const nm = e.n + (e.ln ? ' (Light Novel)' : '');
+    const key = shelfKeyFor(sk); const S = key ? shelf.series[key] : null; const own = S ? ints(S) : []; const max = own.length ? Math.max(...own) : 0; const want = S && (S.want || []).includes(vol);
+    let cls, icon, big, sub;
+    if (own.includes(vol)){ cls = 'own'; icon = '✅'; big = 'You own this one'; sub = `You have ${own.length} of ${nm}.`; }
+    else if (S && vol === max + 1){ cls = 'next'; icon = '⭐'; big = 'Next one you need!'; sub = `You have up to Vol ${max}.`; }
+    else if (S && vol < max){ cls = 'gap'; icon = '🧩'; big = 'Fills a gap!'; sub = `You’re missing this one. You have ${own.length} volumes, up to Vol ${max}.`; }
+    else if (S){ cls = 'ser'; icon = '📚'; big = 'You collect this series'; sub = `But you only have up to Vol ${max}, so this skips ahead.`; }
+    else { cls = 'new'; icon = '✨'; big = 'New series for you'; sub = `Nothing from ${nm} on your shelf yet.`; }
+    html = `<div class="verdict ${cls}">${img ? `<img src="${img}" alt="">` : ''}<div style="font-size:30px">${icon}</div><div class="big">${big}</div><div><b>${esc(nm)} · Vol ${vol}</b></div><div style="font-size:14px;margin-top:4px">${esc(sub)}${want ? ' ♥ It’s on your wishlist.' : ''}</div></div>
+      <div class="row2" style="justify-content:center;flex-wrap:wrap">${own.includes(vol) ? '' : `<button class="btn" id="scanAdd">＋ Add to my shelf</button>${want ? '' : `<button class="btn ghost" id="scanWant">♥ Add to wishlist</button>`}`}</div>` + again;
+    out.innerHTML = html;
+    const sAdd = $('#scanAdd'); if (sAdd) sAdd.onclick = () => { const k2 = key || sk; const prev = shelf.series[k2] ? shelf.series[k2].v : []; const undo = setVols(k2, prev.concat(vol), nm); if (shelf.series[k2].want) shelf.series[k2].want = shelf.series[k2].want.filter(x => x !== vol); save(); toast(`Added ${nm} Vol ${vol}`, undo); sAdd.outerHTML = '<span class="chip good">Added ✓</span>'; const w = $('#scanWant'); if (w) w.remove(); };
+    const sW = $('#scanWant'); if (sW) sW.onclick = () => { const k2 = key || sk; if (!shelf.series[k2]) shelf.series[k2] = { n: nm, v: [], t: Date.now() }; const T = shelf.series[k2]; T.want = [...new Set((T.want || []).concat(vol))].sort((a, c) => a - c); save(); toast(`♥ ${nm} Vol ${vol} on your wishlist`); sW.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; };
+  } else {
+    out.innerHTML = `<div class="verdict unk"><div style="font-size:30px">🔎</div><div class="big">Checking…</div><div>ISBN ${esc(code)}</div></div>` + again;
+    let title = ''; if (navigator.onLine){ try { const j = await fetch('https://openlibrary.org/isbn/' + code + '.json').then(r => r.ok ? r.json() : null); title = j && j.title || ''; } catch(e){} }
+    const words = normName(title); const k = title ? Object.keys(shelf.series).find(x => { const n = normName(shelf.series[x].n); return n.length >= 4 && words.startsWith(n); }) : null;
+    out.innerHTML = `<div class="verdict ${k ? 'ser' : 'unk'}"><div style="font-size:30px">${k ? '📚' : '🔎'}</div><div class="big">${k ? 'Might be one of yours' : 'Not in our catalog'}</div><div>${title ? `<b>${esc(title)}</b>` : `ISBN ${esc(code)}`}</div><div style="font-size:14px;margin-top:4px">${k ? `You have ${shelf.series[k].v.length} of ${esc(shelf.series[k].n)}: Vol ${compactVols(ints(shelf.series[k]))}. Check the volume number.` : (navigator.onLine ? 'We couldn’t match this book to the shop’s list. You can still add it from the + button.' : 'You’re offline, so only books in the shop’s list can be checked.')}</div></div>` + again; }
+  const nx = $('#scanNext'); if (nx) nx.onclick = () => { $('#scanRes').innerHTML = ''; $('#scanIsbn').value = ''; startCam(); }; }
+document.addEventListener('click', e => { if (e.target.closest('[data-scanmode]')) openScan(); });
+
+/* ---------- offline: app keeps working; account saves wait for the connection ---------- */
+function netState(){ const off = !navigator.onLine; let b = $('#offbar'); if (off && !b){ b = document.createElement('div'); b.id = 'offbar'; b.className = 'offbar'; b.textContent = 'You’re offline. Everything still works and saves on this phone; it syncs when you’re back online.'; document.body.prepend(b); } else if (!off && b) b.remove(); }
+window.addEventListener('offline', netState); window.addEventListener('online', () => { netState(); if (acct && acct.at){ if (ls.get('mme-dirty')) acctSave(); else acctSync(); } });
+if (!window.claude && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
 if (window.claude) document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium');
+netState();
 renderAcct();
 boot();
 })();
