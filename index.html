@@ -112,6 +112,10 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .badge{font-size:12px;font-weight:600;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.14)}
 .badge{border:0;color:inherit;font-family:inherit}
 .badge.off{opacity:.45}
+.achhead{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding:0;border:0;background:none;color:inherit;font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-align:left}
+.achemo{display:flex;flex-wrap:wrap;gap:2px 4px;margin-top:6px;font-size:19px;line-height:1.35;cursor:pointer}
+.achemo i{font-style:normal}.achemo i.off{opacity:.28;filter:grayscale(1)}
+.badges.hid{display:none}
 .st-sec{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:14px 16px;margin:0 0 12px}
 .st-sec h3{margin:0 0 8px;font-size:16px;font-family:var(--display)}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -312,6 +316,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       <button class="stat" data-stat="runs"><b id="sRuns">0</b><span>no-gap runs</span></button>
       <button class="stat" data-stat="gaps"><b id="sGaps">0</b><span>gaps to fill</span></button>
     </div>
+    <div id="achWrap"></div>
     <div class="badges" id="badges"></div>
   </section>
 
@@ -337,6 +342,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
     </div>
     <div class="count" id="count"></div>
     <div class="list" id="list"></div>
+    <div id="dupBox" style="margin-top:14px"></div>
     <p style="text-align:center;margin:18px 0 6px"><button class="btn ghost sm" data-openacct="io">⤓ Back up or bring in a collection</button></p>
   </section>
 
@@ -516,6 +522,10 @@ function renderStats(){
   ];
   BADGES[BADGES.length - 1][2] = BADGES.slice(0, -1).filter(b => b[2] >= b[3]).length;
   const shown = BADGES.map((b, i) => [b, i]).filter(([b]) => !b[4] || b[2] >= b[3]); const secret = BADGES.filter(b => b[4] && b[2] < b[3]).length;
+  const earnedN = BADGES.filter(b => b[2] >= b[3]).length, openA = !!ls.get('mme-achopen');
+  const emo = b => b[0].slice(0, b[0].indexOf(' '));
+  $('#achWrap').innerHTML = `<button class="achhead" data-achtog aria-expanded="${openA}"><span>🏅 Achievements · ${earnedN} of ${shown.length}${secret ? ` + ${secret} secret` : ''}</span><span>${openA ? 'Hide ▴' : 'Show all ▾'}</span></button>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
+  $('#badges').classList.toggle('hid', !openA);
   $('#badges').innerHTML = shown.map(([b, i]) => `<button class="badge${b[2]>=b[3]?'':' off'}" data-b="${i}">${b[0]}</button>`).join('') + (secret ? `<button class="badge off" data-b="secret">🔒 ${secret} secret</button>` : '');
 }
 
@@ -709,7 +719,6 @@ function renderStatsTab(){
     ${(() => { const A = allVolReviews(), S = A.filter(r => r.st); return `<div class="srow" style="cursor:default"><span>Volume reviews<small>${A.length} volume${A.length===1?'':'s'} reviewed</small></span><span class="r">${S.length ? (S.reduce((a,r)=>a+r.st,0)/S.length).toFixed(1) + ' ★' : '—'}</span></div>`; })()}
   </div>
   <div class="st-sec"><h3>Collector titles</h3><p class="sub" style="margin:0 0 6px">The biggest shelves among The Mage’s Emporium collectors. Beat a record to take the title.</p>${crownHTML}</div>
-  ${dupHTML()}
   <div class="st-sec"><h3>Your shelf by…</h3>
     <div class="seg2">${Object.entries(LBL).map(([k,t]) => `<button data-by="${k}" aria-pressed="${k===statsBy}">${t}</button>`).join('')}</div>
     ${bars}
@@ -864,7 +873,7 @@ $('#impFile').onchange = async e => { const f = e.target.files && e.target.files
 function coverOf(k){ const s = shelf.series[k]; if (!s) return ''; if (s.c) return s.c; const L = live.get(k); if (!L) return ''; const own = new Set(ints(s)); const it = L.items.find(p => p.img && own.has(p.vol)) || L.items.find(p => p.img); return it ? it.img : ''; }
 function coverHTML(k){ const u = coverOf(k); const n = shelf.series[k].n.replace(/^(the|a)\s+/i,'');
   return `<span class="cover" aria-hidden="true">${u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">` : esc(n[0] || '?')}</span>`; }
-function renderAll(){ renderStats(); renderList(); try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
+function renderAll(){ renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
 $('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; if (t.dataset.b === 'secret'){ openSheet(`<h2>🔒 Secret achievements</h2><p>${BADGES.filter(b => b[4] && b[2] < b[3]).length} achievements are hidden until you earn them. Keep collecting, reading, reviewing and lending to discover them.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); return; } const [name, how, have, need] = BADGES[+t.dataset.b];
   current = null;
   openSheet(`<h2>${name}</h2><p class="sub">${have >= need ? 'Earned!' : 'Not earned yet'}</p><p>${how}</p><div class="bprog"><i style="width:${Math.min(100, Math.round(have/need*100))}%"></i></div><p class="sub">${Math.min(have,need)} of ${need}${have>=need ? ' ✓' : ` · ${need-have} to go`}</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); };
@@ -1680,6 +1689,7 @@ function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your
 function openAcct(focus){ openSheet(`<h2>${ACCT.client && !window.claude ? 'Account & backup' : 'Backup'}</h2><div id="acctSlot"></div><div class="row2" style="margin-top:6px"><button class="btn ghost" data-close>Close</button></div>`);
   const slot = $('#acctSlot'); renderAcct(); slot.appendChild($('#acctBox')); slot.appendChild($('#ioBox'));
   if (focus === 'io') setTimeout(() => $('#ioBox').scrollIntoView({ block: 'start', behavior: 'smooth' }), 50); }
+document.addEventListener('click', e => { const t = e.target.closest('[data-achtog]'); if (t){ ls.set('mme-achopen', !ls.get('mme-achopen')); renderStats(); } const m = e.target.closest('#dupBox [data-merge]'); if (m) mergeSeries(m.dataset.merge.split('|')); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-openacct]'); if (b) openAcct(b.dataset.openacct); });
 function acctOut(expired){ acct = null; ls.set('mme-acct', null); acctMsg = expired ? 'Your login expired. Log in again to keep syncing.' : ''; $('#sync').textContent = 'Saved on this device only'; renderAcct(); }
 function renderAcct(){ const el = $('#acctBox'); if (!el) return; const hb = $('#acctHdr'); if (!ACCT.client || window.claude){ el.classList.add('hidden'); if (hb){ hb.classList.remove('hidden'); hb.classList.add('ghost'); hb.textContent = '⤓ Backup'; hb.onclick = () => openAcct('io'); } return; } el.classList.remove('hidden');
