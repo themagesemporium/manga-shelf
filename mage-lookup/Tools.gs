@@ -9,6 +9,11 @@
 const TOOLS_LOCATION = 'gid://shopify/Location/24217416';
 
 /* ---------- helpers ---------- */
+function toolsGql_(q, v) {                      // like gql_, but gets a fresh Shopify login once if access was denied (e.g. right after new permissions)
+  try { return gql_(q, v); }
+  catch (e) { if (String(e).indexOf('ACCESS_DENIED') < 0) throw e; CacheService.getScriptCache().remove('shopify_token'); return gql_(q, v); }
+}
+function resetShopifyLogin() { CacheService.getScriptCache().remove('shopify_token'); Logger.log('Shopify login cleared; the next request logs in fresh.'); }
 function toolsCodes_(v) {                       // every form a barcode/SKU can take, for matching
   const raw = String(v || '').toUpperCase().replace(/-EXLIB$/, '').replace(/[^0-9X]/g, '');
   const out = [];
@@ -20,7 +25,7 @@ function toolsMonthTag_() { return Utilities.formatDate(new Date(), 'America/New
 function toolsFindVariant_(code) {
   const codes = toolsCodes_(code); if (!codes.length) return null;
   const q = codes.map(c => `barcode:${c} OR sku:${c}`).join(' OR ');
-  const d = gql_(`query($q:String){productVariants(first:5,query:$q){nodes{id sku barcode inventoryItem{id inventoryLevel(locationId:"${TOOLS_LOCATION}"){quantities(names:["available"]){quantity}}}
+  const d = toolsGql_(`query($q:String){productVariants(first:5,query:$q){nodes{id sku barcode inventoryItem{id inventoryLevel(locationId:"${TOOLS_LOCATION}"){quantities(names:["available"]){quantity}}}
     product{id title status tags featuredMedia{preview{image{url(transform:{maxWidth:120})}}}}}}}`, { q });
   const n = d.productVariants.nodes;
   if (!n.length) return null;
@@ -31,7 +36,7 @@ function toolsFindVariant_(code) {
 
 /* ---------- 1. Order check ---------- */
 function toolsOrders() {
-  const d = gql_(`{orders(first:40,sortKey:CREATED_AT,reverse:true,query:"fulfillment_status:unfulfilled AND status:open"){nodes{id name createdAt sourceName
+  const d = toolsGql_(`{orders(first:40,sortKey:CREATED_AT,reverse:true,query:"fulfillment_status:unfulfilled AND status:open"){nodes{id name createdAt sourceName
     customer{firstName lastName} lineItems(first:60){nodes{title quantity sku variant{barcode sku} image{url(transform:{maxWidth:120})}}}}}}`);
   return d.orders.nodes.map(o => ({
     id: o.id, name: o.name, date: o.createdAt.slice(0, 10), src: o.sourceName || '',
@@ -58,7 +63,7 @@ function toolsAdd(code, haul) {
     const lvl = v.inventoryItem.inventoryLevel;
     const before = lvl ? lvl.quantities[0].quantity : 0;
     const key = 'add-' + v.id.split('/').pop() + '-' + Date.now();
-    const r = gql_(`mutation($in:InventoryAdjustQuantitiesInput!){inventoryAdjustQuantities(input:$in) @idempotent(key:"${key}"){userErrors{message}}}`, {
+    const r = toolsGql_(`mutation($in:InventoryAdjustQuantitiesInput!){inventoryAdjustQuantities(input:$in) @idempotent(key:"${key}"){userErrors{message}}}`, {
       in: { name: 'available', reason: 'received', changes: [{ inventoryItemId: v.inventoryItem.id, locationId: TOOLS_LOCATION, delta: 1, changeFromQuantity: before }] } });
     const err = r.inventoryAdjustQuantities.userErrors; if (err.length) return { ok: false, msg: err[0].message };
     // tags: back in stock gets the month tag; the haul tag (if typed) goes on every scan
@@ -66,8 +71,8 @@ function toolsAdd(code, haul) {
     if (before <= 0) { remove = tags.filter(t => /^(outofstock|placeholder|placeholder-current|placeholder-oop)$/i.test(t)); add.push('BackInStock', toolsMonthTag_()); }
     if (haul) add.push(String(haul).trim());
     add = add.filter(t => t && tags.indexOf(t) < 0);
-    if (add.length) gql_(`mutation($id:ID!,$t:[String!]!){tagsAdd(id:$id,tags:$t){userErrors{message}}}`, { id: v.product.id, t: add });
-    if (remove.length) gql_(`mutation($id:ID!,$t:[String!]!){tagsRemove(id:$id,tags:$t){userErrors{message}}}`, { id: v.product.id, t: remove });
+    if (add.length) toolsGql_(`mutation($id:ID!,$t:[String!]!){tagsAdd(id:$id,tags:$t){userErrors{message}}}`, { id: v.product.id, t: add });
+    if (remove.length) toolsGql_(`mutation($id:ID!,$t:[String!]!){tagsRemove(id:$id,tags:$t){userErrors{message}}}`, { id: v.product.id, t: remove });
     const img = v.product.featuredMedia && v.product.featuredMedia.preview && v.product.featuredMedia.preview.image ? v.product.featuredMedia.preview.image.url : '';
     return { ok: true, t: v.product.title, qty: before + 1, back: before <= 0, draft: v.product.status !== 'ACTIVE', img };
   } finally { lock.releaseLock(); }
