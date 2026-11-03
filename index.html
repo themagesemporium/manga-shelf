@@ -312,6 +312,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       <div><h1>My Manga Emporium</h1><small id="sync">Loading your shelf…</small></div>
     </div>
     <button class="btn sm hidden" id="acctHdr" style="margin-left:auto;margin-right:6px;white-space:nowrap">Log in</button>
+    <button class="btn sm gold hidden" id="cartHdr" style="margin-right:6px;white-space:nowrap">🛒 0</button>
     <a class="iconbtn" id="shopLink" href="https://themagesemporium.com" target="_top" aria-label="Back to The Mage’s Emporium shop" title="Back to the shop" style="margin-right:6px;text-decoration:none;font-size:18px;display:grid;place-items:center">🛍️</a>
     <button class="iconbtn" id="theme" aria-label="Change colors"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1.1 0 1.6-.9 1.2-1.8-.5-1.1.2-2.2 1.4-2.2H17a4 4 0 004-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg></button>
   </header>
@@ -945,6 +946,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   $('#tab-reading').classList.toggle('hidden', b.dataset.tab!=='reading');
   $('#tab-lists').classList.toggle('hidden', b.dataset.tab!=='lists');
   if (b.dataset.tab==='lists') renderLists();
+  if (b.dataset.tab==='finds') liveAll();
   if (b.dataset.tab==='stats') renderStatsTab();
   if (b.dataset.tab==='reading') renderReadTab();
 });
@@ -1092,11 +1094,59 @@ function mapProd(p){
     pub: p.vendor || '', aud: p.aud ? p.aud.value : '', au: p.au ? p.au.value : '', g1: p.g1 ? p.g1.value : '', gen: (() => { try { return p.gen ? JSON.parse(p.gen.value) : []; } catch(e){ return []; } })() };
 }
 const SF = 'https://themagesemporium.com/api/2025-07/graphql.json';
-async function liveStock(key, out){ if (window.claude) return; const its = out.items.filter(p => p.handle).slice(0, 120); if (!its.length) return;
-  try { const q = '{' + its.map((p, i) => `p${i}:product(handle:${JSON.stringify(p.handle)}){availableForSale}`).join(' ') + '}';
-    const r = await fetch(SF, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: q }) }); const j = await r.json(); if (!j.data) return;
-    let ch = false; its.forEach((p, i) => { const n = j.data['p' + i]; if (!n) return; const inv = n.availableForSale ? Math.max(1, p.inv || 0) : 0; if ((p.inv > 0) !== (inv > 0)){ p.inv = inv; ch = true; } });
-    out.fresh = 1; out.at = Date.now(); if (ch && current === key) renderSeries(key); } catch(e){} }
+const volOf = t => { const m = String(t).match(/\b(?:Vol\.?|Volume)\s*(\d+(?:\.\d+)?)/i); return m ? +m[1] : null; };
+function collHandle(sk, e){ return 'series-' + sk.replace(/-ln$/, '') + (e && e.ln ? '-light-novel' : ''); }
+const LQ = `products(first:250){nodes{handle title availableForSale priceRange{minVariantPrice{amount}} featuredImage{url(transform:{maxWidth:240})} variants(first:1){nodes{id}}}}`;
+function liveItems(nodes, e, old){ const by = new Map(); const isb = new Map((old || []).map(p => [p.handle, p.isbn]));
+  nodes.forEach(n => { if (/pre-?order/i.test(n.title) || /pre-?order/.test(n.handle)) return; const v = volOf(n.title) ?? (e.i.length === 1 ? e.i[0][0] : null); if (v == null) return;
+    const it = { vol: Math.round(v), price: +n.priceRange.minVariantPrice.amount, inv: n.availableForSale ? 1 : 0, handle: n.handle, img: n.featuredImage ? n.featuredImage.url : '', title: n.title, ser: e.n, sv: e.t || 0, isbn: isb.get(n.handle) || '', vid: n.variants.nodes[0] && n.variants.nodes[0].id };
+    const ex = by.get(it.vol); if (!ex || (it.inv > ex.inv) || (it.inv === ex.inv && it.price < ex.price)) by.set(it.vol, it); });
+  return [...by.values()].sort((a, b) => a.vol - b.vol); }
+async function sfq(query, variables){ const r = await fetch(SF, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query, variables }) }); return r.json(); }
+async function liveStock(key, out){ if (window.claude || !navigator.onLine) return; const hit = snapEntry(key); if (!hit) return; const [sk, e] = hit;
+  try { const j = await sfq(`{c:collection(handle:${JSON.stringify(collHandle(sk, e))}){${LQ}}}`); const c = j.data && j.data.c;
+    if (c && c.products.nodes.length){ const items = liveItems(c.products.nodes, e, out.items); if (items.length){ out.items = items; out.fresh = 1; out.at = Date.now(); if (current === key) renderSeries(key); renderFinds(); return; } }
+    const its = out.items.filter(p => p.handle).slice(0, 120); if (!its.length) return;
+    const q = '{' + its.map((p, i) => `p${i}:product(handle:${JSON.stringify(p.handle)}){availableForSale variants(first:1){nodes{id}}}`).join(' ') + '}'; const j2 = await sfq(q); if (!j2.data) return;
+    its.forEach((p, i) => { const n = j2.data['p' + i]; if (!n) return; p.inv = n.availableForSale ? Math.max(1, p.inv || 0) : 0; p.vid = n.variants.nodes[0] && n.variants.nodes[0].id; });
+    out.fresh = 1; out.at = Date.now(); if (current === key) renderSeries(key); renderFinds(); } catch(err){} }
+// refresh every series on the shelf from the store (Finds + wishlist alerts), at most every 30 minutes
+let liveAllAt = 0, liveAllBusy = false;
+async function liveAll(force){ if (window.claude || !navigator.onLine || liveAllBusy || (!force && Date.now() - liveAllAt < 30*60e3)) return; if (!SNAP) await loadSnap(); if (!SNAP) return; liveAllBusy = true; liveAllAt = Date.now();
+  const list = []; Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const h = snapEntry(k); if (h) list.push([k, h[0], h[1]]); });
+  for (let i = 0; i < list.length; i += 10){ const ch = list.slice(i, i + 10);
+    try { const j = await sfq('{' + ch.map((x, n) => `c${n}:collection(handle:${JSON.stringify(collHandle(x[1], x[2]))}){${LQ}}`).join(' ') + '}');
+      ch.forEach((x, n) => { const c = j.data && j.data['c' + n]; if (!c || !c.products.nodes.length) return; const old = live.get(x[0]); const items = liveItems(c.products.nodes, x[2], old && old.items); if (items.length) live.set(x[0], Object.assign({}, old || {}, { at: Date.now(), v2: 1, items, total: x[2].t || (old && old.total) || 0, fresh: 1 })); }); } catch(e){}
+    if (i % 50 === 40) renderFinds(); }
+  liveAllBusy = false; renderFinds(); renderAll(); wishAlert(); }
+/* ---------- cart: add in-stock volumes, check out on the store ---------- */
+let cart = ls.get('mme-cart') || null;
+function cartChip(){ const b = $('#cartHdr'); if (!b) return; const n = cart && cart.n || 0; b.classList.toggle('hidden', !n || !!window.claude); b.textContent = '🛒 ' + n; b.onclick = openCart; }
+async function vidFor(handle){ for (const L of live.values()){ const it = (L.items || []).find(p => p.handle === handle && p.vid); if (it) return it.vid; }
+  const j = await sfq(`{p:product(handle:${JSON.stringify(handle)}){variants(first:1){nodes{id availableForSale}}}}`); const v = j.data && j.data.p && j.data.p.variants.nodes[0]; return v ? v.id : null; }
+const CF = 'id checkoutUrl totalQuantity cost{totalAmount{amount}} lines(first:100){nodes{id quantity merchandise{... on ProductVariant{id product{title handle featuredImage{url(transform:{maxWidth:120})}}}}}}';
+async function addToCart(handle, btn){ if (window.claude){ window.open(STORE + '/products/' + encodeURIComponent(handle), '_blank'); return; }
+  if (btn){ btn.disabled = true; btn.textContent = 'Adding…'; }
+  try { const vid = await vidFor(handle); if (!vid) throw new Error('not found'); let j;
+    if (cart && cart.id){ j = await sfq(`mutation($c:ID!,$l:[CartLineInput!]!){cartLinesAdd(cartId:$c,lines:$l){cart{${CF}} userErrors{message}}}`, { c: cart.id, l: [{ merchandiseId: vid, quantity: 1 }] }); j = j.data && j.data.cartLinesAdd; }
+    if (!j || !j.cart){ j = await sfq(`mutation($l:[CartLineInput!]!){cartCreate(input:{lines:$l}){cart{${CF}} userErrors{message}}}`, { l: [{ merchandiseId: vid, quantity: 1 }] }); j = j.data && j.data.cartCreate; }
+    if (!j || !j.cart) throw new Error((j && j.userErrors && j.userErrors[0] && j.userErrors[0].message) || 'cart error');
+    cart = { id: j.cart.id, url: j.cart.checkoutUrl, n: j.cart.totalQuantity }; ls.set('mme-cart', cart); cartChip(); toast('Added to your cart 🛒');
+    if (btn){ btn.textContent = 'In cart ✓'; } }
+  catch(e){ if (btn){ btn.disabled = false; btn.textContent = '🛒 Add'; } toast('Couldn’t add it (' + e.message + '). Try the shop page.'); } }
+async function openCart(){ if (!cart || !cart.id) return; openSheet(`<h2>🛒 Your cart</h2><div id="cartBody"><p class="sub"><span class="spin"></span>&nbsp; Loading…</p></div>`);
+  const draw = async () => { const j = await sfq(`query($c:ID!){cart(id:$c){${CF}}}`, { c: cart.id }); const c = j.data && j.data.cart; const el = $('#cartBody'); if (!el) return;
+    if (!c){ cart = null; ls.set('mme-cart', null); cartChip(); el.innerHTML = '<p class="sub">Your cart is empty.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>'; return; }
+    cart = { id: c.id, url: c.checkoutUrl, n: c.totalQuantity }; ls.set('mme-cart', cart); cartChip();
+    el.innerHTML = (c.lines.nodes.length ? c.lines.nodes.map(l => `<div class="find"><img src="${esc(l.merchandise.product.featuredImage ? l.merchandise.product.featuredImage.url : '')}" alt=""><div class="t"><b>${esc(l.merchandise.product.title)}</b><small>Qty ${l.quantity}</small></div><button class="btn ghost sm" data-rmline="${esc(l.id)}">Remove</button></div>`).join('') : '<p class="sub">Your cart is empty.</p>')
+      + `<p style="margin:10px 0 6px"><b>Total: $${(+c.cost.totalAmount.amount).toFixed(2)}</b> <span class="sub">(shipping and tax at checkout)</span></p><div class="row2">${c.lines.nodes.length ? `<a class="btn" href="${esc(c.checkoutUrl)}" target="_top">Check out on the shop</a>` : ''}<button class="btn ghost" data-close>Keep browsing</button></div>`;
+    el.querySelectorAll('[data-rmline]').forEach(b => b.onclick = async () => { b.disabled = true; await sfq(`mutation($c:ID!,$l:[ID!]!){cartLinesRemove(cartId:$c,lineIds:$l){cart{id}}}`, { c: cart.id, l: [b.dataset.rmline] }); draw(); }); };
+  draw().catch(() => { const el = $('#cartBody'); if (el) el.innerHTML = '<p class="note">Couldn’t load your cart. Check your connection.</p>'; }); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-cart]'); if (b){ e.preventDefault(); addToCart(b.dataset.cart, b); } });
+/* ---------- wishlist alerts: wanted volumes that are in stock ---------- */
+function wantedInStock(){ const out = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s.want || !s.want.length) return; const L = live.get(k); if (!L) return; L.items.forEach(p => { if (p.inv > 0 && s.want.includes(p.vol) && !s.v.includes(p.vol)) out.push({ k, n: s.n, p }); }); }); return out; }
+function wishAlert(){ const w = wantedInStock(); const seen = new Set(shelf.seenW || []); const fresh = w.filter(x => !seen.has(x.p.handle));
+  if (fresh.length){ toast(`🔔 ${fresh.length === 1 ? fresh[0].n + ' Vol ' + fresh[0].p.vol + ' is' : fresh.length + ' books from your wishlist are'} back in stock! See Finds.`); shelf.seenW = [...new Set([...seen, ...fresh.map(x => x.p.handle)])].slice(-500); save(); } }
 async function lookupSeries(key, force){
   const s = shelf.series[key]; if (!s || langOf(key)) return null;
   if (!mcp){ if (!SNAP) await loadSnap(); const hit = snapEntry(key); if (!hit) return null; const prevL = live.get(key); if (prevL && prevL.fresh && Date.now() - prevL.at < 10*60e3) return prevL; const out = { at: Date.now(), v2: 1, items: snapItems(hit[1]), total: hit[1].t || 0, snap: SNAP.at }; live.set(key, out); liveStock(key, out); return out; }
@@ -1243,7 +1293,7 @@ function renderSeries(key){
   else if (st === 'loading') store = `<p class="sub"><span class="spin"></span>&nbsp; Checking the store…</p>`;
   else if (st && st !== 'ok') store = `<p class="note">${esc(errText(st))}</p><div class="row2"><button class="btn ghost sm" data-refresh>Try again</button></div>`;
   else if (live.get(key)){
-    store = i.inStock.length ? i.inStock.map(p => `<div class="prod"><img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t">Vol ${p.vol}<small>${esc(p.title)}</small></div><span class="price">$${(p.price||0).toFixed(2)}</span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Buy</a></div>`).join('')
+    store = i.inStock.length ? i.inStock.map(p => `<div class="prod"><img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t">Vol ${p.vol}<small>${esc(p.title)}</small></div><span class="price">$${(p.price||0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(p.handle)}">🛒 Add</button></div>`).join('')
       : `<p class="sub">None of your missing volumes are in stock right now.</p>`;
     store += mcp ? `<div class="row2"><button class="btn ghost sm" data-refresh>Refresh stock</button></div>` : (SNAP ? `<p class="sub" style="margin:8px 0 0">Stock as of ${snapAge()}.</p>` : '');
   }
@@ -1519,7 +1569,8 @@ function renderFinds(){
   const el = $('#finds');
   if (!findsList.length){ el.innerHTML = live.size ? `<div class="empty">Nothing you're missing is in stock among the series checked so far.</div>` : ''; return; }
   const total = findsList.reduce((s,f) => s + (f.p.price||0), 0);
-  el.innerHTML = `<p class="count">${findsList.length} volumes waiting for you · $${total.toFixed(2)} total</p>` + findsList.map(f => `<div class="find"><img src="${esc(f.p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b>${esc(f.n)} Vol ${f.p.vol}</b><small>${f.gap ? 'Fills a gap' : 'Next in the series'}</small></div><span class="price">$${(f.p.price||0).toFixed(2)}</span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener">Buy</a></div>`).join('');
+  const WI = new Set(wantedInStock().map(x => x.p.handle)); findsList.sort((a, b) => (WI.has(b.p.handle) - WI.has(a.p.handle)));
+  el.innerHTML = (WI.size ? `<div class="verdict next" style="text-align:left;margin:0 0 10px"><b>🔔 ${WI.size} from your wishlist ${WI.size === 1 ? 'is' : 'are'} in stock!</b> They’re at the top.</div>` : '') + `<p class="count">${findsList.length} volumes waiting for you · $${total.toFixed(2)} total</p>` + findsList.map(f => `<div class="find"><img src="${esc(f.p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(f.n)} Vol ${f.p.vol}</a></b><small>${WI.has(f.p.handle) ? '♥ On your wishlist' : f.gap ? 'Fills a gap' : 'Next in the series'}</small></div><span class="price">$${(f.p.price||0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(f.p.handle)}">🛒 Add</button></div>`).join('');
 }
 
 /* ---------- wishlist + sell list ---------- */
@@ -1543,10 +1594,11 @@ function renderLists(){
   const sellTxt = `Hi! I'd like to sell these to The Mage's Emporium:\n` + grp(S).map(([k,a]) => `${a[0].n}: Vol ${compactVols(a.map(x=>x.v))}${a[0].low ? ' (foreign / ex-library / damaged)' : ''}`).join('\n') + `\n\n${S.length} books, app estimate $${sTot.toFixed(2)}.`;
   const wantHTML = `
   <div class="st-sec"><h3>♥ Wishlist <span class="sub" style="font-weight:400">(${W.length})</span></h3>
+    ${(() => { const n = Object.keys(shelf.series).reduce((a, k) => { if (langOf(k)) return a; const i = info(k); const w = new Set(i.s.want || []); return a + i.gaps.filter(v => !w.has(v)).length; }, 0); return n ? `<p style="margin:0 0 10px"><button class="btn sm" data-wantgaps>♥ Add all ${n} missing ${n === 1 ? 'volume' : 'volumes'} (gaps) to my wishlist</button></p>` : ''; })()}
     ${W.length ? `${inStock.length ? `<p class="sub" style="margin:0 0 6px">${inStock.length} in stock now · $${wTot.toFixed(2)}</p>` : ''}${grp(W).map(([k,a]) => `<button class="srow" data-k="${esc(k)}"><span>${esc(a[0].n)}<small>Vol ${compactVols(a.map(x=>x.v))}</small></span><span class="r">${a.filter(x => x.p && x.p.inv > 0).length ? `<span class="chip gold">${a.filter(x => x.p && x.p.inv > 0).length} in stock</span>` : a.length}</span></button>`).join('')}
       <div class="st-sec" style="background:var(--surface-2);box-shadow:none;margin:12px 0 0"><h3 style="font-size:15px">🔔 Back-in-stock emails</h3>
         <p class="sub" style="margin:0 0 6px">The shop's website emails you the moment a wishlisted book comes into stock. Tap a volume, then tap <b>Add to Wishlist</b> on its page (sign in to your shop account first).</p>
-        ${W.filter(x => x.p && x.p.handle).slice(0,30).map(x => `<a class="chip" style="display:inline-block;margin:0 6px 6px 0;text-decoration:none" href="${STORE}/products/${encodeURIComponent(x.p.handle)}" target="_blank" rel="noopener">${esc(x.n)} ${x.v}${x.p.inv > 0 ? ' · in stock' : ''}</a>`).join('') || '<p class="sub" style="margin:0">None of these are listed at the shop yet. Check back as the shop adds them.</p>'}</div>
+        ${W.filter(x => x.p && x.p.handle).slice(0,30).map(x => `<a class="chip" style="display:inline-block;margin:0 6px 6px 0;text-decoration:none" href="${STORE}/products/${encodeURIComponent(x.p.handle)}" target="_blank" rel="noopener">${esc(x.n)} ${x.v}${x.p.inv > 0 ? ' · in stock' : ''}</a>`).join('') || '<p class="sub" style="margin:0">None of these are listed at the shop yet. Check back as the shop adds them.</p>'}<p style="margin:6px 0 0"><a class="btn ghost sm" href="${STORE}/apps/wishlist" target="_blank" rel="noopener">♥ Open my shop wishlist</a></p></div>
       <div class="row2"><button class="btn ghost sm" data-copy="gift">Copy gift list</button></div><p class="sub" style="margin:4px 0 0">Send it to family so they know exactly what to buy.</p>`
     : `<p class="sub" style="margin:0">Open a series, switch to “Want ♥”, and tap the volumes you want. Or tap “Want all missing”.</p>`}</div>
 `;
@@ -1568,6 +1620,9 @@ function renderLists(){
 }
 document.addEventListener('change', e => { if (e.target.id === 'alertOn'){ if (e.target.checked){ const em = ($('#alertEmail').value || '').trim(); if (!/^\S+@\S+\.\S+$/.test(em)){ e.target.checked = false; toast('Type your email, then tap Save'); return; } shelf.contact = Object.assign({}, shelf.contact, { email: em }); shelf.alert = true; } else delete shelf.alert; save(); syncAlerts(); return; }
   const c = e.target.closest('[data-cond]'); if (c){ const k = c.dataset.cond; if (shelf.series[k]){ if (c.value === 'low') shelf.series[k].cond = 'low'; else delete shelf.series[k].cond; save(); renderLists(); } } });
+document.addEventListener('click', e => { if (!e.target.closest('[data-wantgaps]')) return; const prev = JSON.parse(JSON.stringify(shelf.series)); let n = 0;
+  Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const i = info(k); const w = new Set(i.s.want || []); const add = i.gaps.filter(v => !w.has(v)); if (add.length){ i.s.want = [...w, ...add].sort((a, b) => a - b); n += add.length; } });
+  save(); renderLists(); toast(`♥ Added ${n} missing ${n === 1 ? 'volume' : 'volumes'} to your wishlist`, () => { shelf.series = prev; save(); renderLists(); }); });
 document.addEventListener('click', async e => {
   const c = e.target.closest('[data-copy]'); if (c){ const t = $('#lists')['_' + c.dataset.copy]; try { await navigator.clipboard.writeText(t); toast('Copied'); } catch(err){ openSheet(`<h2>Copy this</h2><textarea class="rv" readonly>${esc(t)}</textarea><button class="btn ghost" data-close>Close</button>`); } return; }
   const ln = e.target.closest('[data-ln]'); if (ln){ listView = ln.dataset.ln; renderLists(); return; }
@@ -1650,8 +1705,8 @@ async function gzB64(str){ const cs = new Blob([str]).stream().pipeThrough(new C
 async function unGzB64(b){ const bin = atob(b); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
   return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
 const MF = Array.from({ length: PARTS }, (_, i) => `m${i}:metafield(namespace:"mme",key:"shelf${i}"){value}`).join(' ');
-async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress} ${MF}}}`); const c = d.customer;
-  acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
+async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress marketingState} ${MF}}}`); const c = d.customer;
+  acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.mkt = c.emailAddress ? c.emailAddress.marketingState : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
 function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null }; }
@@ -1728,8 +1783,12 @@ function acctOut(expired){ acct = null; ls.set('mme-acct', null); acctMsg = expi
 function renderAcct(){ const el = $('#acctBox'); if (!el) return; const hb = $('#acctHdr'); if (!ACCT.client || window.claude){ el.classList.add('hidden'); if (hb){ hb.classList.remove('hidden'); hb.classList.add('ghost'); hb.textContent = '⤓ Backup'; hb.onclick = () => openAcct('io'); } return; } el.classList.remove('hidden');
   if (hb){ const on = acct && acct.at; hb.classList.remove('hidden'); hb.classList.toggle('ghost', !!on); hb.textContent = on ? '👤 ' + (acct.name || 'Account') : 'Log in'; hb.title = on ? 'Signed in' + (acct.email ? ' as ' + acct.email : '') : 'Log in or back up your shelf';
     hb.onclick = () => openAcct(); }
-  if (acct && acct.at) el.innerHTML = `<h3>Your account</h3><p class="sub" style="margin:0 0 8px">Signed in${acct.email ? ' as <b>' + esc(acct.email) + '</b>' : ''}. Your shelf saves to your Mage’s Emporium account and follows you to any device you log in on. The shop can see your shelf so we can avoid sending you duplicates.${acct.saved ? ' Last saved ' + new Date(acct.saved).toLocaleString() + '.' : ''}</p>${acctMsg ? `<p class="sub" style="color:#b3261e;margin:0 0 8px">${esc(acctMsg)}</p>` : ''}<div class="row2"><button class="btn sm" id="acctSyncBtn">Sync now</button><button class="btn ghost sm" id="acctOutBtn">Log out</button></div>`;
+  if (acct && acct.at) el.innerHTML = `<h3>Your account</h3><p class="sub" style="margin:0 0 8px">Signed in${acct.email ? ' as <b>' + esc(acct.email) + '</b>' : ''}. Your shelf saves to your Mage’s Emporium account and follows you to any device you log in on. The shop can see your shelf so we can avoid sending you duplicates.${acct.saved ? ' Last saved ' + new Date(acct.saved).toLocaleString() + '.' : ''}</p>${acctMsg ? `<p class="sub" style="color:#b3261e;margin:0 0 8px">${esc(acctMsg)}</p>` : ''}<div class="row2"><button class="btn sm" id="acctSyncBtn">Sync now</button><button class="btn ghost sm" id="acctOutBtn">Log out</button></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;margin:12px 0 0;cursor:pointer"><input type="checkbox" id="mktOpt" style="margin-top:4px"${acct.mkt === 'SUBSCRIBED' ? ' checked' : ''}><span>📬 <b>Email me</b> about new arrivals, restocks and sales from The Mage’s Emporium.<small class="sub" style="display:block">Unsubscribe anytime.</small></span></label>`;
   else el.innerHTML = `<h3>Keep your shelf on every device</h3><p class="sub" style="margin:0 0 8px">Log in with your Mage’s Emporium store account (the same one you use at checkout). Your shelf saves to your account, so it’s safe if you change phones and shows up on your computer too. No password: Shopify emails you a code.</p>${acctMsg ? `<p class="sub" style="color:#b3261e;margin:0 0 8px">${esc(acctMsg)}</p>` : ''}<button class="btn sm" id="acctInBtn">Log in or create an account</button>`;
+  const mo = $('#mktOpt'); if (mo) mo.onchange = async () => { mo.disabled = true; try { const sub = mo.checked; const d = await acctGql(sub ? 'mutation{customerEmailMarketingSubscribe{emailAddress{marketingState} userErrors{code message}}}' : 'mutation{customerEmailMarketingUnsubscribe{emailAddress{marketingState} userErrors{code message}}}');
+      const r = d[sub ? 'customerEmailMarketingSubscribe' : 'customerEmailMarketingUnsubscribe']; const er = r.userErrors && r.userErrors[0]; if (er && er.code !== 'CUSTOMER_ALREADY_SUBSCRIBED') throw new Error(er.message);
+      acct.mkt = sub ? 'SUBSCRIBED' : 'UNSUBSCRIBED'; ls.set('mme-acct', acct); toast(sub ? 'You’re on the list! 📬' : 'Unsubscribed from emails'); } catch(e){ mo.checked = !mo.checked; toast('Couldn’t change that: ' + e.message); } mo.disabled = false; };
   const i = $('#acctInBtn'); if (i) i.onclick = acctLogin; const s2 = $('#acctSyncBtn'); if (s2) s2.onclick = acctSync;
   const o = $('#acctOutBtn'); if (o) o.onclick = async () => { if (ls.get('mme-dirty')) { try { await acctPush(); } catch(e){} } const idt = acct && acct.idt; acctOut(false); if (idt) location.href = ACCT.logout + '?' + new URLSearchParams({ id_token_hint: idt, post_logout_redirect_uri: redirectUri() }); }; }
 let acctBooted = false;
@@ -1845,7 +1904,9 @@ function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'l
 if (window.claude) document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium');
 netState();
 renderAcct();
+cartChip();
 boot();
+if (!window.claude) setTimeout(() => liveAll(), 4000);
 })();
 </script>
 </body>
