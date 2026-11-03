@@ -708,9 +708,6 @@ function renderStatsTab(){
     <div class="srow" style="cursor:default"><span>Average rating<small>${rated} series rated</small></span><span class="r">${rated ? (starSum/rated).toFixed(1) + ' ★' : '—'}</span></div>
     ${(() => { const A = allVolReviews(), S = A.filter(r => r.st); return `<div class="srow" style="cursor:default"><span>Volume reviews<small>${A.length} volume${A.length===1?'':'s'} reviewed</small></span><span class="r">${S.length ? (S.reduce((a,r)=>a+r.st,0)/S.length).toFixed(1) + ' ★' : '—'}</span></div>`; })()}
   </div>
-  ${(() => { const A = allVolReviews(); if (!A.length) return `<div class="st-sec"><h3>Your volume reviews</h3><p class="sub" style="margin:0">Open a series, tap a volume (with no mode selected) and leave stars or a few words. Your favorites show up here.</p></div>`;
-    const top = A.slice().sort(vrSort).slice(0, 5), recent = A.filter(r => r.d).sort((a,b) => b.d > a.d ? 1 : b.d < a.d ? -1 : 0).slice(0, 5);
-    return `<div class="st-sec"><h3>Your volume reviews <span class="sub" style="font-weight:400">(${A.length})</span></h3><p class="sub" style="margin:0 0 4px">Top rated</p>${top.map(vrRow).join('')}${recent.length ? `<p class="sub" style="margin:10px 0 4px">Most recent</p>${recent.map(vrRow).join('')}` : ''}</div>`; })()}
   <div class="st-sec"><h3>Collector titles</h3><p class="sub" style="margin:0 0 6px">The biggest shelves among The Mage’s Emporium collectors. Beat a record to take the title.</p>${crownHTML}</div>
   ${dupHTML()}
   <div class="st-sec"><h3>Your shelf by…</h3>
@@ -719,6 +716,9 @@ function renderStatsTab(){
     ${statsBy === 'gen' ? `<p class="sub" style="margin:8px 0 0">Series can have more than one genre, so these add up past 100%.</p>` : ''}
     ${statsBy !== 'fmt' && known < keys.length ? `<p class="sub" style="margin:8px 0 0">Based on ${knownBooks.toLocaleString()} of ${books.toLocaleString()} books (${known} of ${keys.length} series). The rest are series the shop hasn’t listed${syncing ? ' or are still being checked' : ''}.</p>` : ''}
   </div>
+  ${(() => { const A = allVolReviews(); if (!A.length) return `<div class="st-sec"><h3>Your volume reviews</h3><p class="sub" style="margin:0">Open a series, tap a volume (with no mode selected) and leave stars or a few words. Your favorites show up here.</p></div>`;
+    const top = A.slice().sort(vrSort).slice(0, 5), recent = A.filter(r => r.d).sort((a,b) => b.d > a.d ? 1 : b.d < a.d ? -1 : 0).slice(0, 5);
+    return `<div class="st-sec"><h3>Your volume reviews <span class="sub" style="font-weight:400">(${A.length})</span></h3><p class="sub" style="margin:0 0 4px">Top rated</p>${top.map(vrRow).join('')}${recent.length ? `<p class="sub" style="margin:10px 0 4px">Most recent</p>${recent.map(vrRow).join('')}` : ''}</div>`; })()}
 `;
   el.querySelectorAll('[data-merge]').forEach(b => b.onclick = () => mergeSeries(b.dataset.merge.split('|')));
   if (!crownsData && mcp) loadCrowns().then(d => { if (d && !$('#tab-stats').classList.contains('hidden')) renderStatsTab(); });
