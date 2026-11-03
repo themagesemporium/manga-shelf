@@ -297,6 +297,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="3" y="6" width="7" height="24" rx="1.5" fill="var(--accent)"/><rect x="11.5" y="4" width="7" height="26" rx="1.5" fill="var(--gold)"/><rect x="20" y="8" width="7" height="22" rx="1.5" fill="var(--accent)" opacity=".55" transform="rotate(8 23.5 19)"/><path d="M14.9 8.5l.7 1.6 1.7.2-1.3 1.1.4 1.7-1.5-.9-1.5.9.4-1.7-1.3-1.1 1.7-.2z" fill="#fff"/></svg>
       <div><h1>My Manga Emporium</h1><small id="sync">Loading your shelf…</small></div>
     </div>
+    <button class="btn sm hidden" id="acctHdr" style="margin-left:auto;margin-right:6px;white-space:nowrap">Log in</button>
     <button class="iconbtn" id="theme" aria-label="Change colors"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1.1 0 1.6-.9 1.2-1.8-.5-1.1.2-2.2 1.4-2.2H17a4 4 0 004-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg></button>
   </header>
 
@@ -347,8 +348,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
 
   <section id="tab-lists" class="hidden"><div class="seg2" id="listNav" style="margin:0 0 10px"><button data-ln="want" aria-pressed="true">♥ Wishlist</button><button data-ln="sell" aria-pressed="false">$ Sell list</button><button data-ln="loans" aria-pressed="false">↗ Loans</button></div><div id="lists" class="lists"></div></section>
   <section id="tab-reading" class="hidden"><div id="readBody"></div></section>
-  <section id="tab-stats" class="hidden"><div id="statsBody"></div>
-    <div class="st-sec hidden" id="acctBox"></div>
+  <section id="tab-stats" class="hidden"><div class="st-sec hidden" id="acctBox"></div><div id="statsBody"></div>
     <div class="st-sec io"><h3>Back up or bring in a collection</h3>
       <p class="sub" style="margin:0 0 8px">Save a backup of your whole shelf, or bring books in from a backup, a list from another app, or a file the shop sends you. Imports add to what you have; nothing is removed.</p>
       <div class="row2" style="margin:0 0 10px"><button class="btn sm" id="expBtn">Copy my backup</button><button class="btn ghost sm" id="expDl">Save backup file</button></div>
@@ -1586,7 +1586,8 @@ function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your
     try { await acctPush(); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; } catch(e){ acctMsg = 'Couldn’t save to your account: ' + e.message; }
     renderAcct(); toast(w === 'both' ? 'Shelves combined' : 'Shelf chosen', () => { shelf = prev; save(); }); }); }
 function acctOut(expired){ acct = null; ls.set('mme-acct', null); acctMsg = expired ? 'Your login expired. Log in again to keep syncing.' : ''; $('#sync').textContent = 'Saved on this device only'; renderAcct(); }
-function renderAcct(){ const el = $('#acctBox'); if (!el) return; if (!ACCT.client || window.claude){ el.classList.add('hidden'); return; } el.classList.remove('hidden');
+function renderAcct(){ const el = $('#acctBox'); if (!el) return; const hb = $('#acctHdr'); if (!ACCT.client || window.claude){ el.classList.add('hidden'); if (hb) hb.classList.add('hidden'); return; } el.classList.remove('hidden');
+  if (hb){ const on = acct && acct.at; hb.classList.toggle('hidden', !!on); hb.onclick = acctLogin; }
   if (acct && acct.at) el.innerHTML = `<h3>Your account</h3><p class="sub" style="margin:0 0 8px">Signed in${acct.email ? ' as <b>' + esc(acct.email) + '</b>' : ''}. Your shelf saves to your Mage’s Emporium account and follows you to any device you log in on.${acct.saved ? ' Last saved ' + new Date(acct.saved).toLocaleString() + '.' : ''}</p>${acctMsg ? `<p class="sub" style="color:#b3261e;margin:0 0 8px">${esc(acctMsg)}</p>` : ''}<div class="row2"><button class="btn sm" id="acctSyncBtn">Sync now</button><button class="btn ghost sm" id="acctOutBtn">Log out</button></div>`;
   else el.innerHTML = `<h3>Keep your shelf on every device</h3><p class="sub" style="margin:0 0 8px">Log in with your Mage’s Emporium store account (the same one you use at checkout). Your shelf saves to your account, so it’s safe if you change phones and shows up on your computer too. No password: Shopify emails you a code.</p>${acctMsg ? `<p class="sub" style="color:#b3261e;margin:0 0 8px">${esc(acctMsg)}</p>` : ''}<button class="btn sm" id="acctInBtn">Log in or create an account</button>`;
   const i = $('#acctInBtn'); if (i) i.onclick = acctLogin; const s2 = $('#acctSyncBtn'); if (s2) s2.onclick = acctSync;
