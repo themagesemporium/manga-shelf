@@ -931,8 +931,9 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 });
 
 /* ---------- sheet + toast ---------- */
-function openSheet(html){ const hold = $('#acctHold'); ['#acctBox','#ioBox'].forEach(id => { const n = $('#sheetBody').querySelector(id); if (n && hold) hold.appendChild(n); }); $('#sheetBody').innerHTML = html; $('#scrim').classList.add('on'); $('#sheet').classList.add('on'); $('#sheet').scrollTop = 0; }
-function closeSheet(){ $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); current = null; }
+function parkAcct(){ const hold = $('#acctHold'); ['#acctBox','#ioBox'].forEach(id => { const n = $('#sheetBody').querySelector(id); if (n && hold) hold.appendChild(n); }); }
+function openSheet(html){ parkAcct(); $('#sheetBody').innerHTML = html; $('#scrim').classList.add('on'); $('#sheet').classList.add('on'); $('#sheet').scrollTop = 0; }
+function closeSheet(){ parkAcct(); $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); current = null; }
 document.addEventListener('click', e => { const r = e.target.closest('[data-vrk]'); if (!r) return; e.stopPropagation(); const k = r.dataset.vrk; if (shelf.series[k]) openSeries(k); }, true);
 $('#scrim').onclick = closeSheet;
 $('#xbtn').onclick = closeSheet;
@@ -1210,7 +1211,7 @@ function volDetailHTML(key, v){ const s = shelf.series[key]; if (!s) return ''; 
 function renderSeries(key){
   { const s0 = shelf.series[key]; if (s0 && s0.lc){ const cn = Object.assign({}, s0.cn); Object.entries(s0.lc).forEach(([v,l]) => { const o = Object.assign({}, cn[v]); o.t = [o.t, 'Lives at ' + l].filter(Boolean).join(' · '); cn[v] = o; }); s0.cn = cn; delete s0.lc; setTimeout(save, 0); } }
   const s = shelf.series[key];
-  if (!s){ $('#sheetBody').innerHTML = `<p class="sub">This series is no longer on your shelf.</p><button class="btn ghost" data-close>Close</button>`; return; }
+  parkAcct(); if (!s){ $('#sheetBody').innerHTML = `<p class="sub">This series is no longer on your shelf.</p><button class="btn ghost" data-close>Close</button>`; return; }
   const i = info(key); const lang = langOf(key);
   const stockBy = new Map(i.inStock.map(x => [x.vol, x]));
   const n = Math.max(i.span, i.max, 1);
@@ -1686,7 +1687,7 @@ function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your
     applyBody(w === 'cloud' ? cloud : w === 'local' ? local : combine(local, cloud)); closeSheet(); renderAll(); renderFinds();
     try { await acctPush(); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; } catch(e){ acctMsg = 'Couldn’t save to your account: ' + e.message; }
     renderAcct(); toast(w === 'both' ? 'Shelves combined' : 'Shelf chosen', () => { shelf = prev; save(); }); }); }
-function openAcct(focus){ openSheet(`<h2>${ACCT.client && !window.claude ? 'Account & backup' : 'Backup'}</h2><div id="acctSlot"></div><div class="row2" style="margin-top:6px"><button class="btn ghost" data-close>Close</button></div>`);
+function openAcct(focus){ current = null; openSheet(`<h2>${ACCT.client && !window.claude ? 'Account & backup' : 'Backup'}</h2><div id="acctSlot"></div><div class="row2" style="margin-top:6px"><button class="btn ghost" data-close>Close</button></div>`);
   const slot = $('#acctSlot'); renderAcct(); slot.appendChild($('#acctBox')); slot.appendChild($('#ioBox'));
   if (focus === 'io') setTimeout(() => $('#ioBox').scrollIntoView({ block: 'start', behavior: 'smooth' }), 50); }
 document.addEventListener('click', e => { const t = e.target.closest('[data-achtog]'); if (t){ ls.set('mme-achopen', !ls.get('mme-achopen')); renderStats(); } const m = e.target.closest('#dupBox [data-merge]'); if (m) mergeSeries(m.dataset.merge.split('|')); });
