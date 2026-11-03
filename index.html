@@ -112,7 +112,8 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .badge{font-size:12px;font-weight:600;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.14)}
 .badge{border:0;color:inherit;font-family:inherit}
 .badge.off{opacity:.45}
-.achhead{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding:0;border:0;background:none;color:inherit;font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-align:left}
+.achhead{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.achtl{padding:0;border:0;background:none;color:inherit;font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-align:left}
 .achemo{display:flex;flex-wrap:wrap;gap:2px 4px;margin-top:6px;font-size:19px;line-height:1.35;cursor:pointer}
 .achemo i{font-style:normal}.achemo i.off{opacity:.28;filter:grayscale(1)}
 .badges.hid{display:none}
@@ -526,7 +527,7 @@ function renderStats(){
   const shown = BADGES.map((b, i) => [b, i]).filter(([b]) => !b[4] || b[2] >= b[3]); const secret = BADGES.filter(b => b[4] && b[2] < b[3]).length;
   const earnedN = BADGES.filter(b => b[2] >= b[3]).length, openA = !!ls.get('mme-achopen');
   const emo = b => b[0].slice(0, b[0].indexOf(' '));
-  $('#achWrap').innerHTML = `<button class="achhead" data-achtog aria-expanded="${openA}"><span>🏅 Achievements · ${earnedN} of ${shown.length}${secret ? ` + ${secret} secret` : ''}</span><span>${openA ? 'Hide ▴' : 'Show all ▾'}</span></button>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
+  $('#achWrap').innerHTML = `<div class="achhead"><button class="achtl" data-achtog aria-expanded="${openA}">🏅 Achievements · ${earnedN} of ${shown.length} <span style="opacity:.75;font-weight:600">${openA ? '▴' : '▾'}</span></button><button class="badge" data-share style="font-size:12.5px;padding:5px 11px;background:rgba(255,255,255,.22);white-space:nowrap;flex:none">📸 Share</button></div>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
   $('#badges').classList.toggle('hid', !openA);
   $('#badges').innerHTML = shown.map(([b, i]) => `<button class="badge${b[2]>=b[3]?'':' off'}" data-b="${i}">${b[0]}</button>`).join('') + (secret ? `<button class="badge off" data-b="secret">🔒 ${secret} secret</button>` : '');
 }
@@ -916,7 +917,7 @@ function openStat(kind){
 $('#q').oninput = renderList; $('#sort').onchange = () => { renderList(); ls.set('mme-sort', $('#sort').value); };
 const savedSort = ls.get('mme-sort'); if (savedSort) $('#sort').value = savedSort;
 $('#view').onchange = () => { renderList(); ls.set('mme-view', $('#view').value); };
-{ const sv = ls.get('mme-view'); if (sv) $('#view').value = sv; }
+{ const sv = ls.get('mme-view'); $('#view').value = sv || 'shelf'; }
 $('#list').onclick = e => { const c = e.target.closest('.card, .crow, .sh'); if (c) openSeries(c.dataset.k); };
 
 /* ---------- tabs ---------- */
@@ -1761,7 +1762,7 @@ async function shareCard(){ try { await document.fonts.ready; } catch(e){}
   $('#cardSave').onclick = () => { if (!cardFile) return; const mob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (mob && navigator.canShare && navigator.canShare({ files: [cardFile] })){ navigator.share({ files: [cardFile] }).catch(() => {}); return; }
     const u = URL.createObjectURL(cardFile), a = document.createElement('a'); a.href = u; a.download = 'my-manga-collection.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }; }
-document.addEventListener('click', e => { const b = e.target.closest('#shareCard'); if (b) shareCard(); });
+document.addEventListener('click', e => { const b = e.target.closest('#shareCard, [data-share]'); if (b) shareCard(); });
 function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
 if (window.claude) document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium');
 renderAcct();
