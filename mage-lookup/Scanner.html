@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+<base target="_top">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{--ink:#1b2b4b;--muted:#56637f;--accent:#f0662b;--line:#f0da93;--card:#fffef7;--good:#2f7d4f}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.4 system-ui,-apple-system,sans-serif;color:var(--ink);background:linear-gradient(180deg,#69c8ec 0,#b9e5f1 160px,#fff6c8 420px,#fff3b8 100%);min-height:100vh}
+  .wrap{max-width:520px;margin:0 auto;padding:18px 16px 40px}
+  h1{font-size:22px;margin:4px 0 2px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .snap{display:block;background:var(--accent);color:#fff;border-radius:18px;padding:26px 16px;text-align:center;font-weight:700;font-size:20px;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:pointer}
+  .snap small{display:block;font-weight:500;font-size:14px;opacity:.9;margin-top:4px}
+  .snap input{display:none}
+  .row{display:flex;gap:8px;margin-top:14px}
+  .row input{flex:1;min-width:0;font:inherit;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .row button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:0 16px;background:#1d5aae;color:#fff}
+  .msg{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);min-height:20px}
+  .msg.ok{border-color:#9bd3b0}
+  .msg.bad{border-color:#f2a0a0}
+  ul{list-style:none;padding:0;margin:16px 0 0}
+  li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
+  li span{color:var(--good);font-weight:700}
+  .foot{color:var(--muted);font-size:13px;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📚 Mage Scanner</h1>
+  <p class="sub">Snap the barcode on the back of each book. It goes into the Mage Lookup sheet and gets looked up automatically.</p>
+  <label class="snap">📷 Snap a barcode<small>Fill the photo with the barcode, in good light</small><input id="shot" type="file" accept="image/*" capture="environment"></label>
+  <div class="row"><input id="isbn" inputmode="numeric" placeholder="…or type the ISBN"><button id="add">Add</button></div>
+  <div class="msg" id="msg">Ready.</div>
+  <ul id="list"></ul>
+  <p class="foot">Scans join the sheet within about 10 minutes (auto look-up must be ON). This page only works for your account.</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script>
+  var $ = function(id){ return document.getElementById(id); };
+  var count = 0;
+  function say(t, cls){ var m = $('msg'); m.textContent = t; m.className = 'msg' + (cls ? ' ' + cls : ''); }
+  function send(code){
+    say('Adding ' + code + '…');
+    google.script.run
+      .withSuccessHandler(function(r){
+        if (!r.ok){ say(r.msg, 'bad'); return; }
+        count++; var li = document.createElement('li'); li.innerHTML = r.isbn + ' <span>✓</span>'; $('list').insertBefore(li, $('list').firstChild);
+        say('Added ' + r.isbn + (r.note ? ' — ' + r.note : '') + '. ' + r.queued + ' waiting for the sheet.', 'ok');
+        if (navigator.vibrate) navigator.vibrate(60);
+      })
+      .withFailureHandler(function(e){ say('Couldn’t add it: ' + (e && e.message || e), 'bad'); })
+      .addIsbn(code);
+  }
+  $('add').onclick = function(){ var v = $('isbn').value.replace(/\D/g,''); if (v){ send(v); $('isbn').value=''; } };
+  $('isbn').onkeydown = function(e){ if (e.key === 'Enter') $('add').onclick(); };
+  $('shot').onchange = function(e){
+    var f = e.target.files[0]; if (!f) return; say('Reading the barcode…');
+    var url = URL.createObjectURL(f), img = new Image();
+    img.onload = function(){
+      var tries = [1600, 1000, 700], i = 0;
+      function attempt(){
+        if (i >= tries.length){ say('Couldn’t read a barcode in that photo. Try closer and flatter, or type the ISBN.', 'bad'); return; }
+        var max = tries[i++], sc = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        if ('BarcodeDetector' in window){
+          try {
+            new BarcodeDetector({formats:['ean_13','ean_8','upc_a']}).detect(c).then(function(r){ if (r[0]) send(r[0].rawValue); else zx(c); }).catch(function(){ zx(c); });
+            return;
+          } catch(err){}
+        }
+        zx(c);
+      }
+      function zx(c){
+        try {
+          var hints = new Map(); hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A]); hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+          new ZXing.BrowserMultiFormatReader(hints).decodeFromImageUrl(c.toDataURL('image/jpeg', .92)).then(function(r){ send(r.getText()); }).catch(attempt);
+        } catch(err){ attempt(); }
+      }
+      attempt();
+    };
+    img.src = url; e.target.value = '';
+  };
+</script>
+</body>
+</html>
