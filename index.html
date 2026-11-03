@@ -367,7 +367,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
 
   </section>
 
-  <section id="tab-lists" class="hidden"><div class="seg2" id="listNav" style="margin:0 0 10px"><button data-ln="want" aria-pressed="true">♥ Wishlist</button><button data-ln="sell" aria-pressed="false">$ Sell list</button><button data-ln="loans" aria-pressed="false">↗ Loans</button></div><div id="lists" class="lists"></div></section>
+  <section id="tab-lists" class="hidden"><div class="seg2" id="listNav" style="margin:0 0 10px"><button data-ln="want" aria-pressed="true">♥ Wishlist</button><button data-ln="sell" aria-pressed="false">$ Sell list</button><button data-ln="loans" aria-pressed="false">↗ Loans</button><button data-ln="friends" aria-pressed="false">👯 Friends</button></div><div id="lists" class="lists"></div></section>
   <section id="tab-reading" class="hidden"><div id="readBody"></div></section>
   <section id="tab-stats" class="hidden"><div class="st-sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><h3 style="margin:0">📸 Share your shelf</h3><p class="sub" style="margin:2px 0 0">A picture for Instagram stories with your rank, stats and top series</p></div><button class="btn gold sm" id="shareCard">Share</button></div><div id="statsBody"></div>
     <div id="acctHold" class="hidden"><div class="st-sec hidden" id="acctBox"></div>
@@ -1614,7 +1614,7 @@ function renderLists(){
         ${(shelf.quotes||[]).length ? `<p class="sub" style="margin:6px 0 0">Sent ${shelf.quotes.length} ${shelf.quotes.length===1?'request':'requests'}, last on ${shelf.quotes[shelf.quotes.length-1].slice(0,10)}. The shop will email you.</p>` : ''}</div>
       <div class="row2"><button class="btn ghost sm" data-copy="sell">Copy list</button><button class="btn ghost sm" data-sold>Sold — remove from shelf</button></div>`
     : `<p class="sub" style="margin:0">Clearing out? Open a series, switch to “Sell $”, and tap volumes (or “Sell the whole series”). You'll get a trade-in estimate here.</p>`}</div>`;
-  el.innerHTML = listView === 'want' ? wantHTML : listView === 'sell' ? sellHTML : loanStatsHTML();
+  el.innerHTML = listView === 'want' ? wantHTML : listView === 'sell' ? sellHTML : listView === 'friends' ? friendsHTML() : loanStatsHTML();
   document.querySelectorAll('#listNav [data-ln]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ln === listView));
   el._gift = giftTxt; el._sell = sellTxt;
 }
@@ -1709,7 +1709,7 @@ async function acctPull(){ const d = await acctGql(`{customer{id firstName email
   acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.mkt = c.emailAddress ? c.emailAddress.marketingState : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
-function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null }; }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null }; }
 // copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
 function siteMirror(){ const owned = {}; let tb = 0;
   Object.entries(shelf.series).forEach(([k, s]) => { const hit = SNAP ? snapEntry(k) : null; const key = hit ? hit[0] : k; const vs = ints(s);
@@ -1730,14 +1730,14 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; ['log','rl','other','goal'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; ['log','rl','other','goal'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
   Object.entries(b.series || {}).forEach(([k, S]) => { const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
     ['ln','cn','vr'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); Object.keys(S).forEach(f => { if (T[f] == null) T[f] = S[f]; }); });
   ['log'].forEach(f => { out[f] = Object.assign({}, b[f] || {}); Object.entries(a[f] || {}).forEach(([d, n]) => { out[f][d] = Math.max(n, out[f][d] || 0); }); });
   out.rl = Object.assign({}, b.rl || {}); Object.entries(a.rl || {}).forEach(([d, l]) => { out.rl[d] = [...new Set((out.rl[d] || []).concat(l))]; });
-  out.other = Object.assign({}, b.other || {}, a.other || {}); out.goal = Object.assign({}, b.goal || {}, a.goal || {}); return out; }
+  out.other = Object.assign({}, b.other || {}, a.other || {}); out.goal = Object.assign({}, b.goal || {}, a.goal || {}); out.friends = Object.assign({}, b.friends || {}, a.friends || {}); return out; }
 async function acctOrders(force){
   if (!acct || !acct.at) return; const o = shelf.orders || {}; if (!force && o.checked && Date.now() - o.checked < 6*3600e3) return;
   if (!SNAP) await loadSnap(); if (!SNAP) return;
@@ -1900,12 +1900,57 @@ document.addEventListener('click', e => { if (e.target.closest('[data-scanmode]'
 function netState(){ const off = !navigator.onLine; let b = $('#offbar'); if (off && !b){ b = document.createElement('div'); b.id = 'offbar'; b.className = 'offbar'; b.textContent = 'You’re offline. Everything still works and saves on this phone; it syncs when you’re back online.'; document.body.prepend(b); } else if (!off && b) b.remove(); }
 window.addEventListener('offline', netState); window.addEventListener('online', () => { netState(); if (acct && acct.at){ if (ls.get('mme-dirty')) acctSave(); else acctSync(); } });
 if (!window.claude && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+/* ---------- friends: swap shelves by link or file, then compare ---------- */
+let friendSel = null;
+function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
+  return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out }; }
+async function friendShare(){ const pk = friendPack(); let nm = pk.name;
+  if (!nm){ nm = prompt('Your first name (so your friend knows whose shelf this is):', '') || ''; nm = nm.trim(); if (nm){ shelf.card = Object.assign({}, shelf.card, { name: nm }); save(); pk.name = nm; } }
+  const json = JSON.stringify(pk); const b = (await gzB64(json)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); const url = (window.claude ? 'https://app.themagesemporium.com/' : location.origin + location.pathname.replace(/[^/]*$/, '')) + '#f=' + b;
+  const text = `${nm ? nm + '’s' : 'My'} manga shelf on My Manga Emporium. Open it to compare our collections!`;
+  if (url.length < 7000){ if (navigator.share){ try { await navigator.share({ title: 'My manga shelf', text, url }); return; } catch(e){ if (e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(url); toast('Link copied. Paste it to your friend!'); } catch(e){ openSheet(`<h2>Your shelf link</h2><textarea class="rv" readonly>${esc(url)}</textarea><button class="btn ghost" data-close>Close</button>`); } return; }
+  const file = new File([json], `${(nm || 'my').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-manga-shelf.json`, { type: 'application/json' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })){ try { await navigator.share({ files: [file], title: 'My manga shelf', text: text + ' (Friends → Add a friend’s file)' }); return; } catch(e){ if (e.name === 'AbortError') return; } }
+  const u = URL.createObjectURL(file), a = document.createElement('a'); a.href = u; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); toast('Your shelf file is saved. Send it to your friend.'); }
+function friendAdd(pk){ if (!pk || pk.app !== 'mme-friend' || !pk.s) { toast('That isn’t a friend shelf from this app'); return; } shelf.friends = shelf.friends || {};
+  const id = (pk.name || 'friend').toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'friend'; shelf.friends[id] = { name: pk.name || 'Friend', at: pk.at || Date.now(), s: pk.s }; friendSel = id; save();
+  toast(`👯 Added ${pk.name || 'your friend'}’s shelf (${Object.keys(pk.s).length} series)`); listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); }
+async function friendFromHash(){ const m = location.hash.match(/#f=([A-Za-z0-9_-]+)/); if (!m) return; history.replaceState(null, '', location.pathname);
+  try { let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; const pk = JSON.parse(await unGzB64(b)); setTimeout(() => friendAdd(pk), 600); } catch(e){ toast('That friend link didn’t open. Ask them to send it again.'); } }
+function friendKey(fk, f){ if (shelf.series[fk]) return fk; const n = normName(f.n); return Object.keys(shelf.series).find(k => normName(shelf.series[k].n) === n) || null; }
+function friendsHTML(){ const F = shelf.friends || {}; const ids = Object.keys(F); if (friendSel && !F[friendSel]) friendSel = null; if (!friendSel && ids.length) friendSel = ids[0];
+  let h = `<div class="st-sec"><h3>👯 Friends</h3><p class="sub" style="margin:0 0 8px">Swap shelves with a friend to see what you both have, what you can borrow from each other, and gift ideas from their wishlist.</p>
+    <div class="row2" style="flex-wrap:wrap"><button class="btn sm" data-fshare>📤 Send my shelf to a friend</button><label class="btn ghost sm" style="cursor:pointer">📥 Add a friend’s file<input type="file" id="fFile" accept=".json,application/json" hidden></label></div>
+    <p class="sub" style="margin:6px 0 0">Your friend opens your link (or adds your file) in their app. Nothing is shared until you send it.</p></div>`;
+  if (!ids.length) return h;
+  h += `<div class="seg2" style="margin:0 0 10px;flex-wrap:wrap">${ids.map(id => `<button data-fsel="${esc(id)}" aria-pressed="${id === friendSel}">${esc(F[id].name)}</button>`).join('')}</div>`;
+  const f = F[friendSel]; const both = [], borrow = [], lend = [], gifts = [], theirsOnly = [];
+  Object.entries(f.s).forEach(([fk, o]) => { const mk = friendKey(fk, o); const fv = new Set(o.v || []);
+    if (mk){ const i = info(mk); const mine = new Set(i.own); const common = (o.v || []).filter(v => mine.has(v)); if (common.length) both.push([o.n, common.length]);
+      const canB = i.gaps.concat(i.next ? [i.next] : []).filter(v => fv.has(v) && !mine.has(v)); if (canB.length) borrow.push([o.n, canB]);
+      const canL = (o.w || []).filter(v => mine.has(v)); if (canL.length) lend.push([o.n, canL]); }
+    else if ((o.v || []).length) theirsOnly.push([o.n, o.v.length]);
+    const g = (o.w || []).filter(v => !fv.has(v)); if (g.length) gifts.push([o.n, g]); });
+  const row = (n, t) => `<div class="srow" style="cursor:default"><span>${esc(n)}<small>${t}</small></span></div>`;
+  const sec = (title, sub, arr, fmt, empty) => `<div class="st-sec"><h3>${title} <span class="sub" style="font-weight:400">(${arr.length})</span></h3>${sub ? `<p class="sub" style="margin:0 0 6px">${sub}</p>` : ''}${arr.length ? arr.slice(0, 60).map(fmt).join('') + (arr.length > 60 ? `<p class="sub">…and ${arr.length - 60} more</p>` : '') : `<p class="sub" style="margin:0">${empty}</p>`}</div>`;
+  h += `<div class="st-sec"><p style="margin:0"><b>${esc(f.name)}</b>: ${Object.keys(f.s).length} series · ${Object.values(f.s).reduce((a, o) => a + (o.v || []).length, 0)} books <span class="sub">(shared ${new Date(f.at).toLocaleDateString()})</span></p><button class="btn ghost sm" data-fdel="${esc(friendSel)}" style="margin-top:6px">Remove ${esc(f.name)}</button></div>`;
+  h += sec('📖 You could borrow', `Volumes you’re missing that ${esc(f.name)} owns.`, borrow, x => row(x[0], 'Vol ' + compactVols(x[1])), 'Nothing to borrow yet.');
+  h += sec('🎁 Gift ideas', `From ${esc(f.name)}’s wishlist.`, gifts, x => row(x[0], 'Vol ' + compactVols(x[1])), 'Their wishlist is empty.');
+  h += sec('🤝 You could lend', `On ${esc(f.name)}’s wishlist, and you own them.`, lend, x => row(x[0], 'Vol ' + compactVols(x[1])), 'Nothing on their wishlist that you own.');
+  h += sec('💞 You both collect', '', both.sort((a, b) => b[1] - a[1]), x => row(x[0], x[1] + ' volumes in common'), 'No series in common yet.');
+  h += sec('✨ Only they have', 'Series to try.', theirsOnly.sort((a, b) => b[1] - a[1]), x => row(x[0], x[1] + ' volumes'), 'You have everything they have!');
+  return h; }
+document.addEventListener('click', e => { if (e.target.closest('[data-fshare]')){ friendShare(); return; } const s2 = e.target.closest('[data-fsel]'); if (s2){ friendSel = s2.dataset.fsel; renderLists(); return; }
+  const d = e.target.closest('[data-fdel]'); if (d){ const id = d.dataset.fdel; const prev = shelf.friends[id]; delete shelf.friends[id]; friendSel = null; save(); renderLists(); toast('Friend removed', () => { shelf.friends[id] = prev; save(); renderLists(); }); } });
+document.addEventListener('change', async e => { if (e.target.id !== 'fFile' || !e.target.files[0]) return; try { friendAdd(JSON.parse(await e.target.files[0].text())); } catch(err){ toast('Couldn’t read that file'); } });
 function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
 if (window.claude) document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium');
 netState();
 renderAcct();
 cartChip();
 boot();
+friendFromHash();
 if (!window.claude) setTimeout(() => liveAll(), 4000);
 })();
 </script>
