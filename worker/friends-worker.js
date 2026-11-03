@@ -47,6 +47,13 @@ export default {
       if (p === '/approve') v.st = 'ok'; else delete own.viewers[String(body.cid)]; await put(env, 'own:' + me.cid, own); return J({ ok: 1 }); }
     if (p === '/unfollow'){ const oc = String(body.cid || ''); const fol = (await get(env, 'fol:' + me.cid)) || {}; delete fol[oc]; await put(env, 'fol:' + me.cid, fol); if (oc.startsWith('mail:')) return J({ ok: 1 });
       const o = await get(env, 'own:' + oc); if (o && o.viewers[me.cid]){ delete o.viewers[me.cid]; await put(env, 'own:' + oc, o); } return J({ ok: 1 }); }
+    if (p === '/forget'){ // delete everything this person has in the friends service
+      if (own.code) await env.FRIENDS.delete('code:' + own.code);
+      for (const c of Object.keys(own.viewers || {})){ const f = await get(env, 'fol:' + c); if (f && f[me.cid]){ delete f[me.cid]; await put(env, 'fol:' + c, f); } }
+      const fol = (await get(env, 'fol:' + me.cid)) || {};
+      for (const oc of Object.keys(fol)){ if (oc.startsWith('mail:')) continue; const o = await get(env, 'own:' + oc); if (o && o.viewers[me.cid]){ delete o.viewers[me.cid]; await put(env, 'own:' + oc, o); } }
+      await env.FRIENDS.delete('own:' + me.cid); await env.FRIENDS.delete('shelf:' + me.cid); await env.FRIENDS.delete('fol:' + me.cid);
+      if (me.mail) await env.FRIENDS.delete('ask:' + await sha(me.mail)); return J({ ok: 1 }); }
     return J({ error: 'not found' }, 404);
   }
 };

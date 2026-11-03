@@ -2,8 +2,8 @@
    App pages: network first, cached copy when offline (so updates still arrive).
    Store data snapshot + scanner library + fonts: cached after the first load.
    Book covers: cached as they're seen. Logins and account saves are never cached. */
-const V = 'mme-v1';
-const SHELL = ['./', 'index.html', 'help.html', 'config.json', 'manifest.json', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+const V = 'mme-v2';
+const SHELL = ['./', 'index.html', 'help.html', 'privacy.html', 'config.json', 'manifest.json', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
