@@ -437,6 +437,19 @@ function parseVols(txt){
 }
 
 /* ---------- stats ---------- */
+function collectorNumbers(){
+  const C = { books: 0, series: 0, run: 0, runK: null, bl: 0, yuri: 0, shojo: 0, shonen: 0, seinen: 0, josei: 0, horror: 0, rom: 0, isekai: 0, lnv: 0, done: 0, readN: 0, ngen: 0, crowns: [], since: null };
+  const gens = new Set();
+  Object.keys(shelf.series).forEach(k => { const i = info(k), s = i.s, n = s.v.length, m = s.m || {}, g = (m.g || []).join('|');
+    C.books += n; C.series++; C.readN += (s.r || []).length; if (i.own.length > C.run){ C.run = i.own.length; C.runK = k; } if (i.complete) C.done++; if (isLN(k, s)) C.lnv += n;
+    const a = String(m.a || '').toLowerCase(); if (a in C) C[a] += n;
+    if (/BL|Yaoi/i.test(g)) C.bl += n; if (/Yuri/i.test(g)) C.yuri += n; if (/Horror/i.test(g)) C.horror += n; if (/Romance/i.test(g)) C.rom += n; if (/Isekai/i.test(g)) C.isekai += n;
+    (m.g || []).forEach(x => gens.add(x)); if (s.t && (!C.since || s.t < C.since)) C.since = s.t; });
+  C.ngen = gens.size; const o = shelf.orders || {}; if (o.first){ const f = new Date(o.first).getTime(); if (!C.since || f < C.since) C.since = f; }
+  const cs = crownsData && crownsData.crown; if (cs){ const mine = { books: C.books, series: C.series, run: C.run, bl: C.bl, shojo: C.shojo, shonen: C.shonen, seinen: C.seinen, josei: C.josei, complete: C.done };
+    [['books','👑','Largest collection'],['series','🗺️','Most series'],['run','🏃','Longest series run'],['bl','💜','Most BL'],['shojo','🎀','Most shojo'],['shonen','🔥','Most shonen'],['seinen','🗡️','Most seinen'],['josei','🍷','Most josei'],['complete','⭐','Most complete series']]
+      .forEach(([k, ic, t]) => { if (mine[k] > 0 && mine[k] >= (cs[k] || 0)) C.crowns.push(`${ic} ${t} of all our collectors`); }); }
+  return C; }
 function renderStats(){
   const keys = Object.keys(shelf.series);
   let readN = 0; keys.forEach(k => { readN += (shelf.series[k].r || []).length; });
@@ -448,19 +461,60 @@ function renderStats(){
   $('#rankBar').style.width = nx ? Math.round((books - RANKS[r][0]) / (nx[0] - RANKS[r][0]) * 100) + '%' : '100%';
   $('#rankNext').textContent = nx ? `${nx[0]-books} more ${nx[0]-books===1?'book':'books'} to ${nx[1]}` : 'The highest rank there is.';
   $('#sBooks').textContent = books; $('#sSeries').textContent = keys.length; $('#sRuns').textContent = runs; $('#sGaps').textContent = gaps;
+  const C = collectorNumbers(); const o = shelf.orders || {}; const yrs = o.first ? (Date.now() - new Date(o.first)) / (365.25*864e5) : 0;
+  const vrN = Object.values(shelf.series).reduce((a, x) => a + Object.keys(x.vr || {}).length, 0), cnN = Object.values(shelf.series).reduce((a, x) => a + Object.keys(x.cn || {}).length, 0);
+  const lentN = Object.values(shelf.series).reduce((a, x) => a + Object.values(x.ln || {}).filter(l => l.d === 'out').length, 0);
+  const wantN = Object.values(shelf.series).reduce((a, x) => a + (x.want || []).length, 0), sellN = Object.values(shelf.series).reduce((a, x) => a + (x.sell || []).length, 0);
+  const stk = streaks(); const gl = shelf.goal && shelf.goal[String(new Date().getFullYear())]; const yrRead = Object.keys(shelf.log || {}).filter(d => d.startsWith(String(new Date().getFullYear()))).reduce((a, d) => a + shelf.log[d], 0);
   BADGES = [
-    ['📚 100 books', 'Have 100 books on your shelf.', books, 100],
-    ['🏛️ 500 books', 'Have 500 books on your shelf.', books, 500],
-    ['🗺️ Polyglot', 'Own manga in 3 or more languages besides English.', langs.size, 3],
-    ['📖 Novel reader', 'Collect 10 or more light novel series.', ln, 10],
-    ['🧭 Long haul', 'Own 50 or more volumes of a single series.', longest, 50],
-    ['✨ 25 clean runs', 'Have 25 series with 2+ volumes and no gaps (Vol 1 up to your latest, nothing missing).', runs, 25],
-    ['👑 Completionist', 'Own every volume of 5 finished or caught-up series.', complete, 5],
-    ['🔖 Read 50', 'Mark 50 volumes as read (open a series, switch to “Read”, tap volumes).', readN, 50],
-    ['🦉 Read 250', 'Mark 250 volumes as read.', readN, 250],
-    ['✍️ Critic', 'Rate or review 10 series.', keys.filter(k => shelf.series[k].st || shelf.series[k].rv).length, 10]
+    ['🛍️ First Haul', 'Place your first order with us (log in so the app can see your orders).', o.n || 0, 1],
+    ['🧺 Regular', '5 orders with us.', o.n || 0, 5],
+    ['🏰 Guild Member', '10 orders with us.', o.n || 0, 10],
+    ['💰 Big Spender', '$250 spent with us.', Math.round(o.spent || 0), 250],
+    ['🎂 Anniversary', 'One year since your first order with us.', yrs >= 1 ? 1 : 0, 1],
+    ['📚 Bookworm', '50 books on your shelf.', books, 50],
+    ['🏛️ Library', '250 books on your shelf.', books, 250],
+    ['🐉 Dragon Hoard', '500 books on your shelf.', books, 500],
+    ['🏯 Grand Library', '1,000 books on your shelf.', books, 1000],
+    ['🗺️ Series Explorer', '25 series on your shelf.', keys.length, 25],
+    ['🧭 Cartographer', '100 series on your shelf.', keys.length, 100],
+    ['⭐ Completionist', 'Finish a complete series (every volume, no gaps).', complete, 1],
+    ['🌟 Master Completionist', '5 complete series.', complete, 5],
+    ['🏃 Marathoner', '50+ volumes of one series.', longest, 50],
+    ['✨ Tidy Shelves', '25 series with 2+ volumes and no gaps.', runs, 25],
+    ['🌏 Polyglot', 'A manga in another language.', langs.size, 1],
+    ['📜 Light Novel Scholar', '5 light novels.', C.lnv, 5],
+    ['💜 BL Enthusiast', '25 BL volumes.', C.bl, 25],
+    ['🌷 Yuri Admirer', '10 yuri volumes.', C.yuri, 10],
+    ['🔥 Shonen Saiyan', '25 shonen volumes.', C.shonen, 25],
+    ['🎀 Shojo Sweetheart', '25 shojo volumes.', C.shojo, 25],
+    ['🗡️ Seinen Veteran', '25 seinen volumes.', C.seinen, 25],
+    ['🍷 Josei Connoisseur', '25 josei volumes.', C.josei, 25],
+    ['👻 Horror Hound', '10 horror volumes.', C.horror, 10],
+    ['💘 Hopeless Romantic', '25 romance volumes.', C.rom, 25],
+    ['🌀 Isekai Traveler', '10 isekai volumes.', C.isekai, 10],
+    ['🔖 Page Turner', 'Mark 50 volumes as read.', readN, 50],
+    ['🦉 Night Owl', 'Mark 250 volumes as read.', readN, 250],
+    ['✍️ Critic', 'Rate or review 10 series.', keys.filter(k => shelf.series[k].st || shelf.series[k].rv).length, 10],
+    // secret ones: only shown once earned
+    ['💯 Centurion', 'Own 100+ volumes of a single series.', longest, 100, 1],
+    ['🌈 Genre Hopper', 'Books in 10 different genres.', C.ngen, 10, 1],
+    ['🎯 Gap Hunter', '20+ series and not a single gap anywhere.', keys.length >= 20 && !gaps ? 1 : 0, 1, 1],
+    ['📅 Streak Keeper', 'Read something 7 days in a row.', stk.best || 0, 7, 1],
+    ['☄️ Unstoppable', 'Read something 30 days in a row.', stk.best || 0, 30, 1],
+    ['🎓 Goal Getter', 'Hit your yearly reading goal.', gl && yrRead >= gl ? 1 : 0, 1, 1],
+    ['📝 Volume Critic', 'Review 10 single volumes (tap a volume, add stars or words).', vrN, 10, 1],
+    ['🗒️ Note Taker', 'Add notes to 10 volumes.', cnN, 10, 1],
+    ['🤝 Generous Lender', 'Lend out 5 volumes at once.', lentN, 5, 1],
+    ['💌 Wishful Thinker', '25 volumes on your wishlist.', wantN, 25, 1],
+    ['🧹 Shelf Curator', '10 volumes on your sell list.', sellN, 10, 1],
+    ['👑 Crown Holder', 'Hold a collector title (most books, most series, longest run…) among all our collectors.', C.crowns.length, 1, 1],
+    ['🔮 Mythic', 'Reach the Mythic Archmage rank (1,000 books).', books, 1000, 1],
+    ['🏆 Collector of Legend', 'Earn 25 other achievements.', 0, 25, 1]
   ];
-  $('#badges').innerHTML = BADGES.map((b,i) => `<button class="badge${b[2]>=b[3]?'':' off'}" data-b="${i}">${b[0]}</button>`).join('');
+  BADGES[BADGES.length - 1][2] = BADGES.slice(0, -1).filter(b => b[2] >= b[3]).length;
+  const shown = BADGES.map((b, i) => [b, i]).filter(([b]) => !b[4] || b[2] >= b[3]); const secret = BADGES.filter(b => b[4] && b[2] < b[3]).length;
+  $('#badges').innerHTML = shown.map(([b, i]) => `<button class="badge${b[2]>=b[3]?'':' off'}" data-b="${i}">${b[0]}</button>`).join('') + (secret ? `<button class="badge off" data-b="secret">🔒 ${secret} secret</button>` : '');
 }
 
 /* ---------- loans + locations ---------- */
@@ -809,7 +863,7 @@ function coverOf(k){ const s = shelf.series[k]; if (!s) return ''; if (s.c) retu
 function coverHTML(k){ const u = coverOf(k); const n = shelf.series[k].n.replace(/^(the|a)\s+/i,'');
   return `<span class="cover" aria-hidden="true">${u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">` : esc(n[0] || '?')}</span>`; }
 function renderAll(){ renderStats(); renderList(); try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
-$('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; const [name, how, have, need] = BADGES[+t.dataset.b];
+$('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; if (t.dataset.b === 'secret'){ openSheet(`<h2>🔒 Secret achievements</h2><p>${BADGES.filter(b => b[4] && b[2] < b[3]).length} achievements are hidden until you earn them. Keep collecting, reading, reviewing and lending to discover them.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); return; } const [name, how, have, need] = BADGES[+t.dataset.b];
   current = null;
   openSheet(`<h2>${name}</h2><p class="sub">${have >= need ? 'Earned!' : 'Not earned yet'}</p><p>${how}</p><div class="bprog"><i style="width:${Math.min(100, Math.round(have/need*100))}%"></i></div><p class="sub">${Math.min(have,need)} of ${need}${have>=need ? ' ✓' : ` · ${need-have} to go`}</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); };
 document.querySelector('.stats').onclick = e => { const t = e.target.closest('[data-stat]'); if (t) openStat(t.dataset.stat); };
@@ -923,11 +977,13 @@ function setVols(key, vols, name, extra){
 /* ---------- shop snapshot: lets people without the Shopify connection see the store ---------- */
 const SNAP_URL = '';            // filled in at publish time as a fallback for signed-out viewers
 const CDN = 'https://cdn.shopify.com/s/files/1/1935/5029/';
-let SNAP = null, snapLoading = false, snapTried = 0, snapBar = new Map();
+let SNAP = null, snapLoading = false, snapTried = 0, snapBar = new Map(), snapNorm = new Map(), snapPid = new Map();
+const normName = n => String(n||'').toLowerCase().replace(/\((manga|english|paperback|light novel)\)/g,' ').replace(/^(the|a|an)\s+/,'').replace(/[’']/g,'').replace(/&/g,'and').replace(/[^a-z0-9]+/g,'');
 const snapKey = (ser, ln) => handleize(baseName(ser)) + (ln ? '-ln' : '');
 function snapImg(u){ return !u ? '' : (u.startsWith('http') ? u : CDN + u); }
 function snapEntry(key){ if (!SNAP) return null; const s = shelf.series[key]; const ln = s ? isLN(key, s) : /-ln$/.test(key);
-  const c = [key, key.replace(/-light-novel$/, '-ln')]; if (s) c.push(snapKey(s.n, ln)); for (const k of c){ if (SNAP.s[k]) return [k, SNAP.s[k]]; } return null; }
+  const c = [key, key.replace(/-light-novel$/, '-ln')]; if (s) c.push(snapKey(s.n, ln)); for (const k of c){ if (SNAP.s[k]) return [k, SNAP.s[k]]; }
+  const nk = snapNorm.get(normName(s ? s.n : key) + (ln ? '|ln' : '')); if (nk && SNAP.s[nk]) return [nk, SNAP.s[nk]]; return null; }
 function snapItems(e){ return (e.i || []).map(x => ({ vol: x[0], price: x[1], inv: x[2], handle: x[3], img: snapImg(x[4]), title: e.n + (e.ln ? ' Light Novel' : '') + ' Vol ' + x[0], ser: e.n, sv: e.t || 0, isbn: x[5] || '' })); }
 async function loadSnap(){
   if (SNAP || snapLoading || Date.now() - snapTried < 60e3) return SNAP; snapLoading = true; snapTried = Date.now();
@@ -936,7 +992,7 @@ async function loadSnap(){
   if (!url && !window.claude){ try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.snap) url = j.snap; } } catch(e){} }
   if (!url && SNAP_URL) url = SNAP_URL;
   if (url){ try { const r = await fetch(url); if (r.ok){ SNAP = await r.json(); } } catch(e){} }
-  if (SNAP){ snapBar = new Map(); Object.entries(SNAP.s).forEach(([k, e]) => (e.i||[]).forEach(x => { if (x[5]) snapBar.set(String(x[5]), [k, x[0]]); }));
+  if (SNAP){ snapBar = new Map(); snapNorm = new Map(); snapPid = new Map(); Object.entries(SNAP.s).forEach(([k, e]) => { const nn = normName(e.n) + (e.ln ? '|ln' : ''); if (!snapNorm.has(nn)) snapNorm.set(nn, k); (e.i||[]).forEach(x => { if (x[5]) snapBar.set(String(x[5]), [k, x[0]]); if (x[6]) snapPid.set(String(x[6]), [k, x[0]]); }); });
     if (!crownsData && SNAP.cr) crownsData = SNAP.cr; if (!preorders && SNAP.pre) preorders = SNAP.pre.map(x => ({ handle: x[0], title: x[1], ser: x[2], vol: x[3], rd: x[4], ln: !!x[5], price: x[6], img: snapImg(x[7]) }));
     if (!mcp) applySnap(); }
   snapLoading = false; return SNAP; }
@@ -991,9 +1047,15 @@ function mapProd(p){
     img: p.featuredMedia && p.featuredMedia.preview && p.featuredMedia.preview.image ? p.featuredMedia.preview.image.url : '',
     pub: p.vendor || '', aud: p.aud ? p.aud.value : '', au: p.au ? p.au.value : '', g1: p.g1 ? p.g1.value : '', gen: (() => { try { return p.gen ? JSON.parse(p.gen.value) : []; } catch(e){ return []; } })() };
 }
+const SF = 'https://themagesemporium.com/api/2025-07/graphql.json';
+async function liveStock(key, out){ if (window.claude) return; const its = out.items.filter(p => p.handle).slice(0, 120); if (!its.length) return;
+  try { const q = '{' + its.map((p, i) => `p${i}:product(handle:${JSON.stringify(p.handle)}){availableForSale}`).join(' ') + '}';
+    const r = await fetch(SF, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: q }) }); const j = await r.json(); if (!j.data) return;
+    let ch = false; its.forEach((p, i) => { const n = j.data['p' + i]; if (!n) return; const inv = n.availableForSale ? Math.max(1, p.inv || 0) : 0; if ((p.inv > 0) !== (inv > 0)){ p.inv = inv; ch = true; } });
+    out.fresh = 1; out.at = Date.now(); if (ch && current === key) renderSeries(key); } catch(e){} }
 async function lookupSeries(key, force){
   const s = shelf.series[key]; if (!s || langOf(key)) return null;
-  if (!mcp){ if (!SNAP) await loadSnap(); const hit = snapEntry(key); if (!hit) return null; const out = { at: Date.now(), v2: 1, items: snapItems(hit[1]), total: hit[1].t || 0, snap: SNAP.at }; live.set(key, out); return out; }
+  if (!mcp){ if (!SNAP) await loadSnap(); const hit = snapEntry(key); if (!hit) return null; const prevL = live.get(key); if (prevL && prevL.fresh && Date.now() - prevL.at < 10*60e3) return prevL; const out = { at: Date.now(), v2: 1, items: snapItems(hit[1]), total: hit[1].t || 0, snap: SNAP.at }; live.set(key, out); liveStock(key, out); return out; }
   const c = live.get(key); if (c && c.v2 && (s.m || metaTried.has(key + '#')) && !force && Date.now() - c.at < 6*3600e3) return c;
   metaTried.add(key + '#');
   const ln = isLN(key, s);
@@ -1548,7 +1610,7 @@ async function acctPull(){ const d = await acctGql(`{customer{id firstName email
   acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
-function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share }; }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null }; }
 async function acctPush(){ if (!acct || !acct.cid) return; const b = await gzB64(JSON.stringify(shelfBody()));
   if (b.length > PARTS * CHUNK) throw new Error('shelf too big to save to your account');
   const mfs = []; for (let i = 0; i < PARTS; i++) mfs.push({ ownerId: acct.cid, namespace: 'mme', key: 'shelf' + i, type: 'json', value: JSON.stringify(b.slice(i * CHUNK, (i + 1) * CHUNK)) });
@@ -1560,7 +1622,7 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; ['log','rl','other','goal'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; ['log','rl','other','goal'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
   Object.entries(b.series || {}).forEach(([k, S]) => { const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
@@ -1568,6 +1630,20 @@ function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (
   ['log'].forEach(f => { out[f] = Object.assign({}, b[f] || {}); Object.entries(a[f] || {}).forEach(([d, n]) => { out[f][d] = Math.max(n, out[f][d] || 0); }); });
   out.rl = Object.assign({}, b.rl || {}); Object.entries(a.rl || {}).forEach(([d, l]) => { out.rl[d] = [...new Set((out.rl[d] || []).concat(l))]; });
   out.other = Object.assign({}, b.other || {}, a.other || {}); out.goal = Object.assign({}, b.goal || {}, a.goal || {}); return out; }
+async function acctOrders(force){
+  if (!acct || !acct.at) return; const o = shelf.orders || {}; if (!force && o.checked && Date.now() - o.checked < 6*3600e3) return;
+  if (!SNAP) await loadSnap(); if (!SNAP) return;
+  const all = []; let after = null;
+  for (let pg = 0; pg < 20; pg++){ const d = await acctGql(`query($a:String){customer{orders(first:50,after:$a,sortKey:PROCESSED_AT){pageInfo{hasNextPage endCursor} nodes{id processedAt totalPrice{amount} lineItems(first:100){nodes{name sku productId quantity}}}}}}`, { a: after });
+    const c = d.customer.orders; all.push(...c.nodes); if (!c.pageInfo.hasNextPage) break; after = c.pageInfo.endCursor; }
+  const since = o.upto || ''; let added = 0; const prev = JSON.parse(JSON.stringify(shelf.series));
+  all.forEach(od => { if (since && od.processedAt <= since) return; (od.lineItems.nodes || []).forEach(li => {
+    const pid = li.productId ? li.productId.split('/').pop() : ''; const hit = snapPid.get(pid) || (li.sku && snapBar.get(String(li.sku).replace(/\D/g,'')));
+    if (!hit) return; const [k, vol] = hit; const e = SNAP.s[k]; let key = Object.keys(shelf.series).find(x => { const h = snapEntry(x); return h && h[0] === k; }) || k;
+    const S = shelf.series[key] = shelf.series[key] || { n: e.n, v: [], t: Date.now() }; if (!S.v.includes(vol)){ S.v.push(vol); S.v.sort((a,b)=>a-b); added++; if (S.want) S.want = S.want.filter(x => x !== vol); } }); });
+  const paid = all.filter(x => +x.totalPrice.amount > 0);
+  shelf.orders = { n: paid.length, spent: paid.reduce((a, x) => a + +x.totalPrice.amount, 0), first: all.length ? all.map(x => x.processedAt).sort()[0] : null, upto: all.length ? all.map(x => x.processedAt).sort().pop() : since, checked: Date.now() };
+  save(); if (added) toast(`Added ${added} ${added === 1 ? 'book' : 'books'} you bought from the shop`, () => { shelf.series = prev; save(); }); }
 async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy = true; $('#sync').textContent = 'Syncing with your account…';
   try { const cloud = await acctPull(); const local = shelfBody(); const nl = shelfCount(local), nc = shelfCount(cloud); const dirty = ls.get('mme-dirty');
     if (!nc){ acctBusy = false; if (nl) await acctPush(); }
@@ -1575,6 +1651,7 @@ async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy =
     else if (acct.fresh){ acctBusy = false; delete acct.fresh; ls.set('mme-acct', acct); askMerge(local, cloud); return; }
     else { applyBody(combine(local, cloud)); acctBusy = false; await acctPush(); }
     delete acct.fresh; ls.set('mme-acct', acct); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; acctMsg = '';
+    acctOrders().catch(() => {});
   } catch(e){ acctBusy = false; $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t reach your account: ' + e.message; }
   renderAll(); renderFinds(); if (current) renderSeries(current); renderAcct(); }
 function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your store account already has a saved shelf, and this device has one too. Which should we keep?</p>
@@ -1603,42 +1680,61 @@ let acctBooted = false;
 async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted = true; try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.acct) ACCT.client = j.acct; } } catch(e){}
   if (!ACCT.client){ renderAcct(); return; } await acctCallback(); renderAcct(); if (acct && acct.at) acctSync();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && acct && acct.at && !ls.get('mme-dirty')) acctSync(); else if (document.visibilityState === 'hidden' && acct && ls.get('mme-dirty')){ clearTimeout(acctT); acctSave(); } }); }
-/* ---------- share card (Instagram story size) ---------- */
-function loadImg(src){ return new Promise(res => { if (!src) return res(null); const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = src; setTimeout(() => res(null), 6000); }); }
-async function makeCard(){
-  const W = 1080, H = 1920, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
-  const cs = getComputedStyle(document.documentElement); const ac = (cs.getPropertyValue('--accent') || '#e8505b').trim() || '#e8505b', gold = (cs.getPropertyValue('--gold') || '#f6a623').trim() || '#f6a623';
-  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#1d2b5a'); bg.addColorStop(1, '#3b1d4f'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
-  for (let i = 0; i < 60; i++){ g.fillStyle = `rgba(255,255,255,${Math.random()*0.5+0.1})`; g.beginPath(); g.arc(Math.random()*W, Math.random()*H, Math.random()*2.5+0.5, 0, 7); g.fill(); }
-  const keys = Object.keys(shelf.series); let books = 0, readN = 0, done = 0; keys.forEach(k => { const i = info(k); books += i.s.v.length; readN += (i.s.r||[]).length; if (i.total && i.own.length >= i.total) done++; });
-  let r = 0; while (r+1 < RANKS.length && books >= RANKS[r+1][0]) r++;
-  const name = (acct && acct.name) || '';
-  g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = '600 46px Figtree, system-ui, sans-serif'; g.fillText(name ? name + '’s manga shelf' : 'My manga shelf', W/2, 150);
-  g.fillStyle = gold; g.font = '700 34px Figtree, system-ui, sans-serif'; g.fillText('COLLECTOR RANK', W/2, 250);
-  g.fillStyle = '#fff'; g.font = '800 120px Fraunces, Georgia, serif'; g.fillText(RANKS[r][1], W/2, 380, W - 120);
-  const stat = (x, n, l) => { g.fillStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.roundRect(x - 150, 440, 300, 190, 28); g.fill(); g.fillStyle = '#fff'; g.font = '800 78px Figtree, system-ui, sans-serif'; g.fillText(Number(n).toLocaleString(), x, 545); g.font = '600 32px Figtree, system-ui, sans-serif'; g.fillStyle = 'rgba(255,255,255,.8)'; g.fillText(l, x, 595); };
-  stat(W/2 - 330, books, 'books'); stat(W/2, keys.length, 'series'); stat(W/2 + 330, readN, 'read');
-  const top = keys.map(k => ({ k, s: shelf.series[k] })).sort((a, b) => b.s.v.length - a.s.v.length).slice(0, 6);
-  g.fillStyle = gold; g.font = '700 34px Figtree, system-ui, sans-serif'; g.fillText('BIGGEST SERIES', W/2, 720);
-  const cw = 270, ch = 405, gap = 30, x0 = (W - (cw*3 + gap*2)) / 2, y0 = 760;
-  const imgs = await Promise.all(top.map(t => loadImg(t.s.c || '')));
-  top.forEach((t, i) => { const x = x0 + (i % 3) * (cw + gap), y = y0 + Math.floor(i / 3) * (ch + 70);
-    g.save(); g.beginPath(); g.roundRect(x, y, cw, ch, 18); g.clip();
-    if (imgs[i]){ const im = imgs[i]; const sc = Math.max(cw / im.width, ch / im.height); g.drawImage(im, x + (cw - im.width*sc)/2, y + (ch - im.height*sc)/2, im.width*sc, im.height*sc); }
-    else { g.fillStyle = [ac, gold, '#4a90d9', '#2f9e5f', '#7b5ea7'][i % 5]; g.fillRect(x, y, cw, ch); g.fillStyle = '#fff'; g.font = '800 120px Fraunces, Georgia, serif'; g.fillText((t.s.n[0] || '?').toUpperCase(), x + cw/2, y + ch/2 + 40); }
-    g.restore(); g.fillStyle = '#fff'; g.font = '600 26px Figtree, system-ui, sans-serif'; let nm = t.s.n; while (g.measureText(nm).width > cw && nm.length > 4) nm = nm.slice(0, -2); if (nm !== t.s.n) nm = nm.trim() + '…';
-    g.fillText(nm, x + cw/2, y + ch + 34); g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '500 24px Figtree, system-ui, sans-serif'; g.fillText(t.s.v.length + (t.s.v.length === 1 ? ' vol' : ' vols'), x + cw/2, y + ch + 62); });
-  const earned = (BADGES || []).filter(b => b[2] >= b[3]).map(b => b[0]).slice(0, 6);
-  if (earned.length){ g.fillStyle = 'rgba(255,255,255,.9)'; g.font = '600 34px Figtree, system-ui, sans-serif'; const line1 = earned.slice(0, 3).join('   '), line2 = earned.slice(3).join('   '); g.fillText(line1, W/2, 1735, W - 80); if (line2) g.fillText(line2, W/2, 1785, W - 80); }
-  g.fillStyle = gold; g.font = '700 36px Figtree, system-ui, sans-serif'; g.fillText('app.themagesemporium.com', W/2, 1850); g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '500 28px Figtree, system-ui, sans-serif'; g.fillText('Track your manga with The Mage’s Emporium', W/2, 1890);
-  return cv; }
-async function shareCard(btn){ btn.disabled = true; const old = btn.textContent; btn.textContent = 'Making…';
-  try { const cv = await makeCard(); const blob = await new Promise(r => cv.toBlob(r, 'image/png')); const file = new File([blob], 'my-manga-shelf.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })){ try { await navigator.share({ files: [file], title: 'My manga shelf' }); } catch(e){} }
-    else { const url = URL.createObjectURL(blob); openSheet(`<h2>Your shelf picture</h2><p class="sub">Press and hold the picture to save it, then post it to Instagram.</p><img src="${url}" alt="My manga shelf" style="width:100%;border-radius:12px"><div class="row2"><a class="btn" href="${url}" download="my-manga-shelf.png">Download</a><button class="btn ghost" data-close>Close</button></div>`); }
-  } catch(e){ toast('Couldn’t make the picture: ' + (e.message || e)); }
-  btn.disabled = false; btn.textContent = old; }
-document.addEventListener('click', e => { const b = e.target.closest('#shareCard'); if (b) shareCard(b); });
+/* ---------- share card (Instagram story size): same look as the old My Collection card; colors follow the top genre ---------- */
+function cardData(){ const C = collectorNumbers(); let r = 0; while (r+1 < RANKS.length && C.books >= RANKS[r+1][0]) r++;
+  const earned = BADGES.filter(b => b[2] >= b[3]); const total = BADGES.filter(b => !b[4]).length + BADGES.filter(b => b[4] && b[2] >= b[3]).length;
+  return { name: (shelf.card && shelf.card.name != null ? shelf.card.name : (acct && acct.name) || ''), rank: RANKS[r][1], since: C.since ? new Date(C.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '',
+    books: C.books, series: C.series, done: C.done, run: C.run, runName: C.runK ? shelf.series[C.runK].n : '', crowns: C.crowns,
+    badges: earned.map(b => b[0]), earned: earned.length, total, g: [C.shojo, C.shonen, C.seinen, C.josei, C.bl, C.horror], site: 'app.themagesemporium.com' }; }
+function drawCard(d){ const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const F = '"Figtree","Nunito",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif', E = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  const INK = '#3b1d6e', ORG = '#ff5300', CREAM = '#fff9c1';
+  const TH = { def: { bg: ['#3a1c78','#5b3fd0','#3f6fd8','#1f9fd6'], bar: ['#6a4be0','#3f8fe0'] }, shojo: { bg: ['#6b2f9e','#b04aa8','#de7bb8','#8e6ee0'], bar: ['#b04aa8','#de7bb8'] },
+    shonen: { bg: ['#7a1f12','#d2481c','#1f3f9a','#0f1f5c'], bar: ['#d2481c','#1f5fd0'] }, seinen: { bg: ['#0e1522','#1f2c44','#34506e','#14202f'], bar: ['#34506e','#6f8fb0'] },
+    josei: { bg: ['#4a1530','#8c2f55','#c0697a','#5a2a5e'], bar: ['#8c2f55','#c0697a'] }, horror: { bg: ['#050505','#2a0a0e','#5e0f16','#120406'], bar: ['#5e0f16','#a3121f'] },
+    bl: { bg: ['#2e1660','#6b3fc0','#a07ae0','#4a52c8'], bar: ['#6b3fc0','#a07ae0'] } };
+  const gk = ['shojo','shonen','seinen','josei','bl','horror']; let tk = 'def', tb = 0; gk.forEach((k, i) => { if ((d.g[i] || 0) > tb){ tb = d.g[i]; tk = k; } }); const T = TH[tk];
+  let g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, T.bg[0]); g.addColorStop(.35, T.bg[1]); g.addColorStop(.7, T.bg[2]); g.addColorStop(1, T.bg[3]); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  let s1 = x.createLinearGradient(0, H*.15, W, H*.55); s1.addColorStop(0,'rgba(255,255,255,0)'); s1.addColorStop(.35,'rgba(160,255,240,.18)'); s1.addColorStop(.5,'rgba(255,255,255,.28)'); s1.addColorStop(.65,'rgba(255,170,255,.16)'); s1.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle = s1; x.fillRect(0, 0, W, H);
+  let s2 = x.createLinearGradient(W, H*.55, 0, H); s2.addColorStop(0,'rgba(255,255,255,0)'); s2.addColorStop(.4,'rgba(255,220,150,.12)'); s2.addColorStop(.5,'rgba(255,255,255,.22)'); s2.addColorStop(.6,'rgba(150,200,255,.14)'); s2.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle = s2; x.fillRect(0, 0, W, H);
+  const star = (cx, cy, r, col) => { x.beginPath(); for (let i = 0; i < 8; i++){ const a = i*Math.PI/4, rr = i%2 ? r*.28 : r; x.lineTo(cx+Math.cos(a)*rr, cy+Math.sin(a)*rr); } x.closePath(); x.fillStyle = col; x.fill(); };
+  [[90,110,26],[990,170,34],[960,880,20],[70,1010,22],[1000,1500,28],[110,1780,30],[540,60,14],[860,1830,16]].forEach(p => star(p[0], p[1], p[2]*.8, 'rgba(255,255,255,.55)'));
+  for (let i = 0; i < 60; i++){ x.beginPath(); x.arc((i*263+40)%W, (i*397+90)%H, 1.5+(i%3), 0, 7); x.fillStyle = 'rgba(255,255,255,.35)'; x.fill(); }
+  const rr = (X, Y, w, h, r, f, st) => { x.beginPath(); x.moveTo(X+r, Y); x.arcTo(X+w, Y, X+w, Y+h, r); x.arcTo(X+w, Y+h, X, Y+h, r); x.arcTo(X, Y+h, X, Y, r); x.arcTo(X, Y, X+w, Y, r); x.closePath(); if (f){ x.fillStyle = f; x.fill(); } if (st){ x.lineWidth = 4; x.strokeStyle = st; x.stroke(); } };
+  const fnt = (w, sz) => w + ' ' + sz + 'px ' + F + ',' + E;
+  const t = (str, X, y, sz, w, col, al) => { x.font = fnt(w || '800', sz); x.fillStyle = col || INK; x.textAlign = al || 'center'; x.fillText(str, X, y); };
+  const fit = (str, max, sz, w) => { x.font = fnt(w || '800', sz); while (x.measureText(str).width > max && sz > 26){ sz -= 3; x.font = fnt(w || '800', sz); } return sz; };
+  const pill = (str, cy, bg, col, sz, w) => { const z = fit(str, 860, sz || 34, w || '800'); x.font = fnt(w || '800', z); const tw = x.measureText(str).width + 80; rr(W/2-tw/2, cy-z-12, tw, z+38, (z+38)/2, bg); t(str, W/2, cy+4, z, w || '800', col); };
+  pill('THE MAGE’S EMPORIUM', 150, 'rgba(255,255,255,.9)', ORG, 32);
+  const nm = (d.name ? d.name + '’s' : 'My') + ' Manga Collection'; t(nm, W/2, 270, fit(nm, 960, 82, '900'), '900', '#fff');
+  pill('🔮 ' + d.rank + (d.since ? '  ·  collector since ' + d.since : ''), 350, 'rgba(255,255,255,.16)', '#fff', 34, '700');
+  [[d.books, 'books'], [d.series, 'series'], [d.done, '★ done / caught up']].forEach((tl, i) => { const X = 70 + i*320; rr(X, 420, 300, 250, 60, 'rgba(255,255,255,.82)', 'rgba(255,255,255,1)'); x.textAlign = 'center'; x.font = fnt('900', String(tl[0]).length > 4 ? 84 : 104); x.fillStyle = ORG; x.fillText(tl[0], X+150, 565); x.font = fnt('700', tl[1].length > 10 ? 27 : 36); x.fillStyle = INK; x.fillText(tl[1], X+150, 628); });
+  let y = 720;
+  if (d.run > 1){ rr(70, y, 940, 150, 60, CREAM, '#fff'); t('🏃 longest run', W/2, y+55, 34, '700', '#c2410c'); const rn = d.runName + ' · ' + d.run + ' vols'; t(rn, W/2, y+115, fit(rn, 860, 50, '900'), '900', INK); y += 180; }
+  d.crowns.slice(0, 3).forEach(c2 => { pill(c2, y+44, 'rgba(255,255,255,.92)', INK, 32, '800'); y += 74; }); if (d.crowns.length) y += 16;
+  const gn = ['Shojo','Shonen','Seinen','Josei','BL','Horror'], gs = d.g.reduce((a, b) => a + (b || 0), 0);
+  const rows = gn.map((n, i) => [n, d.g[i] || 0]).filter(r2 => r2[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  if (gs > 0){ const gh = 100 + rows.length*56; rr(70, y, 940, gh, 60, 'rgba(255,255,255,.88)', '#fff'); t('my shelf by genre', W/2, y+64, 38, '900', INK); let yy = y + 84;
+    rows.forEach(r2 => { yy += 56; const pc = Math.round(r2[1]*100/gs); x.textAlign = 'left'; x.font = fnt('800', 34); x.fillStyle = INK; x.fillText(r2[0], 130, yy); rr(310, yy-28, 520, 28, 14, 'rgba(59,29,110,.12)'); const bw = Math.max(28, 520*pc/100), bg = x.createLinearGradient(310, 0, 830, 0); bg.addColorStop(0, T.bar[0]); bg.addColorStop(.5, T.bar[1]); bg.addColorStop(1, ORG); rr(310, yy-28, bw, 28, 14, bg); x.textAlign = 'right'; x.fillStyle = INK; x.fillText(pc + '%', 960, yy); });
+    y += gh + 30; }
+  pill('🏅 ' + d.earned + ' of ' + d.total + ' achievements', y+44, 'rgba(255,255,255,.16)', '#fff', 34, '800'); y += 84;
+  const cw = 300, ch = 150, room = Math.max(0, Math.floor((H - 170 - y) / (ch + 16)));
+  (room ? d.badges.slice(-room*3) : []).reverse().forEach((b, i) => { const X = 70 + (i%3)*(cw+20), Y = y + Math.floor(i/3)*(ch+16); rr(X, Y, cw, ch, 56, 'rgba(255,255,255,.85)', '#fff'); const sp = b.indexOf(' '), ic = b.slice(0, sp), nmb = b.slice(sp+1); x.textAlign = 'center'; x.font = '64px ' + E; x.fillStyle = INK; x.fillText(ic, X+cw/2, Y+74); x.font = fnt('800', nmb.length > 16 ? 25 : 29); x.fillText(nmb, X+cw/2, Y+126); });
+  pill('track yours free → ' + d.site, H-70, 'rgba(255,255,255,.9)', ORG, 32, '800');
+  return c; }
+let cardFile = null;
+async function shareCard(){ try { await document.fonts.ready; } catch(e){}
+  const d = cardData(); openSheet(`<h2>Share your collection</h2><label class="sub" for="cardName" style="display:block;margin:0 0 4px">Name on the picture</label><input id="cardName" value="${esc(d.name)}" placeholder="Your first name (or leave empty)" autocomplete="off" style="width:100%;margin:0 0 10px">
+    <img id="cardImg" alt="Your collector stats picture" style="width:100%;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.18)">
+    <div class="row2" style="margin-top:10px"><button class="btn" id="cardShare">Share</button><button class="btn ghost" id="cardSave">Save image</button><button class="btn ghost" data-close>Close</button></div>
+    <p class="sub" style="margin:8px 0 0">On your phone, tap Share and pick Instagram (Story or Post), or Save image to put it in your photos. You can also press and hold the picture.</p>`);
+  const paint = () => { const dd = cardData(); dd.name = $('#cardName').value.trim(); const cv = drawCard(dd); $('#cardImg').src = cv.toDataURL('image/png'); cardFile = null; cv.toBlob(b => { cardFile = new File([b], 'my-manga-collection.png', { type: 'image/png' }); const ok = navigator.canShare && navigator.canShare({ files: [cardFile] }); $('#cardShare').classList.toggle('hidden', !ok); }); };
+  paint(); let tm = null; $('#cardName').oninput = () => { clearTimeout(tm); tm = setTimeout(() => { shelf.card = Object.assign({}, shelf.card, { name: $('#cardName').value.trim() }); save(); paint(); }, 400); };
+  $('#cardShare').onclick = () => { if (cardFile) navigator.share({ files: [cardFile], title: 'My manga collection' }).catch(() => {}); };
+  $('#cardSave').onclick = () => { if (!cardFile) return; const mob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (mob && navigator.canShare && navigator.canShare({ files: [cardFile] })){ navigator.share({ files: [cardFile] }).catch(() => {}); return; }
+    const u = URL.createObjectURL(cardFile), a = document.createElement('a'); a.href = u; a.download = 'my-manga-collection.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }; }
+document.addEventListener('click', e => { const b = e.target.closest('#shareCard'); if (b) shareCard(); });
 function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
 boot();
 })();
