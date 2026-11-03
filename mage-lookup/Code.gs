@@ -75,7 +75,7 @@ function autoLookup() {                                       // runs on the tim
 /* ---------- Mage Scanner (phone web app, deployed "only myself") ---------- */
 function doGet(e) {
   const tools = e && e.parameter && e.parameter.page === 'tools';
-  return HtmlService.createHtmlOutputFromFile(tools ? 'Tools' : 'Scanner')
+  return HtmlService.createHtmlOutputFromFile(tools ? 'ToolsPage' : 'Scanner')
     .setTitle(tools ? 'Mage Tools' : 'Mage Scanner')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
