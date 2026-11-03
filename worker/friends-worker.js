@@ -10,8 +10,8 @@ const rnd = n => [...crypto.getRandomValues(new Uint8Array(n))].map(b => 'abcdef
 async function sha(t){ const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join(''); }
 async function who(env, req){ const t = req.headers.get('authorization'); if (!t) return null; const h = 'tok:' + await sha(t);
   const c = await env.FRIENDS.get(h, 'json'); if (c) return c;
-  const r = await fetch(CAAPI, { method: 'POST', headers: { 'content-type': 'application/json', authorization: t }, body: JSON.stringify({ query: '{customer{id firstName}}' }) });
-  if (!r.ok) return null; const j = await r.json(); const cu = j.data && j.data.customer; if (!cu) return null;
+  const r = await fetch(CAAPI, { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json', authorization: t, origin: ORIGIN, referer: ORIGIN + '/', 'user-agent': 'Mozilla/5.0 (MME friends)' }, body: JSON.stringify({ query: '{customer{id firstName}}' }) });
+  if (!r.ok){ who.last = r.status + ' ' + (await r.text()).slice(0, 120); return null; } const j = await r.json(); const cu = j.data && j.data.customer; if (!cu) return null;
   const me = { cid: cu.id.split('/').pop(), name: cu.firstName || 'A friend' }; await env.FRIENDS.put(h, JSON.stringify(me), { expirationTtl: 3600 }); return me; }
 const get = async (env, k) => (await env.FRIENDS.get(k, 'json')) || null;
 const put = (env, k, v) => env.FRIENDS.put(k, JSON.stringify(v));
@@ -20,7 +20,7 @@ export default {
   async fetch(req, env){
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
     const url = new URL(req.url); const p = url.pathname;
-    const me = await who(env, req); if (!me) return J({ error: 'login' }, 401);
+    const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
     let body = {}; if (req.method === 'POST' || req.method === 'PUT'){ try { body = await req.json(); } catch(e){} }
     const own = (await get(env, 'own:' + me.cid)) || { code: null, name: me.name, viewers: {} };
 
