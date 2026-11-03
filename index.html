@@ -985,7 +985,7 @@ const snapKey = (ser, ln) => handleize(baseName(ser)) + (ln ? '-ln' : '');
 function snapImg(u){ return !u ? '' : (u.startsWith('http') ? u : CDN + u); }
 function snapEntry(key){ if (!SNAP) return null; const s = shelf.series[key]; const ln = s ? isLN(key, s) : /-ln$/.test(key);
   const c = [key, key.replace(/-light-novel$/, '-ln')]; if (s) c.push(snapKey(s.n, ln)); for (const k of c){ if (SNAP.s[k]) return [k, SNAP.s[k]]; }
-  const nk = snapNorm.get(normName(s ? s.n : key) + (ln ? '|ln' : '')); if (nk && SNAP.s[nk]) return [nk, SNAP.s[nk]]; return null; }
+  const q = normName(s ? s.n : key) + (ln ? '|ln' : ''); const nk = snapNorm.get(q) || (SNAP.al && SNAP.al[q]); if (nk && SNAP.s[nk]) return [nk, SNAP.s[nk]]; return null; }
 function snapItems(e){ return (e.i || []).map(x => ({ vol: x[0], price: x[1], inv: x[2], handle: x[3], img: snapImg(x[4]), title: e.n + (e.ln ? ' Light Novel' : '') + ' Vol ' + x[0], ser: e.n, sv: e.t || 0, isbn: x[5] || '' })); }
 async function loadSnap(){
   if (SNAP || snapLoading || Date.now() - snapTried < 60e3) return SNAP; snapLoading = true; snapTried = Date.now();
@@ -998,11 +998,20 @@ async function loadSnap(){
     if (!crownsData && SNAP.cr) crownsData = SNAP.cr; if (!preorders && SNAP.pre) preorders = SNAP.pre.map(x => ({ handle: x[0], title: x[1], ser: x[2], vol: x[3], rd: x[4], ln: !!x[5], price: x[6], img: snapImg(x[7]) }));
     if (!mcp) applySnap(); }
   snapLoading = false; return SNAP; }
-function applySnap(){ if (!SNAP) return; Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const hit = snapEntry(k); if (!hit) return; const e = hit[1]; const items = snapItems(e);
+function applySnap(){ if (!SNAP) return; let miss = []; Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const hit = snapEntry(k); if (!hit){ const s0 = shelf.series[k]; const cv = SNAP.cv && SNAP.cv[normName(s0.n)]; if (!s0.c && cv) s0.c = snapImg(cv); else if (!s0.c && !s0.ct) miss.push(k); return; } const e = hit[1]; const items = snapItems(e);
     live.set(k, { at: Date.now(), v2: 1, items, total: e.t || 0, snap: SNAP.at });
     const s = shelf.series[k]; if (e.m && !s.m) s.m = { a: e.m.aud || '', g: e.m.gen ? String(e.m.gen).split(/,\s*/).filter(Boolean) : [], au: e.m.au || '', p: e.m.pub || '' };
     if (!s.c){ const own = new Set(ints(s)); const it = items.find(p => p.img && own.has(p.vol)) || items.find(p => p.img); if (it) s.c = it.img; } });
-  renderAll(); renderFinds(); if (current) renderSeries(current); }
+  renderAll(); renderFinds(); if (current) renderSeries(current); if (typeof miss !== 'undefined' && miss.length) olCovers(miss); }
+// books the shop doesn't carry: borrow an English cover from Open Library (a few at a time, remembered on the shelf)
+let olBusy = false;
+async function olCovers(keys){ if (olBusy || window.claude) return; olBusy = true; let n = 0, got = 0;
+  for (const k of keys.slice(0, 40)){ const s = shelf.series[k]; if (!s || s.c || s.ct) continue; s.ct = 1; n++;
+    try { const t = s.n.replace(/\((manga|light novel|english)\)/ig, ' ').replace(/\s+/g, ' ').trim();
+      const r = await fetch('https://openlibrary.org/search.json?' + new URLSearchParams({ title: t, limit: '8', fields: 'cover_i,title,language' })); const j = await r.json();
+      const d = (j.docs || []).filter(x => x.cover_i); const en = d.find(x => (x.language || []).includes('eng')) || d[0]; if (en){ s.c = 'https://covers.openlibrary.org/b/id/' + en.cover_i + '-M.jpg'; got++; } } catch(e){}
+    await new Promise(r => setTimeout(r, 350)); }
+  olBusy = false; if (n) save(); }
 function snapAge(){ if (!SNAP || !SNAP.at) return ''; const h = Math.round((Date.now() - new Date(SNAP.at)) / 36e5); return h < 1 ? 'just now' : h < 48 ? h + ' h ago' : Math.round(h/24) + ' days ago'; }
 async function buildSnap(btn, msg){
   if (!mcp){ msg.textContent = 'Building the snapshot needs your Shopify connection.'; return; }
