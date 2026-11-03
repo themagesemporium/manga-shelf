@@ -998,20 +998,24 @@ async function loadSnap(){
     if (!crownsData && SNAP.cr) crownsData = SNAP.cr; if (!preorders && SNAP.pre) preorders = SNAP.pre.map(x => ({ handle: x[0], title: x[1], ser: x[2], vol: x[3], rd: x[4], ln: !!x[5], price: x[6], img: snapImg(x[7]) }));
     if (!mcp) applySnap(); }
   snapLoading = false; return SNAP; }
-function applySnap(){ if (!SNAP) return; let miss = []; Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const hit = snapEntry(k); if (!hit){ const s0 = shelf.series[k]; const cv = SNAP.cv && SNAP.cv[normName(s0.n)]; if (!s0.c && cv) s0.c = snapImg(cv); else if (!s0.c && !s0.ct) miss.push(k); return; } const e = hit[1]; const items = snapItems(e);
+function applySnap(){ if (!SNAP) return; let miss = []; Object.keys(shelf.series).forEach(k => { const s0 = shelf.series[k]; if (langOf(k)){ if (!s0.c){ const en = snapNorm.get(normName(s0.n.replace(/\([^)]*\)/g, ' '))); const e0 = en && SNAP.s[en]; const im = e0 && (e0.i || []).find(x => x[4]); if (im) s0.c = snapImg(im[4]); else if ((s0.ct||0) < 2) miss.push(k); } return; } const hit = snapEntry(k); if (!hit){ const cv = SNAP.cv && SNAP.cv[normName(s0.n)]; if (!s0.c && cv) s0.c = snapImg(cv); else if (!s0.c && (s0.ct||0) < 2) miss.push(k); return; } const e = hit[1]; const items = snapItems(e);
     live.set(k, { at: Date.now(), v2: 1, items, total: e.t || 0, snap: SNAP.at });
     const s = shelf.series[k]; if (e.m && !s.m) s.m = { a: e.m.aud || '', g: e.m.gen ? String(e.m.gen).split(/,\s*/).filter(Boolean) : [], au: e.m.au || '', p: e.m.pub || '' };
     if (!s.c){ const own = new Set(ints(s)); const it = items.find(p => p.img && own.has(p.vol)) || items.find(p => p.img); if (it) s.c = it.img; } });
   renderAll(); renderFinds(); if (current) renderSeries(current); if (typeof miss !== 'undefined' && miss.length) olCovers(miss); }
 // books the shop doesn't carry: borrow an English cover from Open Library (a few at a time, remembered on the shelf)
 let olBusy = false;
-async function olCovers(keys){ if (olBusy || window.claude) return; olBusy = true; let n = 0, got = 0;
-  for (const k of keys.slice(0, 40)){ const s = shelf.series[k]; if (!s || s.c || s.ct) continue; s.ct = 1; n++;
-    try { const t = s.n.replace(/\((manga|light novel|english)\)/ig, ' ').replace(/\s+/g, ' ').trim();
-      const r = await fetch('https://openlibrary.org/search.json?' + new URLSearchParams({ title: t, limit: '8', fields: 'cover_i,title,language' })); const j = await r.json();
-      const d = (j.docs || []).filter(x => x.cover_i); const en = d.find(x => (x.language || []).includes('eng')) || d[0]; if (en){ s.c = 'https://covers.openlibrary.org/b/id/' + en.cover_i + '-M.jpg'; got++; } } catch(e){}
+async function olCovers(keys){ if (olBusy || window.claude) return; olBusy = true; let n = 0;
+  const sib = nm => { const q = normName(nm); let best = null; snapNorm.forEach((k, key) => { const b = key.split('|')[0]; if (b.length >= 5 && q.startsWith(b) && (!best || b.length > best[0].length)) best = [b, k]; }); const e = best && SNAP.s[best[1]]; const im = e && (e.i || []).find(x => x[4]); return im ? snapImg(im[4]) : ''; };
+  for (const k of keys.slice(0, 40)){ const s = shelf.series[k]; if (!s || s.c || (s.ct||0) >= 2) continue; s.ct = 2; n++;
+    const t = s.n.replace(/\((manga|light novel|english|[a-z]+ edition)\)/ig, ' ').replace(/\s+/g, ' ').trim();
+    try { const r = await fetch('https://openlibrary.org/search.json?' + new URLSearchParams({ q: t, limit: '10', fields: 'cover_i,title,language' })); const j = await r.json();
+      const d = (j.docs || []).filter(x => x.cover_i); const en = d.find(x => (x.language || []).includes('eng')) || d[0]; if (en) s.c = 'https://covers.openlibrary.org/b/id/' + en.cover_i + '-M.jpg'; } catch(e){}
+    if (!s.c){ try { const r = await fetch('https://www.googleapis.com/books/v1/volumes?' + new URLSearchParams({ q: t, maxResults: '10', printType: 'books', langRestrict: langOf(k) ? '' : 'en' })); const j = await r.json();
+      const it = (j.items || []).find(x => x.volumeInfo && x.volumeInfo.imageLinks); if (it){ const L = it.volumeInfo.imageLinks; s.c = String(L.thumbnail || L.smallThumbnail).replace(/^http:/, 'https:').replace('&edge=curl', ''); } } catch(e){} }
+    if (!s.c) s.c = sib(t);
     await new Promise(r => setTimeout(r, 350)); }
-  olBusy = false; if (n) save(); }
+  olBusy = false; if (n){ save(); } }
 function snapAge(){ if (!SNAP || !SNAP.at) return ''; const h = Math.round((Date.now() - new Date(SNAP.at)) / 36e5); return h < 1 ? 'just now' : h < 48 ? h + ' h ago' : Math.round(h/24) + ' days ago'; }
 async function buildSnap(btn, msg){
   if (!mcp){ msg.textContent = 'Building the snapshot needs your Shopify connection.'; return; }
