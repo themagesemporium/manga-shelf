@@ -212,6 +212,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .chip.gold{background:var(--gold-soft);color:var(--gold)}
 .chip.acc{background:var(--accent-soft);color:var(--accent)}
 .chip.good{color:var(--good)}
+.hlrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;padding:11px 14px;margin:0 0 8px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}.hlrow.crow{cursor:pointer}.hlrow small{display:block;color:var(--muted);font-size:12.5px}.hlchips{display:flex;gap:6px;flex-wrap:wrap}
 
 /* sheet */
 .scrim{position:fixed;inset:0;background:rgba(10,8,16,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
@@ -362,7 +363,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       </select>
       <select id="view" aria-label="Change the view"><option value="shelf">View: Bookshelf</option><option value="full">View: Full cards</option><option value="compact">View: Compact list</option></select>
     </div>
-    <div class="seg2" id="shelfSeg" role="group" aria-label="Show"><button data-sf="all" aria-pressed="true">All</button><button data-sf="done" aria-pressed="false">Complete</button><button data-sf="open" aria-pressed="false">Incomplete</button><button data-sf="recs" aria-pressed="false">✨ For you</button></div>
+    <div class="seg2" id="shelfSeg" role="group" aria-label="Show"><button data-sf="all" aria-pressed="true">All</button><button data-sf="done" aria-pressed="false">Complete</button><button data-sf="open" aria-pressed="false">Incomplete</button><button data-sf="recs" aria-pressed="false">✨ For you</button><button data-sf="hl" aria-pressed="false">📦 Holds &amp; loans</button></div>
     <div class="count" id="count"></div>
     <div class="list" id="list"></div>
     <div id="dupBox" style="margin-top:14px"></div>
@@ -856,6 +857,7 @@ function renderList(){
   const sort = $('#sort').value;
   let keys = Object.keys(shelf.series).filter(k => { if (!q) return true; const s = shelf.series[k]; return s.n.toLowerCase().includes(q) || (s.loc||'').toLowerCase().includes(q) || Object.values(s.lc||{}).some(l => l.toLowerCase().includes(q)) || Object.values(s.ln||{}).some(l => l.w.toLowerCase().includes(q)); });
   if (shelfFilter === 'recs' && Object.keys(shelf.series).length){ renderRecs(q); return; }
+  if (shelfFilter === 'hl'){ renderHL(q); return; }
   const I = Object.fromEntries(keys.map(k => [k, info(k)]));
   if (shelfFilter === 'done') keys = keys.filter(k => I[k].complete); else if (shelfFilter === 'open') keys = keys.filter(k => !I[k].complete);
   const name = k => shelf.series[k].n.replace(/^(the|a)\s+/i,'');
@@ -1025,7 +1027,7 @@ function openStat(kind){
 }
 $('#q').oninput = renderList; $('#sort').onchange = () => { renderList(); ls.set('mme-sort', $('#sort').value); };
 /* ---------- shelf filter: all / complete / incomplete / recommended ---------- */
-var shelfFilter = ls.get('mme-sf') || 'all'; if (!['all','done','open','recs'].includes(shelfFilter)) shelfFilter = 'all';
+var shelfFilter = ls.get('mme-sf') || 'all'; if (!['all','done','open','recs','hl'].includes(shelfFilter)) shelfFilter = 'all';
 function syncSeg(){ document.querySelectorAll('#shelfSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sf === shelfFilter))); }
 syncSeg();
 $('#shelfSeg').onclick = e => { const b = e.target.closest('[data-sf]'); if (!b) return; shelfFilter = b.dataset.sf; ls.set('mme-sf', shelfFilter); syncSeg(); track('filter-' + shelfFilter); renderList(); };
@@ -1047,6 +1049,18 @@ function recList(){
     out.push({ k, e, v1, sc, why: au ? `By the author of ${au}` : `Because you collect ${gm.slice(0, 2).join(' & ')}${e.m.aud && A[e.m.aud] ? ` · ${e.m.aud}` : ''}` }); });
   return out.sort((a, b) => b.sc - a.sc).slice(0, 40);
 }
+function renderHL(q){ const el = $('#list'); el.classList.remove('compact','shelfv'); const rows = [];
+  const keyOf = n => Object.keys(shelf.series).find(k => normName(shelf.series[k].n) === normName(n));
+  (holds ? holds.items : []).forEach(h => { const k = keyOf(h.s); const s = k && shelf.series[k]; const v = h.v != null ? Math.round(h.v) : null; rows.push({ k, n: s ? s.n : h.s, v, t: h.t, kind: 'hold', p: h.p, own: !!(s && v != null && ints(s).includes(v)) }); });
+  Object.entries(shelf.series).forEach(([k, s]) => Object.entries(s.ln || {}).forEach(([v, l]) => rows.push({ k, n: s.n, v: +v, kind: l.d === 'out' ? 'out' : 'in', who: l.w, at: l.at, own: ints(s).includes(+v) })));
+  const ql = q.toLowerCase(); const R = rows.filter(r => !ql || r.n.toLowerCase().includes(ql) || (r.who || '').toLowerCase().includes(ql) || (r.t || '').toLowerCase().includes(ql));
+  R.sort((a, b) => a.n.replace(/^(the|a)\s+/i, '').localeCompare(b.n.replace(/^(the|a)\s+/i, '')) || (a.v || 0) - (b.v || 0));
+  const nH = R.filter(r => r.kind === 'hold').length, nO = R.filter(r => r.kind === 'out').length, nI = R.filter(r => r.kind === 'in').length;
+  $('#count').textContent = R.length ? [nH ? nH + ' on hold' : '', nO ? nO + ' lent out' : '', nI ? nI + ' borrowed' : ''].filter(Boolean).join(' · ') + (q ? ' match' : '') : '';
+  if (!R.length){ el.innerHTML = `<div class="empty">${q ? `No holds or loans match “${esc(q)}”.` : `<h3>No holds or loans yet</h3>Books the shop sets aside for you show up here. To track a loan, open a series, switch to <b>Loan</b>, type a name and tap volumes.`}</div>`; return; }
+  const st = r => r.kind === 'hold' ? `<span class="chip" style="color:#8a5a00">📦 On hold at the shop${r.p ? ' · $' + (+r.p).toFixed(2) : ''}</span>` : r.kind === 'out' ? `<span class="chip" style="color:var(--accent)">↗ Lent to ${esc(r.who)}</span>` : `<span class="chip" style="color:#1d5aae">↙ Borrowed from ${esc(r.who)}</span>`;
+  const ow = r => r.own ? `<span class="chip good">✓ Owned</span>` : `<span class="chip">Not owned${r.kind === 'hold' ? ' yet' : ''}</span>`;
+  el.innerHTML = R.map(r => `<div class="${r.k ? 'crow ' : ''}hlrow"${r.k ? ` data-k="${esc(r.k)}"` : ''}><div><b>${esc(r.n)}</b>${r.v != null ? ' Vol ' + r.v : (r.t ? ' <small>' + esc(r.t) + '</small>' : '')}${r.at ? `<small>since ${esc(r.at)}</small>` : ''}</div><div class="hlchips">${st(r)}${ow(r)}</div></div>`).join(''); }
 function renderRecs(q){
   const el = $('#list'); el.classList.remove('compact', 'shelfv');
   if (!SNAP){ el.innerHTML = `<div class="empty"><span class="spin"></span></div>`; $('#count').textContent = ''; loadSnap().then(() => { if (shelfFilter === 'recs') renderList(); }); return; }
@@ -1894,7 +1908,7 @@ async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy =
     else if (acct.fresh){ acctBusy = false; delete acct.fresh; ls.set('mme-acct', acct); askMerge(local, cloud); return; }
     else { applyBody(combine(local, cloud)); acctBusy = false; await acctPush(); }
     delete acct.fresh; ls.set('mme-acct', acct); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; acctMsg = '';
-    acctOrders().catch(() => {}); liveLoad().then(() => livePush()); liveFromHash();
+    acctOrders().catch(() => {}); liveLoad().then(() => livePush(true)); liveFromHash();
   } catch(e){ acctBusy = false; $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t reach your account: ' + e.message; }
   renderAll(); renderFinds(); if (current) renderSeries(current); renderAcct(); }
 function askMerge(local, cloud){ openSheet(`<h2>You have two shelves</h2><p>Your store account already has a saved shelf, and this device has one too. Which should we keep?</p>
@@ -2068,6 +2082,7 @@ async function fapi(path, body){ const t = await acctAccess(); if (!t) throw new
 async function liveLoad(){ if (!FRIENDS_API || !acct || !acct.at || liveBusy || !navigator.onLine) return; liveBusy = true;
   try { const st = await fapi('/state'); for (const f of st.following){ if (f.shelf){ try { let b = f.shelf; f.pk = JSON.parse(await unGzB64(b)); } catch(e){} } } liveF = st; } catch(e){ liveF = { err: e.message || 'unavailable' }; }
   liveBusy = false; if (listView === 'friends') renderLists(); }
+async function liveSendShelf(){ try { await fapi('/shelf', { s: await gzB64(JSON.stringify(friendPack())) }); liveShelfAt = Date.now(); return true; } catch(e){ return false; } }
 async function livePush(force){ if (!FRIENDS_API || !liveF || !liveF.me || !liveF.me.live) return; if (!force && Date.now() - liveShelfAt < 120e3) return; liveShelfAt = Date.now();
   try { await fapi('/shelf', { s: await gzB64(JSON.stringify(friendPack())) }); } catch(e){} }
 function liveLink(){ return 'https://app.themagesemporium.com/#live=' + liveF.me.code; }
@@ -2122,8 +2137,8 @@ function friendsHTML(){ const F = Object.assign({}, shelf.friends || {}); const 
            <p style="margin:10px 0 4px"><b>Can see your shelf</b> (${ok.length})</p>${ok.length ? ok.map(v => `<div class="srow" style="cursor:default"><span>${esc(v.name)}</span><span class="r"><button class="btn ghost sm" data-liverev="${esc(v.cid)}">Revoke</button></span></div>`).join('') : '<p class="sub" style="margin:0">Nobody yet.</p>'}`
         : `<p class="sub" style="margin:0 0 8px">Let friends see your shelf as it changes. They ask, you approve, and you can revoke anytime.</p><button class="btn sm" data-liveon>🔴 Share my shelf live</button>`) + `<p class="sub" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--surface-2)">🔒 <b>Private by default.</b> Only people you approve on this list can see your shelf. Nobody else can, not even with your link, until you tap Approve. (The Mage’s Emporium can always see shelves, to avoid sending you duplicates.)</p></div>`;
       liveF.following.forEach(f => { if (f.st === 'ok' && f.pk){ const nm = f.pk.name || f.name; Object.keys(F).forEach(id => { if (!F[id].live && normName(F[id].name) === normName(nm)){ delete F[id]; if (shelf.friends && shelf.friends[id]){ delete shelf.friends[id]; setTimeout(save, 0); } } }); F['live:' + f.cid] = { name: nm, at: f.pk.at || Date.now(), s: f.pk.s, live: 1, cid: f.cid }; } });
-      const waiting = liveF.following.filter(f => f.st !== 'ok');
-      if (waiting.length) h += `<div class="st-sec">${waiting.map(f => `<div class="srow" style="cursor:default"><span>${esc(f.name)}<small>${f.st === 'ask' ? (String(f.cid).startsWith('mail:') ? 'Request sent. Waiting for them to log in and approve' : 'Waiting for them to approve your request') : 'Stopped sharing with you'}</small></span><span class="r"><button class="btn ghost sm" data-liveunf="${esc(f.cid)}">${f.st === 'ask' ? 'Cancel' : 'Remove'}</button></span></div>`).join('')}</div>`; } }
+      const waiting = liveF.following.filter(f => f.st !== 'ok' || !f.pk);
+      if (waiting.length) h += `<div class="st-sec">${waiting.map(f => `<div class="srow" style="cursor:default"><span>${esc(f.name)}<small>${f.st === 'ok' ? 'Approved! Their shelf shows up here once they open the app' : f.st === 'ask' ? (String(f.cid).startsWith('mail:') ? 'Request sent. Waiting for them to log in and approve' : 'Waiting for them to approve your request') : 'Stopped sharing with you'}</small></span><span class="r"><button class="btn ghost sm" data-liveunf="${esc(f.cid)}">${f.st === 'ok' ? 'Remove' : f.st === 'ask' ? 'Cancel' : 'Remove'}</button></span></div>`).join('')}</div>`; } }
   const ids2 = Object.keys(F); if (!ids2.length) return h; if (!friendSel || !F[friendSel]) friendSel = ids2[0];
   h += `<div class="seg2" style="margin:0 0 10px;flex-wrap:wrap">${ids2.map(id => `<button data-fsel="${esc(id)}" aria-pressed="${id === friendSel}">${F[id].live ? '🔴 ' : ''}${esc(F[id].name)}</button>`).join('')}</div>`;
   const f = F[friendSel]; const both = [], borrow = [], lend = [], gifts = [], theirsOnly = [];
@@ -2154,10 +2169,10 @@ document.addEventListener('click', async e => { const t = e.target.closest('[dat
     try { await fapi('/ask', { email: mail }); track('friend-ask'); toast('Request saved! Now send them a quick email.'); const me = (acct && acct.name) || '';
       location.href = 'mailto:' + encodeURIComponent(mail) + '?subject=' + encodeURIComponent('Can I see your manga shelf? 📚') + '&body=' + encodeURIComponent('Hi! I’d love to see your manga collection on My Manga Emporium.\n\n1. Open https://app.themagesemporium.com\n2. Log in with this email (' + mail + ')\n3. Tap 👯 Friends and approve my request\n\nYou can stop sharing anytime.' + (me ? '\n\n' + me : ''));
       liveLoad(); } catch(err){ toast(err.message); } return; }
-  if (t.dataset.liveans){ const [cid, yes] = t.dataset.liveans.split('|'); try { await fapi('/answer', { cid, yes: yes === '1' }); toast(yes === '1' ? 'Approved! They can see your shelf now 👯' : 'Request declined'); await liveLoad(); if (yes === '1') livePush(true); } catch(err){ toast(err.message); } return; }
+  if (t.dataset.liveans){ const [cid, yes] = t.dataset.liveans.split('|'); try { await fapi('/answer', { cid, yes: yes === '1' }); toast(yes === '1' ? 'Approved! They can see your shelf now 👯' : 'Request declined'); if (yes === '1') await liveSendShelf(); await liveLoad(); } catch(err){ toast(err.message); } return; }
   try { if (t.dataset.liveon !== undefined){ await fapi('/on', {}); await liveLoad(); await livePush(true); toast('🔴 Live sharing is on. Send your invite link!'); }
     else if (t.dataset.liveoff !== undefined){ if (!confirm('Stop sharing your shelf with everyone? Friends will no longer see it, and your invite link stops working.')) return; await fapi('/off', {}); toast('Live sharing is off'); }
-    else if (t.dataset.liveok){ await fapi('/approve', { cid: t.dataset.liveok }); toast('Approved 👯'); }
+    else if (t.dataset.liveok){ await fapi('/approve', { cid: t.dataset.liveok }); await liveSendShelf(); toast('Approved 👯'); }
     else if (t.dataset.liverev){ await fapi('/revoke', { cid: t.dataset.liverev }); toast('Removed. They can no longer see your shelf.'); }
     else if (t.dataset.liveunf){ await fapi('/unfollow', { cid: t.dataset.liveunf }); friendSel = null; toast('Removed'); }
     else if (t.dataset.livesend !== undefined){ track('live-invite'); const url = liveLink(); const text = 'Want to see my manga shelf? Open this in My Manga Emporium and I’ll approve you:';
