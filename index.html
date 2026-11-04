@@ -1860,12 +1860,21 @@ async function gzB64(str){ const cs = new Blob([str]).stream().pipeThrough(new C
 async function unGzB64(b){ const bin = atob(b); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
   return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
 const MF = Array.from({ length: PARTS }, (_, i) => `m${i}:metafield(namespace:"mme",key:"shelf${i}"){value}`).join(' ');
-async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress marketingState} hd:metafield(namespace:"custom",key:"app_holds"){value} mb:metafield(namespace:"custom",key:"app_member_until"){value} ${MF}}}`); const c = d.customer;
+async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress marketingState} hd:metafield(namespace:"custom",key:"app_holds"){value} sw:metafield(namespace:"custom",key:"store_wishlist"){value} mb:metafield(namespace:"custom",key:"app_member_until"){value} ${MF}}}`); const c = d.customer;
   acct.paid = c.mb && c.mb.value ? c.mb.value : '';
   try { const hv = c.hd && c.hd.value ? JSON.parse(c.hd.value) : null; holds = hv && hv.items && hv.items.length ? hv : null; ls.set('mme-holds', holds); } catch(e){}
+  try { storeWish = c.sw && c.sw.value ? JSON.parse(c.sw.value) : null; } catch(e){ storeWish = null; }
   acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.mkt = c.emailAddress ? c.emailAddress.marketingState : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct); staffDevice();
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
+// store wishlist (SE Wishlist Engine on the website) -> app Wishlist. Each book is added once; if the reader removes it here, it stays removed.
+let storeWish = null;
+function applyStoreWish(){ if (!storeWish || !Array.isArray(storeWish.items)) return; const seen = new Set(ls.get('mme-swseen') || []); let n = 0;
+  storeWish.items.forEach(it => { const v = Math.round(+it.v); if (!it.s || !v) return; const ln = !!it.ln; const k0 = handleize(it.s) + (ln ? '-ln' : ''); const id = k0 + '|' + v; if (seen.has(id)) return; seen.add(id);
+    let k = shelf.series[k0] ? k0 : Object.keys(shelf.series).find(x => normName(shelf.series[x].n) === normName(it.s) && /-ln$/.test(x) === ln);
+    if (!k){ k = k0; shelf.series[k] = { n: it.s + (ln ? ' (Light Novel)' : ''), v: [] }; }
+    const s = shelf.series[k]; if ((s.v || []).map(Number).includes(v) || (s.want || []).includes(v)) return; s.want = [...new Set([...(s.want || []), v])].sort((a, b) => a - b); n++; });
+  ls.set('mme-swseen', [...seen]); if (n){ save(); toast(`Added ${n} ${n === 1 ? 'book' : 'books'} from your website wishlist to your ♥ Wishlist`); } }
 function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null }; }
 // copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
 function siteMirror(){ const owned = {}; let tb = 0;
@@ -1916,6 +1925,7 @@ async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy =
     else if (acct.fresh){ acctBusy = false; delete acct.fresh; ls.set('mme-acct', acct); askMerge(local, cloud); return; }
     else { applyBody(combine(local, cloud)); acctBusy = false; await acctPush(); }
     delete acct.fresh; ls.set('mme-acct', acct); $('#sync').textContent = `${Object.keys(shelf.series).length} series · saved to your account`; acctMsg = '';
+    applyStoreWish();
     acctOrders().catch(() => {}); liveLoad().then(() => livePush(true)); liveFromHash();
   } catch(e){ acctBusy = false; $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t reach your account: ' + e.message; }
   renderAll(); renderFinds(); if (current) renderSeries(current); renderAcct(); }
