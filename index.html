@@ -112,6 +112,15 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .badge{font-size:12px;font-weight:600;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.14)}
 .badge{border:0;color:inherit;font-family:inherit}
 .badge.off{opacity:.45}
+.chal{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
+.chal .row{background:var(--surface-2);border-radius:12px;padding:10px 12px}
+.chal .row b{display:block;font-size:14.5px}.chal .row small{color:var(--muted);font-size:12.5px}
+.chal .bar{height:7px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:6px}.chal .bar i{display:block;height:100%;background:var(--accent)}
+.chal .row.done{background:var(--accent-soft)}.chal .row.done b::after{content:' ✓';color:var(--accent)}
+.bingo{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:6px 0 4px}
+.bingo div{aspect-ratio:1;border-radius:8px;background:var(--surface-2);font-size:clamp(9px,2.5vw,11px);line-height:1.15;display:flex;align-items:center;justify-content:center;text-align:center;padding:3px;color:var(--ink);overflow:hidden;hyphens:auto;-webkit-hyphens:auto}
+.bingo div.on{background:var(--accent);color:#fff;font-weight:700}.bingo div.free{background:var(--gold-soft);color:var(--gold);font-weight:700}
+.bingo div.win{outline:2px solid var(--gold);outline-offset:-2px}
 .achhead{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
 .scanv{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:14px;overflow:hidden}
 .scanv video{width:100%;height:100%;object-fit:cover}
@@ -538,6 +547,11 @@ function renderStats(){
     ['🤝 Generous Lender', 'Lend out 5 volumes at once.', lentN, 5, 1],
     ['💌 Wishful Thinker', '25 volumes on your wishlist.', wantN, 25, 1],
     ['🧹 Shelf Curator', '10 volumes on your sell list.', sellN, 10, 1],
+    ['🗓️ Challenger', 'Finish every challenge in one month (tap 🎯 Monthly challenges).', ((shelf.ach||{}).chm || []).length, 1],
+    ['🏅 Challenge Champion', 'Finish the monthly challenges in 6 different months.', ((shelf.ach||{}).chm || []).length, 6, 1],
+    ['🎱 Bingo!', 'Get a line on the monthly Manga Bingo card.', ((shelf.ach||{}).bgo || []).length, 1],
+    ['🎰 Bingo Master', 'Get a Bingo in 3 different months.', ((shelf.ach||{}).bgo || []).length, 3, 1],
+    ['🃏 Blackout', 'Fill the whole Manga Bingo card in one month.', ((shelf.ach||{}).bgx || []).length, 1, 1],
     ['👑 Crown Holder', 'Hold a collector title (most books, most series, longest run…) among all our collectors.', C.crowns.length, 1, 1],
     ['🔮 Mythic', 'Reach the Mythic Archmage rank (1,000 books).', books, 1000, 1],
     ['🏆 Collector of Legend', 'Earn 25 other achievements.', 0, 25, 1]
@@ -546,7 +560,7 @@ function renderStats(){
   const shown = BADGES.map((b, i) => [b, i]).filter(([b]) => !b[4] || b[2] >= b[3]); const secret = BADGES.filter(b => b[4] && b[2] < b[3]).length;
   const earnedN = BADGES.filter(b => b[2] >= b[3]).length, openA = !!ls.get('mme-achopen');
   const emo = b => b[0].slice(0, b[0].indexOf(' '));
-  $('#achWrap').innerHTML = (holds ? `<button class="badge" data-goholds style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">📦 ${holds.items.length} ${holds.items.length === 1 ? 'book' : 'books'} on hold for you</button>` : '') + `<div style="display:flex;gap:8px;margin-top:12px"><button class="badge" data-gofriends style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">👯 Friends</button><button class="badge" data-share style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">📸 Share my shelf</button></div><div class="achhead"><button class="achtl" data-achtog aria-expanded="${openA}">🏅 Achievements · ${earnedN} of ${shown.length} <span style="opacity:.75;font-weight:600">${openA ? 'Hide ▴' : 'Show all ▾'}</span></button></div>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
+  $('#achWrap').innerHTML = (holds ? `<button class="badge" data-goholds style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">📦 ${holds.items.length} ${holds.items.length === 1 ? 'book' : 'books'} on hold for you</button>` : '') + (() => { const c = monthChal(); return `<button class="badge" data-gochal style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">🎯 ${c.label} challenges · ${c.doneN} of ${c.list.length} done · 🎱 Bingo ${c.bingoLines ? '✓ BINGO!' : c.marked + '/24'}</button>`; })() + `<div style="display:flex;gap:8px;margin-top:12px"><button class="badge" data-gofriends style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">👯 Friends</button><button class="badge" data-share style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">📸 Share my shelf</button></div><div class="achhead"><button class="achtl" data-achtog aria-expanded="${openA}">🏅 Achievements · ${earnedN} of ${shown.length} <span style="opacity:.75;font-weight:600">${openA ? 'Hide ▴' : 'Show all ▾'}</span></button></div>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
   $('#badges').classList.toggle('hid', !openA);
   $('#badges').innerHTML = shown.map(([b, i]) => `<button class="badge${b[2]>=b[3]?'':' off'}" data-b="${i}">${b[0]}</button>`).join('') + (secret ? `<button class="badge off" data-b="secret">🔒 ${secret} secret</button>` : '');
 }
@@ -570,6 +584,72 @@ function logRead(n, key, vols, day){ if (!n) return; const L = shelf.log || (she
   if (key && vols && vols.length){ const R = shelf.rl || (shelf.rl = {}); let a = R[k] || [];
     if (n > 0) vols.forEach(x => { const t = key + '|' + x; if (!a.includes(t)) a.push(t); }); else a = a.filter(t => !vols.some(x => t === key + '|' + x));
     if (a.length) R[k] = a; else delete R[k]; } }
+/* ---------- monthly challenges + Manga Bingo (same card for everyone each month) ---------- */
+function seeded(seed){ let x = seed >>> 0 || 1; return () => { x ^= x << 13; x >>>= 0; x ^= x >> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; }; }
+function serMeta(key){ const s = shelf.series[key] || {}; const h = snapEntry(key); const e = h ? h[1] : null; const em = (e && e.m) || {};
+  const g = (s.m && s.m.g && s.m.g.length) ? s.m.g : String(em.gen || '').split(/,\s*/).filter(Boolean);
+  return { g, a: (s.m && s.m.a) || em.aud || '', an: /yes|true/i.test(String(em.an || '')), sp: parseInt(em.sp) || 0, gr: /yes|true/i.test(String(em.gr || '')), t: (e && e.t) || s.fin || 0, ln: isLN(key, s), ss: em.ss || '', t0: s.t || 0 }; }
+const BINGO_POOL = [
+  ['Shojo', m => m.a === 'Shojo'], ['Shonen', m => m.a === 'Shonen'], ['Seinen', m => m.a === 'Seinen'], ['Josei', m => m.a === 'Josei'],
+  ['Romance', m => m.g.includes('Romance')], ['Comedy', m => m.g.includes('Comedy')], ['Fantasy', m => m.g.includes('Fantasy')], ['Horror', m => m.g.includes('Horror')],
+  ['Sports', m => m.g.includes('Sports')], ['Slice of Life', m => m.g.includes('Slice of Life')], ['Mystery', m => m.g.includes('Mystery')], ['Sci-Fi', m => m.g.includes('Sci-Fi')],
+  ['Supernatural', m => m.g.includes('Supernatural')], ['Historical', m => m.g.includes('Historical')], ['Action', m => m.g.includes('Action')], ['Drama', m => m.g.includes('Drama')],
+  ['Psychological', m => m.g.includes('Psychological') || m.g.includes('Thriller')], ['Adventure', m => m.g.includes('Adventure')],
+  ['A Vol 1', (m, v) => v === 1], ['Vol 10 or later', (m, v) => v >= 10], ['A light novel', m => m.ln], ['Has an anime', m => m.an],
+  ['A one-shot', m => m.t === 1], ['Series of 20+ vols', m => m.t >= 20], ['Series of 3 or fewer', m => m.t > 1 && m.t <= 3], ['A Gentle Read', m => m.gr],
+  ['Spice 3+ 🌶️', m => m.sp >= 3], ['A finished series', m => /complete/i.test(m.ss)], ['A final volume', (m, v) => m.t > 1 && v === m.t],
+  ['Started this month', (m, v, mk) => m.t0 && dayKey(new Date(m.t0)).slice(0, 7) === mk], ['Borrowed from a friend', (m, v, mk, key) => { const l = loanOf(shelf.series[key] || {}, v); return !!(l && l.d !== 'out'); }],
+  ['Read on a weekend', (m, v, mk, key, day) => [0, 6].includes(new Date(day + 'T12:00:00').getDay())], ['3 vols in one day', (m, v, mk, key, day, R) => (shelf.log || {})[day] >= 3]
+];
+function monthChal(){
+  const now = new Date(), mk = dayKey(now).slice(0, 7), label = now.toLocaleDateString(undefined, { month: 'long' });
+  const seed = now.getFullYear() * 12 + now.getMonth(); const rnd = seeded(seed * 2654435761);
+  const R = shelf.rl || {}, L = shelf.log || {};
+  const reads = []; Object.keys(R).filter(d => d.slice(0, 7) === mk).forEach(d => R[d].forEach(t => { const i = t.lastIndexOf('|'); reads.push({ key: t.slice(0, i), v: +t.slice(i + 1), day: d }); }));
+  const readN = Object.keys(L).filter(d => d.slice(0, 7) === mk).reduce((a, d) => a + (L[d] || 0), 0);
+  const readDays = Object.keys(L).filter(d => d.slice(0, 7) === mk && L[d] > 0).length;
+  const metaC = {}; const M = k => metaC[k] || (metaC[k] = serMeta(k));
+  const before = new Set(); Object.keys(R).filter(d => d.slice(0, 7) < mk).forEach(d => R[d].forEach(t => { const k = t.slice(0, t.lastIndexOf('|')); if (shelf.series[k]) M(k).g.forEach(g => before.add(g)); }));
+  const newG = new Set(); reads.forEach(r => { if (shelf.series[r.key]) M(r.key).g.forEach(g => { if (!before.has(g)) newG.add(g); }); });
+  const started = Object.keys(shelf.series).filter(k => shelf.series[k].t && dayKey(new Date(shelf.series[k].t)).slice(0, 7) === mk).length;
+  const vol1 = new Set(reads.filter(r => r.v === 1).map(r => r.key)).size;
+  const genres = new Set(); reads.forEach(r => { if (shelf.series[r.key]) M(r.key).g.forEach(g => genres.add(g)); });
+  const finals = new Set(reads.filter(r => shelf.series[r.key] && M(r.key).t > 1 && r.v === M(r.key).t).map(r => r.key)).size;
+  const POOL = [
+    ['📚 Bookworm month', 'Read 10 volumes this month.', readN, 10], ['📅 Steady reader', 'Read on 8 different days this month.', readDays, 8],
+    ['🌱 Fresh start', 'Add a brand-new series to your shelf.', started, 1], ['🧭 Explorer', 'Read a genre you haven’t logged before.', newG.size, 1],
+    ['1️⃣ Pilot season', 'Read 3 different Volume 1s.', vol1, 3], ['🌈 Mix it up', 'Read from 4 different genres.', genres.size, 4],
+    ['🏁 The finish line', 'Read the final volume of a series.', finals, 1], ['🔥 Marathon', 'Read 5 volumes in a single day.', Math.max(0, ...Object.keys(L).filter(d => d.slice(0, 7) === mk).map(d => L[d] || 0)), 5]
+  ];
+  const order = POOL.map((p, i) => [rnd(), i]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(x => POOL[x[1]]);
+  const list = order.map(([t, d, n, goal]) => ({ t, d, n: Math.min(n, goal), goal, done: n >= goal }));
+  const sq = BINGO_POOL.map((p, i) => [rnd(), i]).sort((a, b) => a[0] - b[0]).slice(0, 24).map(x => BINGO_POOL[x[1]]);
+  sq.splice(12, 0, ['FREE ⭐', null]);
+  // each volume read can fill only one square (best possible matching), so a Bingo needs 5 different reads
+  const uniq = []; const seenR = new Set(); reads.forEach(r => { const id = r.key + '|' + r.v; if (!seenR.has(id) && shelf.series[r.key]){ seenR.add(id); uniq.push(r); } });
+  const cand = sq.map(([lbl, fn]) => fn ? uniq.map((r, j) => { try { return fn(M(r.key), r.v, mk, r.key, r.day) ? j : -1; } catch(e){ return -1; } }).filter(j => j >= 0) : []);
+  const owner = new Array(uniq.length).fill(-1);
+  const tryS = (i, seen) => { for (const j of cand[i]){ if (seen[j]) continue; seen[j] = 1; if (owner[j] < 0 || tryS(owner[j], seen)){ owner[j] = i; return true; } } return false; };
+  sq.forEach((x, i) => { if (cand[i].length) tryS(i, {}); });
+  const filled = new Set(owner.filter(i => i >= 0));
+  const marks = sq.map(([lbl, fn], i) => !fn || filled.has(i));
+  const lines = []; for (let i = 0; i < 5; i++){ lines.push([0,1,2,3,4].map(j => i*5 + j)); lines.push([0,1,2,3,4].map(j => j*5 + i)); } lines.push([0,6,12,18,24], [4,8,12,16,20]);
+  const won = lines.filter(l => l.every(i => marks[i])); const win = new Set(won.flat());
+  const doneN = list.filter(c => c.done).length; const marked = marks.filter(Boolean).length - 1;
+  // remember wins (badges keep them after the month ends)
+  let ch = false; const keep = (f, ok) => { if (!ok) return; const A = shelf.ach || (shelf.ach = {}); const a = A[f] || (A[f] = []); if (!a.includes(mk)){ a.push(mk); ch = true; } };
+  keep('chm', doneN === list.length); keep('bgo', won.length > 0); keep('bgx', marked === 24);
+  if (ch && !monthChal._saving){ monthChal._saving = true; setTimeout(() => { monthChal._saving = false; try { save(); } catch(e){} }, 0); }
+  const left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
+  return { mk, label, list, doneN, sq, marks, win, bingoLines: won.length, marked, left, readsN: reads.length };
+}
+function openChal(){ const c = monthChal();
+  openSheet(`<h2>🎯 ${esc(c.label)} challenges</h2><p class="sub" style="margin-top:0">${c.left} day${c.left === 1 ? '' : 's'} left. New challenges and a new Bingo card every month, the same for every collector. Mark volumes as read (tap a series, then the 📖 on a volume) and they count automatically.</p>
+  <div class="chal">${c.list.map(x => `<div class="row${x.done ? ' done' : ''}"><b>${esc(x.t)}</b><small>${esc(x.d)} · ${x.n} of ${x.goal}</small><div class="bar"><i style="width:${Math.round(x.n / x.goal * 100)}%"></i></div></div>`).join('')}</div>
+  <h3 style="margin:4px 0 2px">🎱 Manga Bingo</h3><p class="sub" style="margin:0 0 6px">Read a volume that fits a square to mark it (each volume fills one square). Five in a row (across, down or diagonal) is a Bingo! ${c.bingoLines ? `<b>You have ${c.bingoLines} Bingo${c.bingoLines > 1 ? 's' : ''}! 🎉</b>` : `${c.marked} of 24 squares marked.`}</p>
+  <div class="bingo">${c.sq.map(([l], i) => `<div class="${i === 12 ? 'free' : c.marks[i] ? 'on' : ''}${c.win.has(i) ? ' win' : ''}">${esc(l)}</div>`).join('')}</div>
+  ${c.readsN ? '' : '<p class="sub">No volumes marked as read this month yet.</p>'}<p class="sub" style="margin:8px 0 0">Finish all 3 challenges for 🗓️ Challenger, and get a line for 🎱 Bingo! (see Achievements).</p>`); }
+document.addEventListener('click', e => { if (e.target.closest('[data-gochal]')){ e.preventDefault(); track('challenges'); openChal(); } });
 function streaks(){
   const L = shelf.log || {}; const has = d => (L[dayKey(d)]||0) > 0;
   const d = new Date(); let cur = 0; if (!has(d)) d.setDate(d.getDate()-1);
@@ -879,7 +959,7 @@ function importData(text){
     if (!cur){ shelf.series[k] = a.full ? Object.assign({}, a.x) : { n: a.n, v: [...a.v].sort((x,y)=>x-y), t: Date.now() }; ns++; nb += a.v.size; return; }
     const before = cur.v.length; cur.v = [...new Set(cur.v.concat([...a.v]))].sort((x,y)=>x-y); nb += cur.v.length - before;
     if (a.full){ ['r','st','rv','loc','want','sell','cond','c','m'].forEach(f => { if (a.x[f] != null && cur[f] == null) cur[f] = a.x[f]; }); } });
-  if (j && j.app === 'my-manga-emporium'){ ['log','rl','other','goal'].forEach(f => { if (j[f] && typeof j[f] === 'object'){ shelf[f] = Object.assign({}, j[f], shelf[f] || {}); } }); }
+  if (j && j.app === 'my-manga-emporium'){ ['log','rl','other','goal','ach'].forEach(f => { if (j[f] && typeof j[f] === 'object'){ shelf[f] = Object.assign({}, j[f], shelf[f] || {}); } }); }
   return { ns, nb };
 }
 $('#expBtn').onclick = async () => { const t = exportShelf(); try { await navigator.clipboard.writeText(t); toast(`Backup copied (${Object.keys(shelf.series).length} series). Paste it somewhere safe.`); } catch(e){ $('#impTxt').value = t; toast('Couldn’t copy automatically: the backup is in the box below. Select all and copy it.'); } };
@@ -1710,7 +1790,7 @@ async function boot(){
   docRef.onSnapshot(snap => {
     clearTimeout(timer); mode = 'db';
     const d = snap.exists ? snap.data() : null;
-    if (d && d.series && !dirty && !(snap.metadata && snap.metadata.hasPendingWrites)) { shelf = { series: JSON.parse(JSON.stringify(d.series)) }; if (d.share) shelf.share = true; if (d.log) shelf.log = JSON.parse(JSON.stringify(d.log)); if (d.rl) shelf.rl = JSON.parse(JSON.stringify(d.rl)); if (d.other) shelf.other = JSON.parse(JSON.stringify(d.other)); ['contact','alert','quotes'].forEach(f => { if (d[f] != null) shelf[f] = JSON.parse(JSON.stringify(d[f])); }); if (d.goal) shelf.goal = d.goal; if (d.skin){ shelf.skin = d.skin; applySkin(d.skin); ls.set('mme-skin', d.skin); } }
+    if (d && d.series && !dirty && !(snap.metadata && snap.metadata.hasPendingWrites)) { shelf = { series: JSON.parse(JSON.stringify(d.series)) }; if (d.share) shelf.share = true; if (d.log) shelf.log = JSON.parse(JSON.stringify(d.log)); if (d.rl) shelf.rl = JSON.parse(JSON.stringify(d.rl)); if (d.other) shelf.other = JSON.parse(JSON.stringify(d.other)); if (d.ach) shelf.ach = JSON.parse(JSON.stringify(d.ach)); ['contact','alert','quotes'].forEach(f => { if (d[f] != null) shelf[f] = JSON.parse(JSON.stringify(d[f])); }); if (d.goal) shelf.goal = d.goal; if (d.skin){ shelf.skin = d.skin; applySkin(d.skin); ls.set('mme-skin', d.skin); } }
     $('#sync').textContent = `${Object.keys(shelf.series).length} series · synced`;
     renderAll(); renderFinds(); if (current) renderSeries(current); maybeSync();
   }, err => { clearTimeout(timer); startLocal('Sync paused (' + (err.code||'error') + ') — using this device'); });
@@ -1755,7 +1835,7 @@ async function acctPull(){ const d = await acctGql(`{customer{id firstName email
   acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.mkt = c.emailAddress ? c.emailAddress.marketingState : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
-function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null }; }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null }; }
 // copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
 function siteMirror(){ const owned = {}; let tb = 0;
   Object.entries(shelf.series).forEach(([k, s]) => { const hit = SNAP ? snapEntry(k) : null; const key = hit ? hit[0] : k; const vs = ints(s);
@@ -1776,7 +1856,7 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; ['log','rl','other','goal'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
   Object.entries(b.series || {}).forEach(([k, S]) => { const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
