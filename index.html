@@ -1329,7 +1329,7 @@ async function loadAbout(key){
   try {
     const d = await gql(`{c:collectionByIdentifier(identifier:{handle:${JSON.stringify(h)}}){title handle description ra:metafield(namespace:"custom",key:"read_alikes"){references(first:6){nodes{... on Collection{title handle}}}}}}`);
     let desc = '', ra = [];
-    if (d.c){ desc = (d.c.description || '').replace(/Every volume we (have|carry)[\s\S]*$/i, '').trim(); ra = d.c.ra && d.c.ra.references ? d.c.ra.references.nodes.filter(n => n.handle) : []; }
+    if (d.c){ desc = (d.c.description || '').replace(/(Browse )?every volume we (have|carry)[\s\S]*$/i, '').trim(); ra = d.c.ra && d.c.ra.references ? d.c.ra.references.nodes.filter(n => n.handle) : []; }
     if (!desc){                                     // fall back to the volume 1 listing's blurb
       const L = live.get(key); const it = L && L.items.find(p => p.vol === 1) || (L && L.items[0]);
       if (it){ const p = await gql(`{p:productByIdentifier(identifier:{handle:${JSON.stringify(it.handle)}}){descriptionHtml}}`); const m = p.p && p.p.descriptionHtml.match(/<p>(?!\s*<)([\s\S]*?)<\/p>\s*$/); if (m) desc = m[1].replace(/<[^>]+>/g, ''); }
