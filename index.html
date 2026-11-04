@@ -1841,7 +1841,7 @@ const MF = Array.from({ length: PARTS }, (_, i) => `m${i}:metafield(namespace:"m
 async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress marketingState} hd:metafield(namespace:"custom",key:"app_holds"){value} mb:metafield(namespace:"custom",key:"app_member_until"){value} ${MF}}}`); const c = d.customer;
   acct.paid = c.mb && c.mb.value ? c.mb.value : '';
   try { const hv = c.hd && c.hd.value ? JSON.parse(c.hd.value) : null; holds = hv && hv.items && hv.items.length ? hv : null; ls.set('mme-holds', holds); } catch(e){}
-  acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.mkt = c.emailAddress ? c.emailAddress.marketingState : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct);
+  acct.cid = c.id; acct.email = c.emailAddress ? c.emailAddress.emailAddress : ''; acct.mkt = c.emailAddress ? c.emailAddress.marketingState : ''; acct.name = c.firstName || ''; ls.set('mme-acct', acct); staffDevice();
   let b = ''; for (let i = 0; i < PARTS; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
   if (!b) return null; try { return JSON.parse(await unGzB64(b)); } catch(e){ return null; } }
 function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null }; }
@@ -2053,8 +2053,13 @@ if (!window.claude && 'serviceWorker' in navigator && location.protocol === 'htt
 // privacy-friendly visit counter (GoatCounter: no cookies, no personal data) on the hosted app only
 const GC = 'https://themagesemporium.goatcounter.com/count';
 function track(ev){ try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: ev, title: ev, event: true }); } catch(e){} }
-if (!window.claude && location.hostname === 'app.themagesemporium.com'){ window.goatcounter = { path: (matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? '/home-screen-app' : '/browser' };
-  const gs = document.createElement('script'); gs.async = true; gs.src = 'https://gc.zgo.at/count.js'; gs.dataset.goatcounter = GC; document.head.appendChild(gs); }
+// visit stats skip the shop's own devices: any device where Megan's account has logged in (emails kept only as short hashes), or ?nocount / #nocount once to opt a device out (?count to undo)
+const STAFF_H = ['79c2017283f009b2', 'df50a7ae224b52d6'];
+async function staffDevice(){ try { if (/[?#&]count\b/.test(location.href) && !/nocount/.test(location.href)) ls.set('mme-nocount', null); if (/nocount/.test(location.href)) ls.set('mme-nocount', 1); if (ls.get('mme-nocount')) return true;
+  const em = acct && acct.email ? String(acct.email).toLowerCase() : ''; if (!em) return false; const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(em));
+  const hx = [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16); if (STAFF_H.includes(hx)){ ls.set('mme-nocount', 1); return true; } } catch(e){} return false; }
+if (!window.claude && location.hostname === 'app.themagesemporium.com') staffDevice().then(skip => { window.goatcounter = { path: (matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? '/home-screen-app' : '/browser', no_onload: skip, no_events: skip };
+  if (skip) return; const gs = document.createElement('script'); gs.async = true; gs.src = 'https://gc.zgo.at/count.js'; gs.dataset.goatcounter = GC; document.head.appendChild(gs); });
 /* ---------- friends: swap shelves by link or file, then compare ---------- */
 let friendSel = null, FRIENDS_API = '', liveF = null, liveBusy = false, liveShelfAt = 0;
 async function fapi(path, body){ const t = await acctAccess(); if (!t) throw new Error('Log in first');
