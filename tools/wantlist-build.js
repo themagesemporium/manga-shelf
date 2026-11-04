@@ -4,7 +4,7 @@
 // Writes JSON rows [[series, wishers, [[ "Vol N", count ], ...]], ...] to shop metafields claude_tmp.wantlist0, wantlist1, ...
 // Build the page with tools/build_wantlist.py and publish it to the Want List artifact.
 window._wlRun = async () => {
-  const WL = window._WL = { st: 'customers', cust: 0, wishers: 0, products: 0, rows: 0, parts: 0, fin: false, err: [] };
+  const WL = window._WL = { st: 'customers', cust: 0, shelves: 0, wishers: 0, products: 0, rows: 0, parts: 0, fin: false, err: [] };
   const SKIP = new Set(['99230547976']); // Megan's own account
   const unGz = async b => { const bin = Uint8Array.from(atob(b), c => c.charCodeAt(0)); const s = new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip')); return await new Response(s).text(); };
   const norm = s => String(s || '').toLowerCase().replace(/\s*\(light novel\)\s*/g, '').trim();
@@ -19,6 +19,7 @@ window._wlRun = async () => {
       const cid = c.id.split('/').pop(); if (SKIP.has(cid)) continue;
       if (c.sw && c.sw.value){ try { (JSON.parse(c.sw.value).items || []).forEach(x => add(cid, x.s, x.v, x.ln)); } catch (e) {} }
       if (c.m0 && c.m0.value){
+        WL.shelves++;
         let b = ''; for (let i = 0; i < 8; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
         try { const sh = JSON.parse(await unGz(b)); Object.values(sh.series || {}).forEach(s => (s.want || []).forEach(v => add(cid, s.n, v, /light novel/i.test(s.n)))); } catch (e) { WL.err.push('shelf ' + cid); }
       }
