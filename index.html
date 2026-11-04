@@ -553,6 +553,10 @@ function renderStats(){
     ['🎱 Bingo!', 'Get a line on the monthly Manga Bingo card.', ((shelf.ach||{}).bgo || []).length, 1],
     ['🎰 Bingo Master', 'Get a Bingo in 3 different months.', ((shelf.ach||{}).bgo || []).length, 3, 1],
     ['🃏 Blackout', 'Fill the whole Manga Bingo card in one month.', ((shelf.ach||{}).bgx || []).length, 1, 1],
+    ['👯 Friendly', 'Connect with a friend in the app (Friends).', (shelf.ach||{}).frn || 0, 1],
+    ['📚 Book Club', 'Connect with 3 friends.', (shelf.ach||{}).frn || 0, 3, 1],
+    ['🦋 Social Butterfly', 'Connect with 10 friends.', (shelf.ach||{}).frn || 0, 10, 1],
+    ['🔓 Open Shelf', 'Approve a friend to see your shelf live.', (shelf.ach||{}).frv || 0, 1, 1],
     ['👑 Crown Holder', 'Hold a collector title (most books, most series, longest run…) among all our collectors.', C.crowns.length, 1, 1],
     ['🔮 Mythic', 'Reach the Mythic Archmage rank (1,000 books).', books, 1000, 1],
     ['🏆 Collector of Legend', 'Earn 25 other achievements.', 0, 25, 1]
@@ -629,6 +633,7 @@ function monthChal(){
     ['1️⃣ Pilot season', 'Read 3 different Volume 1s.', vol1, 3], ['🌈 Mix it up', 'Read from 4 different genres.', genres.size, 4],
     ['🏁 The finish line', 'Read the final volume of a series.', finals, 1], ['🔥 Marathon', 'Read 5 volumes in a single day.', Math.max(0, ...Object.keys(L).filter(d => d.slice(0, 7) === mk).map(d => L[d] || 0)), 5]
   ];
+  if (mk >= '2026-12'){ const ds = Object.keys(L).filter(d => d.slice(0, 7) === mk && L[d] > 0).sort(); let run = 0, best = 0, prev = null; ds.forEach(k => { const t = new Date(k + 'T12:00:00'); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; best = Math.max(best, run); prev = t; }); POOL.push(['⚡ Streak week', 'Read 7 days in a row this month.', best, 7], ['📆 Every weekend', 'Read on 4 different weekend days this month.', ds.filter(k => [0, 6].includes(new Date(k + 'T12:00:00').getDay())).length, 4]); }
   const order = POOL.map((p, i) => [rnd(), i]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(x => POOL[x[1]]);
   const list = order.map(([t, d, n, goal]) => ({ t, d, n: Math.min(n, goal), goal, done: n >= goal }));
   const sq = BINGO_POOL.map((p, i) => [rnd(), i]).sort((a, b) => a[0] - b[0]).slice(0, 24).map(x => BINGO_POOL[x[1]]);
@@ -659,6 +664,7 @@ function openChal(){ const c = monthChal();
   <p style="margin:10px 0 0;display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm gold" href="${STORE}/products/manga-reading-bingo-${['january','february','march','april','may','june','july','august','september','october','november','december'][new Date().getMonth()]}-printable-pdf-english-spanish" target="_blank" rel="noopener">🖨️ This month's printable Bingo card</a><a class="btn sm ghost" href="${STORE}/products/manga-reading-bingo-yearly-kit" target="_blank" rel="noopener">📦 Printed Yearly Kit</a></p>
   ${c.readsN ? '' : '<p class="sub">No volumes marked as read this month yet.</p>'}<p class="sub" style="margin:8px 0 0">Finish all 3 challenges for 🗓️ Challenger, and get a line for 🎱 Bingo! (see Achievements).</p>`); }
 document.addEventListener('click', e => { if (e.target.closest('[data-gochal]')){ e.preventDefault(); track('challenges'); openChal(); } });
+function estPages(prefix){ const L = shelf.log || {}, R = shelf.rl || {}; let pg = 0; Object.keys(L).forEach(d => { if (prefix && !d.startsWith(prefix)) return; const items = R[d] || []; items.forEach(t => { const k = t.slice(0, t.lastIndexOf('|')); const s = shelf.series[k]; pg += s && isLN(k, s) ? 250 : 190; }); pg += Math.max(0, (L[d] || 0) - items.length) * 190; }); return pg; }
 function streaks(){
   const L = shelf.log || {}; const has = d => (L[dayKey(d)]||0) > 0;
   const d = new Date(); let cur = 0; if (!has(d)) d.setDate(d.getDate()-1);
@@ -724,6 +730,7 @@ function renderReadTab(){
     ${fact(`${st.best} ${st.best===1?'day':'days'}`, 'longest streak')}
     ${fact(`${month} / ${year}`, 'read this month / this year')}
     ${fact(readN.toLocaleString(), `read · ${books ? Math.round(readN/books*100) : 0}% of your shelf`)}
+    ${fact('≈' + estPages(String(new Date().getFullYear())).toLocaleString(), 'pages read this year')}
   </div></div>
   <div class="st-sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><h3 style="margin:0">🎉 Your ${yr} in review</h3><p class="sub" style="margin:2px 0 0">Your year in manga, all in one place</p></div><button class="btn gold sm" data-yir="${yr}">Open</button></div>
   <div class="st-sec"><h3>${yr} reading goal</h3>
@@ -2096,8 +2103,25 @@ async function liveFromHash(){ const m = location.hash.match(/#live=([a-z0-9]+)/
   $('#invYes').onclick = async () => { $('#invYes').disabled = true; try { const r = await fapi('/request', { code }); ls.set('mme-livecode', null); closeSheet(); toast(r.st === 'ok' ? `👯 You can see ${r.name}’s collection` : `👯 Request sent! ${r.name} just needs to approve it.`); goFriends(); } catch(e){ ls.set('mme-livecode', null); closeSheet(); toast('Couldn’t open that invite: ' + e.message); } };
   $('#invNo').onclick = () => { ls.set('mme-livecode', null); closeSheet(); toast('Invitation declined'); }; }
 function goFriends(){ listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); liveLoad(); }
+function friendBoardHTML(F){ let me; try { me = monthChal(); } catch(e){ return ''; } const st = streaks();
+  const rows = [{ n: 'You', you: 1, rd: me.readsN, cd: me.doneN, ct: me.list.length, bl: me.bingoLines, sq: me.marked, cur: st.cur, pg: estPages(me.mk) }];
+  Object.values(F).forEach(f => { const a = f.act; if (!a || a.mk !== me.mk) return; rows.push({ n: f.name, rd: a.rd || 0, cd: a.cd || 0, ct: a.ct || 3, bl: a.bl || 0, sq: Math.max(0, String(a.bm || '').split('').filter(x => x === '1').length - 1), cur: a.cur || 0, pg: a.pg || 0 }); });
+  if (rows.length < 2) return '';
+  rows.sort((a, b) => b.rd - a.rd || b.sq - a.sq || b.cur - a.cur);
+  const medal = i => ['🥇', '🥈', '🥉'][i] || (i + 1) + '.';
+  const top = (k) => rows.reduce((m, r) => r[k] > m[k] ? r : m, rows[0]);
+  const ts = top('cur'), tb = top('sq');
+  return `<div class="st-sec"><h3>🏆 ${esc(me.label)} with friends</h3><p class="sub" style="margin:0 0 8px">Everyone gets the same challenges and Bingo card each month. Most volumes read wins the month.</p>
+    ${rows.map((r, i) => `<div class="srow" style="cursor:default${r.you ? ';font-weight:700' : ''}"><span>${medal(i)} ${esc(r.n)}<small>📖 ${r.rd} read${r.pg ? ` (≈${r.pg.toLocaleString()} pages)` : ''} · 🎯 ${r.cd}/${r.ct} challenges · 🎱 ${r.sq}/24${r.bl ? ` · ${r.bl} Bingo${r.bl > 1 ? 's' : ''}!` : ''} · 🔥 ${r.cur}-day streak</small></span></div>`).join('')}
+    <p class="sub" style="margin:8px 0 0">${ts.cur ? `🔥 Longest streak right now: <b>${esc(ts.n)}</b> (${ts.cur} days). ` : ''}${tb.sq ? `🎱 Closest to Blackout: <b>${esc(tb.n)}</b>.` : ''}</p></div>`; }
+function friendBingoHTML(f){ const a = f && f.act; let me; try { me = monthChal(); } catch(e){ return ''; } if (!a || a.mk !== me.mk || !a.bm) return '';
+  const bm = String(a.bm).split('').map(x => x === '1'); const lines = []; for (let i = 0; i < 5; i++){ lines.push([0,1,2,3,4].map(j => i*5 + j)); lines.push([0,1,2,3,4].map(j => j*5 + i)); } lines.push([0,6,12,18,24], [4,8,12,16,20]);
+  const win = new Set(lines.filter(l => l.every(i => bm[i])).flat());
+  return `<div class="st-sec"><h3>🎱 ${esc(f.name)}’s ${esc(me.label)} Bingo</h3><p class="sub" style="margin:0 0 6px">📖 ${a.rd || 0} volumes read this month${a.pg ? ` (≈${a.pg.toLocaleString()} pages)` : ''} · 🎯 ${a.cd || 0} of ${a.ct || 3} challenges · 🔥 ${a.cur || 0}-day streak (best ${a.best || 0})${a.bl ? ` · <b>${a.bl} Bingo${a.bl > 1 ? 's' : ''}! 🎉</b>` : ''}</p>
+    <div class="bingo">${me.sq.map(([l], i) => `<div class="${i === 12 ? 'free' : bm[i] ? 'on' : ''}${win.has(i) ? ' win' : ''}">${esc(l)}</div>`).join('')}</div></div>`; }
 function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
-  return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out }; }
+  let act = null; try { const c = monthChal(), st = streaks(); act = { mk: c.mk, rd: c.readsN, cd: c.doneN, ct: c.list.length, bm: c.marks.map(x => x ? 1 : 0).join(''), bl: c.bingoLines, cur: st.cur, best: st.best, pg: estPages(c.mk) }; } catch(e){}
+  return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out, act }; }
 async function friendShare(){ track('friend-share'); const pk = friendPack(); let nm = pk.name;
   if (!nm){ nm = prompt('Your first name (so your friend knows whose shelf this is):', '') || ''; nm = nm.trim(); if (nm){ shelf.card = Object.assign({}, shelf.card, { name: nm }); save(); pk.name = nm; } }
   const json = JSON.stringify(pk); const b = (await gzB64(json)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); const url = (window.claude ? 'https://app.themagesemporium.com/' : location.origin + location.pathname.replace(/[^/]*$/, '')) + '#f=' + b;
@@ -2137,12 +2161,15 @@ function friendsHTML(){ const F = Object.assign({}, shelf.friends || {}); const 
            ${ask.length ? `<p style="margin:10px 0 4px"><b>Waiting for you</b></p>` + ask.map(v => `<div class="srow" style="cursor:default"><span>${esc(v.name)}<small>wants to see your shelf</small></span><span class="r"><button class="btn sm" data-liveok="${esc(v.cid)}">Approve</button> <button class="btn ghost sm" data-liverev="${esc(v.cid)}">Decline</button></span></div>`).join('') : ''}
            <p style="margin:10px 0 4px"><b>Can see your shelf</b> (${ok.length})</p>${ok.length ? ok.map(v => `<div class="srow" style="cursor:default"><span>${esc(v.name)}</span><span class="r"><button class="btn ghost sm" data-liverev="${esc(v.cid)}">Revoke</button></span></div>`).join('') : '<p class="sub" style="margin:0">Nobody yet.</p>'}`
         : `<p class="sub" style="margin:0 0 8px">Let friends see your shelf as it changes. They ask, you approve, and you can revoke anytime.</p><button class="btn sm" data-liveon>🔴 Share my shelf live</button>`) + `<p class="sub" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--surface-2)">🔒 <b>Private by default.</b> Only people you approve on this list can see your shelf. Nobody else can, not even with your link, until you tap Approve. (The Mage’s Emporium can always see shelves, to avoid sending you duplicates.)</p></div>`;
-      liveF.following.forEach(f => { if (f.st === 'ok' && f.pk){ const nm = f.pk.name || f.name; Object.keys(F).forEach(id => { if (!F[id].live && normName(F[id].name) === normName(nm)){ delete F[id]; if (shelf.friends && shelf.friends[id]){ delete shelf.friends[id]; setTimeout(save, 0); } } }); F['live:' + f.cid] = { name: nm, at: f.pk.at || Date.now(), s: f.pk.s, live: 1, cid: f.cid }; } });
+      liveF.following.forEach(f => { if (f.st === 'ok' && f.pk){ const nm = f.pk.name || f.name; Object.keys(F).forEach(id => { if (!F[id].live && normName(F[id].name) === normName(nm)){ delete F[id]; if (shelf.friends && shelf.friends[id]){ delete shelf.friends[id]; setTimeout(save, 0); } } }); F['live:' + f.cid] = { name: nm, at: f.pk.at || Date.now(), s: f.pk.s, live: 1, cid: f.cid, act: f.pk.act || null }; } });
       const waiting = liveF.following.filter(f => f.st !== 'ok' || !f.pk);
       if (waiting.length) h += `<div class="st-sec">${waiting.map(f => `<div class="srow" style="cursor:default"><span>${esc(f.name)}<small>${f.st === 'ok' ? 'Approved! Their shelf shows up here once they open the app' : f.st === 'ask' ? (String(f.cid).startsWith('mail:') ? 'Request sent. Waiting for them to log in and approve' : 'Waiting for them to approve your request') : 'Stopped sharing with you'}</small></span><span class="r"><button class="btn ghost sm" data-liveunf="${esc(f.cid)}">${f.st === 'ok' ? 'Remove' : f.st === 'ask' ? 'Cancel' : 'Remove'}</button></span></div>`).join('')}</div>`; } }
+  try { const A = shelf.ach || (shelf.ach = {}); const fn = Object.keys(F).length; const fv = liveF && liveF.me && liveF.me.viewers ? liveF.me.viewers.filter(v => v.st === 'ok').length : 0; if (fn > (A.frn || 0) || fv > (A.frv || 0)){ A.frn = Math.max(A.frn || 0, fn); A.frv = Math.max(A.frv || 0, fv); setTimeout(save, 0); } } catch(e){}
   const ids2 = Object.keys(F); if (!ids2.length) return h; if (!friendSel || !F[friendSel]) friendSel = ids2[0];
+  h += friendBoardHTML(F);
   h += `<div class="seg2" style="margin:0 0 10px;flex-wrap:wrap">${ids2.map(id => `<button data-fsel="${esc(id)}" aria-pressed="${id === friendSel}">${F[id].live ? '🔴 ' : ''}${esc(F[id].name)}</button>`).join('')}</div>`;
   const f = F[friendSel]; const both = [], borrow = [], lend = [], gifts = [], theirsOnly = [];
+  h += friendBingoHTML(f);
   Object.entries(f.s).forEach(([fk, o]) => { const mk = friendKey(fk, o); const fv = new Set(o.v || []);
     if (mk){ const i = info(mk); const mine = new Set(i.own); const common = (o.v || []).filter(v => mine.has(v)); if (common.length) both.push([o.n, common.length]);
       const canB = i.gaps.concat(i.next ? [i.next] : []).filter(v => fv.has(v) && !mine.has(v)); if (canB.length) borrow.push([o.n, canB]);
