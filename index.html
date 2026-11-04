@@ -353,6 +353,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       </select>
       <select id="view" aria-label="Change the view"><option value="shelf">View: Bookshelf</option><option value="full">View: Full cards</option><option value="compact">View: Compact list</option></select>
     </div>
+    <div class="seg2" id="shelfSeg" role="group" aria-label="Show"><button data-sf="all" aria-pressed="true">All</button><button data-sf="done" aria-pressed="false">Complete</button><button data-sf="open" aria-pressed="false">Incomplete</button><button data-sf="recs" aria-pressed="false">✨ For you</button></div>
     <div class="count" id="count"></div>
     <div class="list" id="list"></div>
     <div id="dupBox" style="margin-top:14px"></div>
@@ -766,7 +767,9 @@ function renderList(){
   const q = $('#q').value.trim().toLowerCase();
   const sort = $('#sort').value;
   let keys = Object.keys(shelf.series).filter(k => { if (!q) return true; const s = shelf.series[k]; return s.n.toLowerCase().includes(q) || (s.loc||'').toLowerCase().includes(q) || Object.values(s.lc||{}).some(l => l.toLowerCase().includes(q)) || Object.values(s.ln||{}).some(l => l.w.toLowerCase().includes(q)); });
+  if (shelfFilter === 'recs' && Object.keys(shelf.series).length){ renderRecs(q); return; }
   const I = Object.fromEntries(keys.map(k => [k, info(k)]));
+  if (shelfFilter === 'done') keys = keys.filter(k => I[k].complete); else if (shelfFilter === 'open') keys = keys.filter(k => !I[k].complete);
   const name = k => shelf.series[k].n.replace(/^(the|a)\s+/i,'');
   const ratio = k => { const i = I[k]; const den = Math.max(i.total, i.max, 1); return i.own.length / den; };
   keys.sort((a,b) => {
@@ -777,13 +780,13 @@ function renderList(){
     const tier = i => i.complete ? 0 : (i.total ? 1 : (i.own.length > 1 ? 2 : 3));
     return tier(I[a]) - tier(I[b]) || ratio(b) - ratio(a) || I[b].own.length - I[a].own.length || name(a).localeCompare(name(b));
   });
-  $('#count').textContent = keys.length ? `${keys.length} series${q?' match':''}` : '';
+  $('#count').textContent = keys.length ? `${keys.length} ${shelfFilter === 'done' ? 'complete ' : shelfFilter === 'open' ? 'incomplete ' : ''}series${q?' match':''}` : '';
   if (!Object.keys(shelf.series).length){
     $('#list').innerHTML = mode === 'loading' ? `<div class="empty"><span class="spin"></span></div>` :
       `<div class="empty"><h3>Your shelf is empty</h3>Tap <b>Add books</b> to scan a barcode or type a series.</div>`;
     return;
   }
-  if (!keys.length){ $('#list').innerHTML = `<div class="empty">Nothing on your shelf matches “${esc(q)}”.</div>`; return; }
+  if (!keys.length){ $('#list').innerHTML = `<div class="empty">${q ? `Nothing on your shelf matches “${esc(q)}”.` : shelfFilter === 'done' ? 'No complete series yet. Finish a run and it shows up here! ⭐' : 'Every series on your shelf is complete. 🎉'}</div>`; return; }
   const vmode = $('#view').value; const compact = vmode === 'compact'; $('#list').classList.toggle('compact', compact); $('#list').classList.toggle('shelfv', vmode === 'shelf');
   if (vmode === 'shelf'){ const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
     $('#list').innerHTML = keys.map(k => { const i = I[k]; const u = coverOf(k); const n = i.s.n;
@@ -933,6 +936,38 @@ function openStat(kind){
   openSheet(html + `<div class="row2"><button class="btn ghost" data-close>Close</button></div>`);
 }
 $('#q').oninput = renderList; $('#sort').onchange = () => { renderList(); ls.set('mme-sort', $('#sort').value); };
+/* ---------- shelf filter: all / complete / incomplete / recommended ---------- */
+var shelfFilter = ls.get('mme-sf') || 'all'; if (!['all','done','open','recs'].includes(shelfFilter)) shelfFilter = 'all';
+function syncSeg(){ document.querySelectorAll('#shelfSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sf === shelfFilter))); }
+syncSeg();
+$('#shelfSeg').onclick = e => { const b = e.target.closest('[data-sf]'); if (!b) return; shelfFilter = b.dataset.sf; ls.set('mme-sf', shelfFilter); syncSeg(); track('filter-' + shelfFilter); renderList(); };
+const ADULT_G = ['Ecchi','Yaoi','BL','Yuri'];
+function recList(){
+  const owned = new Set(), G = {}, A = {}, AU = {}; let W = 0, hasLN = false;
+  Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const h = snapEntry(k); if (h) owned.add(h[0]); if (isLN(k, s)) hasLN = true;
+    const sm = h && h[1].m; const m = s.m || (sm ? { g: String(sm.gen || '').split(/,\s*/).filter(Boolean), a: sm.aud || '', au: sm.au || '' } : null); if (!m) return;
+    const w = Math.min(Math.max(ints(s).length, 1), 10); W += w; (m.g || []).forEach(g => G[g] = (G[g] || 0) + w); if (m.a) A[m.a] = (A[m.a] || 0) + w; if (m.au && !AU[m.au]) AU[m.au] = s.n; });
+  if (!W) return [];
+  const out = [];
+  Object.entries(SNAP.s).forEach(([k, e]) => { if (owned.has(k) || !e.m) return; if (e.ln && !hasLN) return;
+    const v1 = (e.i || []).find(x => x[0] === 1 && x[2] > 0 && x[4]); if (!v1) return;
+    const gs = String(e.m.gen || '').split(/,\s*/).filter(Boolean); if (gs.some(g => ADULT_G.includes(g) && !G[g])) return;
+    const au = e.m.au && AU[e.m.au] && normName(AU[e.m.au]) !== normName(e.n) ? AU[e.m.au] : '';
+    const gm = gs.filter(g => G[g]).sort((a, b) => G[b] - G[a]);
+    let sc = gm.reduce((t, g) => t + G[g] / W, 0) / Math.max(1, Math.sqrt(gs.length)) + (e.m.aud && A[e.m.aud] ? A[e.m.aud] / W * 0.6 : 0) + (au ? 1.5 : 0);
+    if (!sc) return; sc += Math.min((e.i || []).filter(x => x[2] > 0).length, 10) * 0.02;
+    out.push({ k, e, v1, sc, why: au ? `By the author of ${au}` : `Because you collect ${gm.slice(0, 2).join(' & ')}${e.m.aud && A[e.m.aud] ? ` · ${e.m.aud}` : ''}` }); });
+  return out.sort((a, b) => b.sc - a.sc).slice(0, 40);
+}
+function renderRecs(q){
+  const el = $('#list'); el.classList.remove('compact', 'shelfv');
+  if (!SNAP){ el.innerHTML = `<div class="empty"><span class="spin"></span></div>`; $('#count').textContent = ''; loadSnap().then(() => { if (shelfFilter === 'recs') renderList(); }); return; }
+  let R = recList(); if (q) R = R.filter(r => r.e.n.toLowerCase().includes(q));
+  $('#count').textContent = R.length ? `${R.length} series to try · Vol 1 is in stock for each` : '';
+  if (!R.length){ el.innerHTML = `<div class="empty">${q ? `No recommendations match “${esc(q)}”.` : 'Add a few series to your shelf and we’ll suggest new ones to start.'}</div>`; return; }
+  el.innerHTML = `<div style="display:grid;gap:8px">` + R.map(r => { const h = r.v1[3]; return `<div class="find"><img src="${esc(snapImg(r.v1[4]))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(h)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(r.e.n)}${r.e.ln ? ' (Light Novel)' : ''} Vol 1</a></b><small>${esc(r.why)}${r.e.t ? ` · ${r.e.t} vols` : ''}</small></div><span class="price">$${(+r.v1[1] || 0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(h)}">🛒 Add</button></div>`; }).join('') + `</div>`;
+}
+
 const savedSort = ls.get('mme-sort'); if (savedSort) $('#sort').value = savedSort;
 $('#view').onchange = () => { renderList(); ls.set('mme-view', $('#view').value); };
 { const sv = ls.get('mme-view'); $('#view').value = sv || 'shelf'; }
