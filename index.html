@@ -1564,7 +1564,8 @@ function openAdd(tab, pre){
   addTab = tab; current = null;
   openSheet(`<h2>Add books</h2><p class="sub">Scan the barcode on the back, search the store, or type it in.</p>
   <div class="seg" role="tablist"><button data-at="scan" aria-selected="${tab==='scan'}">Scan</button><button data-at="search" aria-selected="${tab==='search'}">Search</button><button data-at="type" aria-selected="${tab==='type'}">Type it</button></div>
-  <div id="addBody"></div>`);
+  <div id="addBody"></div>
+  <div class="st-sec" style="margin-top:16px;padding:12px 14px"><h3 style="font-size:15px">📸 Big collection? Send us photos</h3><p class="sub" style="margin:0 0 8px">Email us photos of your shelves with the spines readable and we’ll add every book for you. ${acct ? '' : '<b>Log in first</b> so we know which account to fill. '}It’s done by hand, so it can take a few days.</p><a class="btn sm" href="${photoMailto()}" target="_top" data-photoadd>✉️ Email my collection photos</a></div>`);
   renderAdd(pre);
 }
 function renderAdd(pre){
