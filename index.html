@@ -267,7 +267,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
 .seg button{padding-left:4px;padding-right:4px}
 .lists textarea{width:100%;min-height:70px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)}
 .loanbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 0}.loanbar input,.locrow input{flex:1;min-width:0;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
-.locrow{display:flex;gap:8px;margin-top:6px}
+.locrow{display:flex;gap:8px;margin-top:6px}.locrow select{flex:1;min-width:0;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
 .legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin:10px 0 4px;flex-wrap:wrap}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 .sec{margin-top:18px}
@@ -1726,7 +1726,7 @@ function renderFinds(){
 }
 
 /* ---------- wishlist + sell list ---------- */
-const BUY = { good: 2.5, low: 1 }; let listView = 'want';
+const BUY = { good: 2.5, low: 1, hc: 4 }; const CREDIT = 1.2; const buyOf = c => c === 'hc' ? BUY.hc : c === 'low' ? BUY.low : BUY.good; let listView = 'want';
 function wantPayload(){ const W = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const vols = (s.want||[]).filter(v => !s.v.includes(v)); if (vols.length) W.push({ key: k, series: s.n, vols }); }); return W; }
 let alertT = null;
 function syncAlerts(){ clearTimeout(alertT); alertT = setTimeout(async () => { if (!dbRef || !myId) return; try { const ref = dbRef.collection('alerts').doc(myId);
@@ -1737,13 +1737,13 @@ function renderLists(){
   const W = [], S = [];
   Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const L = live.get(k); const pr = new Map(L ? L.items.map(p => [p.vol, p]) : []);
     (s.want||[]).filter(v => !s.v.includes(v)).forEach(v => W.push({ k, n: s.n, v, p: pr.get(v) }));
-    (s.sell||[]).filter(v => s.v.includes(v)).forEach(v => S.push({ k, n: s.n, v, low: !!langOf(k) || s.cond === 'low' })); });
+    (s.sell||[]).filter(v => s.v.includes(v)).forEach(v => S.push({ k, n: s.n, v, low: !!langOf(k) || s.cond === 'low', c: langOf(k) ? 'low' : (s.cond || 'good') })); });
   W.sort((a,b) => a.n.localeCompare(b.n) || a.v - b.v); S.sort((a,b) => a.n.localeCompare(b.n) || a.v - b.v);
   const grp = (arr) => { const m = new Map(); arr.forEach(x => { if (!m.has(x.k)) m.set(x.k, []); m.get(x.k).push(x); }); return [...m.entries()]; };
   const inStock = W.filter(x => x.p && x.p.inv > 0); const wTot = inStock.reduce((a,x) => a + (x.p.price||0), 0);
-  const sTot = S.reduce((a,x) => a + (x.low ? BUY.low : BUY.good), 0);
+  const sTot = S.reduce((a,x) => a + buyOf(x.c), 0);
   const giftTxt = `My manga wishlist:\n` + grp(W).map(([k,a]) => `${a[0].n}: Vol ${compactVols(a.map(x=>x.v))}`).join('\n') + `\n\nFind them at The Mage's Emporium: ${STORE}`;
-  const sellTxt = `Hi! I'd like to sell these to The Mage's Emporium:\n` + grp(S).map(([k,a]) => `${a[0].n}: Vol ${compactVols(a.map(x=>x.v))}${a[0].low ? ' (foreign / ex-library / damaged)' : ''}`).join('\n') + `\n\n${S.length} books, app estimate $${sTot.toFixed(2)}.`;
+  const sellTxt = `Hi! I'd like to sell these to The Mage's Emporium:\n` + grp(S).map(([k,a]) => `${a[0].n}: Vol ${compactVols(a.map(x=>x.v))}${a[0].c === 'low' ? ' (foreign / ex-library / damaged)' : a[0].c === 'hc' ? ' (hardcover / full color)' : ''}`).join('\n') + `\n\n${S.length} books, app estimate $${sTot.toFixed(2)} cash or $${(sTot*CREDIT).toFixed(2)} store credit.`;
   const wantHTML = `
   <div class="st-sec"><h3>♥ Wishlist <span class="sub" style="font-weight:400">(${W.length})</span></h3>
     ${(() => { const n = Object.keys(shelf.series).reduce((a, k) => { if (langOf(k)) return a; const i = info(k); const w = new Set(i.s.want || []); return a + i.gaps.filter(v => !w.has(v)).length; }, 0); return n ? `<p style="margin:0 0 10px"><button class="btn sm" data-wantgaps>♥ Add all ${n} missing ${n === 1 ? 'volume' : 'volumes'} (gaps) to my wishlist</button></p>` : ''; })()}
@@ -1755,13 +1755,14 @@ function renderLists(){
     : `<p class="sub" style="margin:0">Open a series, switch to “Want ♥”, and tap the volumes you want. Or tap “Want all missing”.</p>`}</div>
 `;
   const sellHTML = `<div class="st-sec"><h3>$ Sell / clear-out list <span class="sub" style="font-weight:400">(${S.length})</span></h3>
-    ${S.length ? `<p class="sub" style="margin:0 0 6px">The Mage's Emporium pays <b>$2.50</b> per English book in good or better condition and <b>$1</b> for foreign-language, ex-library or damaged copies.</p>
-      ${grp(S).map(([k,a]) => `<div class="srow" style="cursor:default"><span>${esc(a[0].n)} <button class="vx" data-unsellall="${esc(k)}" aria-label="Remove ${esc(a[0].n)} from the sell list"><b>× all</b></button><small>${a.map(x => `<button class="vx" data-unsell="${esc(k)}|${x.v}" aria-label="Remove Vol ${x.v} from the sell list">Vol ${x.v} <b>×</b></button>`).join('')}</small></span><span class="r">${langOf(k) ? 'Foreign · $1' : `<select data-cond="${esc(k)}" aria-label="Condition"><option value="good"${a[0].low?'':' selected'}>Good · $2.50</option><option value="low"${a[0].low?' selected':''}>Damaged / ex-library · $1</option></select>`}</span></div>`).join('')}
-      <p style="margin:10px 0 0"><b>Estimated trade-in: $${sTot.toFixed(2)}</b> for ${S.length} ${S.length===1?'book':'books'}</p><p class="sub" style="margin:2px 0 0">Final offer is confirmed when the shop sees the books.</p>
+    ${S.length ? `<p class="sub" style="margin:0 0 6px">The Mage's Emporium pays <b>$2.50</b> per English book in good or better condition, <b>$4</b> for hardcover or full-color books, and <b>$1</b> for foreign-language, ex-library or heavily damaged copies. Take it as store credit and get <b>20% more</b>. Mail your books in or drop them off locally.</p>
+      ${grp(S).map(([k,a]) => `<div class="srow" style="cursor:default"><span>${esc(a[0].n)} <button class="vx" data-unsellall="${esc(k)}" aria-label="Remove ${esc(a[0].n)} from the sell list"><b>× all</b></button><small>${a.map(x => `<button class="vx" data-unsell="${esc(k)}|${x.v}" aria-label="Remove Vol ${x.v} from the sell list">Vol ${x.v} <b>×</b></button>`).join('')}</small></span><span class="r">${langOf(k) ? 'Foreign · $1' : `<select data-cond="${esc(k)}" aria-label="Condition"><option value="good"${a[0].c==='good'?' selected':''}>Good · $2.50</option><option value="hc"${a[0].c==='hc'?' selected':''}>Hardcover / full color · $4</option><option value="low"${a[0].c==='low'?' selected':''}>Damaged / ex-library · $1</option></select>`}</span></div>`).join('')}
+      <p style="margin:10px 0 0"><b>Estimated trade-in: $${sTot.toFixed(2)} cash or $${(sTot*CREDIT).toFixed(2)} store credit</b> for ${S.length} ${S.length===1?'book':'books'}</p><p class="sub" style="margin:2px 0 0">Final offer is confirmed when the shop sees the books.</p>
       <div class="st-sec" style="background:var(--surface-2);box-shadow:none;margin:12px 0 0"><h3 style="font-size:15px">Get a quote from The Mage's Emporium</h3>
         <div class="locrow"><input id="qName" placeholder="Your name" value="${esc((shelf.contact||{}).name||'')}" autocomplete="name"></div>
         <div class="locrow"><input id="qEmail" type="email" placeholder="Email for the quote" value="${esc((shelf.contact||{}).email||'')}" autocomplete="email"></div>
-        <div class="locrow"><input id="qNote" placeholder="Anything else? (pickup, shipping, condition notes)"></div>
+        <div class="locrow"><select id="qPay" aria-label="How you'd like to be paid"><option value="credit">Store credit (+20%)</option><option value="cash">Cash</option></select><select id="qHow" aria-label="How you'll get the books to us"><option value="mail">I'll mail them in</option><option value="drop">I'll drop them off locally</option></select></div>
+        <div class="locrow"><input id="qNote" placeholder="Anything else? (condition notes, questions)"></div>
         <div class="row2"><button class="btn sm" data-quote>Submit for a quote</button></div>
         ${(shelf.quotes||[]).length ? `<p class="sub" style="margin:6px 0 0">Sent ${shelf.quotes.length} ${shelf.quotes.length===1?'request':'requests'}, last on ${shelf.quotes[shelf.quotes.length-1].slice(0,10)}. The shop will email you.</p>` : ''}</div>
       <div class="row2"><button class="btn ghost sm" data-copy="sell">Copy list</button><button class="btn ghost sm" data-sold>Sold — remove from shelf</button></div>`
@@ -1772,7 +1773,7 @@ function renderLists(){
   el._gift = giftTxt; el._sell = sellTxt;
 }
 document.addEventListener('change', e => { if (e.target.id === 'alertOn'){ if (e.target.checked){ const em = ($('#alertEmail').value || '').trim(); if (!/^\S+@\S+\.\S+$/.test(em)){ e.target.checked = false; toast('Type your email, then tap Save'); return; } shelf.contact = Object.assign({}, shelf.contact, { email: em }); shelf.alert = true; } else delete shelf.alert; save(); syncAlerts(); return; }
-  const c = e.target.closest('[data-cond]'); if (c){ const k = c.dataset.cond; if (shelf.series[k]){ if (c.value === 'low') shelf.series[k].cond = 'low'; else delete shelf.series[k].cond; save(); renderLists(); } } });
+  const c = e.target.closest('[data-cond]'); if (c){ const k = c.dataset.cond; if (shelf.series[k]){ if (c.value === 'low' || c.value === 'hc') shelf.series[k].cond = c.value; else delete shelf.series[k].cond; save(); renderLists(); } } });
 document.addEventListener('click', e => { if (!e.target.closest('[data-wantgaps]')) return; const prev = JSON.parse(JSON.stringify(shelf.series)); let n = 0;
   Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const i = info(k); const w = new Set(i.s.want || []); const add = i.gaps.filter(v => !w.has(v)); if (add.length){ i.s.want = [...w, ...add].sort((a, b) => a - b); n += add.length; } });
   save(); renderLists(); toast(`♥ Added ${n} missing ${n === 1 ? 'volume' : 'volumes'} to your wishlist`, () => { shelf.series = prev; save(); renderLists(); }); });
@@ -1784,14 +1785,14 @@ document.addEventListener('click', async e => {
     Object.values(shelf.series).forEach(s => { if (!s.ln) return; Object.keys(s.ln).forEach(v => { if (s.ln[v].w === w && s.ln[v].d === d){ delete s.ln[v]; n++; } }); if (!Object.keys(s.ln).length) delete s.ln; });
     save(); toast(`${n} ${n===1?'book':'books'} back from ${w}`, () => { shelf.series = prev; save(); }); return; }
   const as = e.target.closest('[data-alertsave]'); if (as){ const em = $('#alertEmail').value.trim(); if (!/^\S+@\S+\.\S+$/.test(em)){ toast('Type a valid email'); return; } shelf.contact = Object.assign({}, shelf.contact, { email: em }); shelf.alert = true; save(); syncAlerts(); toast(dbRef ? 'Stock alerts on' : 'Saved on this device (sign in to send alerts to the shop)'); return; }
-  const qt = e.target.closest('[data-quote]'); if (qt){ const name = $('#qName').value.trim(), em = $('#qEmail').value.trim(), note = $('#qNote').value.trim();
+  const qt = e.target.closest('[data-quote]'); if (qt){ const name = $('#qName').value.trim(), em = $('#qEmail').value.trim(), note = $('#qNote').value.trim(), pay = $('#qPay').value, how = $('#qHow').value;
     if (!name || !/^\S+@\S+\.\S+$/.test(em)){ toast('Add your name and email so the shop can reply'); return; }
     shelf.contact = Object.assign({}, shelf.contact, { name, email: em });
-    const items = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const vols = (s.sell||[]).filter(v => s.v.includes(v)); if (vols.length) items.push({ key: k, series: s.n, vols, cond: langOf(k) ? 'foreign' : (s.cond === 'low' ? 'damaged/ex-library' : 'good') }); });
-    const count = items.reduce((a,x) => a + x.vols.length, 0); const est = items.reduce((a,x) => a + x.vols.length * (x.cond === 'good' ? BUY.good : BUY.low), 0);
-    if (!dbRef || !myId){ location.href = `mailto:themagesemporium@gmail.com?subject=${encodeURIComponent('Quote request: ' + count + ' books')}&body=${encodeURIComponent($('#lists')._sell + '\n\n' + name + ' · ' + em + (note ? '\n' + note : ''))}`; return; }
+    const items = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const vols = (s.sell||[]).filter(v => s.v.includes(v)); if (vols.length) items.push({ key: k, series: s.n, vols, cond: langOf(k) ? 'foreign' : (s.cond === 'low' ? 'damaged/ex-library' : s.cond === 'hc' ? 'hardcover/full color' : 'good') }); });
+    const count = items.reduce((a,x) => a + x.vols.length, 0); const est = items.reduce((a,x) => a + x.vols.length * (x.cond === 'good' ? BUY.good : x.cond === 'hardcover/full color' ? BUY.hc : BUY.low), 0); const payTxt = pay === 'credit' ? `Store credit (estimate $${(est*CREDIT).toFixed(2)})` : `Cash (estimate $${est.toFixed(2)})`, howTxt = how === 'drop' ? 'Drop off locally' : 'Mail in';
+    if (!dbRef || !myId){ location.href = `mailto:themagesemporium@gmail.com?subject=${encodeURIComponent('Quote request: ' + count + ' books')}&body=${encodeURIComponent($('#lists')._sell + '\n\nPayment: ' + payTxt + '\nGetting them to you: ' + howTxt + '\n\n' + name + ' · ' + em + (note ? '\n' + note : ''))}`; return; }
     qt.disabled = true; qt.textContent = 'Sending…';
-    try { const id = Date.now().toString(36); await dbRef.collection('quotes/' + myId + '/items').doc(id).set({ user: myId, name, email: em, note, items, count, estimate: Math.round(est*100)/100, at: new Date().toISOString(), status: 'new' });
+    try { const id = Date.now().toString(36); await dbRef.collection('quotes/' + myId + '/items').doc(id).set({ user: myId, name, email: em, note, pay, how, items, count, estimate: Math.round(est*100)/100, at: new Date().toISOString(), status: 'new' });
       shelf.quotes = (shelf.quotes || []).concat(new Date().toISOString()); save(); toast(`Sent! The Mage's Emporium will email ${em} with a quote.`);
     } catch(err){ qt.disabled = false; qt.textContent = 'Submit for a quote'; toast('Couldn’t send: ' + (err.code || err.message || err)); }
     return; }
