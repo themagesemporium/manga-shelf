@@ -2150,7 +2150,9 @@ function evRange(e){ const f = (k, o) => new Date(k + 'T12:00:00').toLocaleDateS
   return e.s.slice(0, 7) === e.e.slice(0, 7) ? `${f(e.s, { month: 'short', day: 'numeric' })}–${+e.e.slice(8)}, ${e.e.slice(0, 4)}` : `${f(e.s, { month: 'short', day: 'numeric' })} – ${f(e.e, { month: 'short', day: 'numeric', year: 'numeric' })}`; }
 function saleDays(y, m){ const out = [], mk = dayKey(new Date(y, m, 1));
   out.push({ d: mk, ic: '🏷️', t: 'Discount day', sub: 'New price drops go live on the 1st of every month' });
-  ((SNAP && SNAP.sales) || []).forEach(([t, s, e]) => { for (let k = s, i = 0; k <= e && i < 40; k = addDays(k, 1), i++) out.push({ d: k, ic: '🏷️', t, sub: 'Sale at The Mage’s Emporium' + (s === e ? '' : ' · through ' + new Date(e + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })) }); });
+  const th = new Date(y, 10, 1); th.setDate(1 + ((4 - th.getDay() + 7) % 7) + 21);
+  if (m === 10 || m === 11) [[1, 'Black Friday'], [2, 'Small Business Saturday'], [4, 'Cyber Monday']].forEach(([n, t]) => { const d = new Date(th); d.setDate(th.getDate() + n); out.push({ d: dayKey(d), ic: '🎉', t, sub: 'Awesome deals! Stay tuned!' }); });
+  ((SNAP && SNAP.sales) || []).forEach(([t, s, e]) => { if (dayKey() < s || dayKey() > e) return; for (let k = s, i = 0; k <= e && i < 40; k = addDays(k, 1), i++) out.push({ d: k, ic: '🏷️', t, sub: 'Sale at The Mage’s Emporium' + (s === e ? '' : ' · through ' + new Date(e + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })) }); });
   return out; }
 function evDays(evs){ const out = []; evs.forEach(e => { for (let k = e.s, i = 0; k <= e.e && i < 10; k = addDays(k, 1), i++) out.push({ d: k, ic: '🎪', t: e.n + (e.pend ? ' (pending)' : ''), sub: 'Convention' + (e.p ? ' · ' + e.p : '') + ' · come see our booth!' }); }); return out; }
 /* ---------- orders on the way + mystery boxes ----------
