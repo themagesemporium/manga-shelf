@@ -39,7 +39,7 @@ self.addEventListener('push', e => {
   e.waitUntil(Promise.all([
     self.registration.showNotification(m.t || 'My Manga Emporium', { body: m.b || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: m.tag || 'mme', data: { u: m.u || './' } }),
     // app icon badge: count unseen notifications (the app resets it when opened)
-    caches.open('mme-badge').then(async c => { const r = await c.match('/n'); const n = (r ? +(await r.text()) || 0 : 0) + 1; await c.put('/n', new Response(String(n))); if (self.navigator.setAppBadge) await self.navigator.setAppBadge(n).catch(() => {}); }).catch(() => {})
+    caches.open('mme-badge').then(async c => { if (await c.match('/off')) return; const r = await c.match('/n'); const n = (r ? +(await r.text()) || 0 : 0) + 1; await c.put('/n', new Response(String(n))); if (self.navigator.setAppBadge) await self.navigator.setAppBadge(n).catch(() => {}); }).catch(() => {})
   ]));
 });
 self.addEventListener('notificationclick', e => {

@@ -1159,7 +1159,7 @@ document.addEventListener('click', e => { const g = e.target.closest('[data-fixg
 /* ---------- messages: fixes to check, notes and feedback to the shop, replies from the shop (custom.app_msgs) ---------- */
 let shopMsgs = ls.get('mme-msgs') || [];
 /* app icon badge (home-screen app on iPhone 16.4+, Android, desktop): unread shop messages + books to check. Notifications add to it while the app is closed; opening the app resets it to this count. */
-function appBadge(n){ try { if (!navigator.setAppBadge) return; (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {}); if (window.caches) caches.open('mme-badge').then(c => c.delete('/n')).catch(() => {}); } catch(e){} }
+function appBadge(n){ try { if (!navigator.setAppBadge) return; if (ls.get('mme-badgeoff')) n = 0; (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {}); if (window.caches) caches.open('mme-badge').then(c => c.delete('/n')).catch(() => {}); } catch(e){} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') try { msgUI(); } catch(e){} });
 function msgUnread(){ const seen = shelf.msgSeen || 0; return (shopMsgs || []).filter(m => (m.at || 0) > seen).length; }
 function msgUI(){ let nFix = 0; try { nFix = fixMap().size; } catch(e){} const nNew = msgUnread(); appBadge(nFix + nNew); const dot = $('#msgDot'); if (dot){ dot.hidden = !(nFix + nNew); dot.textContent = nFix + nNew; }
@@ -2260,7 +2260,7 @@ async function pushUI(){ const el = $('#pushBox'); if (!el) return; if (!acct ||
   if (pushHomeFirst()){ pushSet(h + '<p class="sub" style="margin:0 0 8px">On iPhone, add the app to your home screen first, then open it from there to turn on notifications.</p><button class="btn ghost sm" data-a2hs>How to add it</button>'); return; }
   if (!pushOK()){ pushSet(h + '<p class="sub" style="margin:0">This browser can’t show notifications. Try Chrome on Android, or the home screen app on iPhone.</p>'); return; }
   const sub = await pushSub(); const on = !!sub && Notification.permission === 'granted'; const P = pushPrefs(); 
-  pushSet(h + (on ? `<p class="sub" style="margin:0 0 6px">On for this device. Pick what you want to hear about:</p>${PUSHK.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-pushp="${k}"${P[k] !== false ? ' checked' : ''}><span>${l}</span></label>`).join('')}<div class="row2"><button class="btn ghost sm" data-pushtest>Send me a test</button><button class="btn ghost sm" data-pushoff>Turn off</button></div>`
+  pushSet(h + (on ? `<p class="sub" style="margin:0 0 6px">On for this device. Pick what you want to hear about:</p>${PUSHK.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-pushp="${k}"${P[k] !== false ? ' checked' : ''}><span>${l}</span></label>`).join('')}${navigator.setAppBadge ? `<label class="toggle"><input type="checkbox" data-badgeon${ls.get('mme-badgeoff') ? '' : ' checked'}><span>🔴 Show a number on the app icon</span></label>` : ''}<div class="row2"><button class="btn ghost sm" data-pushtest>Send me a test</button><button class="btn ghost sm" data-pushoff>Turn off</button></div>`
     : Notification.permission === 'denied' ? '<p class="sub" style="margin:0">Notifications are blocked for this app. Allow them in your phone or browser settings for app.themagesemporium.com, then come back here.</p>'
     : '<p class="sub" style="margin:0 0 8px">Get a heads-up when the shop replies to you, a volume on your wishlist is back in stock, your order or mystery box arrives, or a sale starts.</p><button class="btn sm" data-pushon>🔔 Turn on notifications</button>')); }
 document.addEventListener('click', async e => { const t = e.target.closest('[data-pushon],[data-pushtest],[data-pushoff]'); if (!t) return; t.disabled = true;
@@ -2272,6 +2272,9 @@ document.addEventListener('click', async e => { const t = e.target.closest('[dat
     else { const sub = await pushSub(); if (sub){ await fapi('/push/unsub', { endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe(); } track('push-off'); toast('Notifications are off'); } }
   catch(err){ toast('Couldn’t change notifications: ' + (err && err.message || err)); }
   t.disabled = false; pushUI(); });
+document.addEventListener('change', async e => { const b = e.target.closest('[data-badgeon]'); if (!b) return; ls.set('mme-badgeoff', b.checked ? null : 1);
+  try { const c = await caches.open('mme-badge'); if (b.checked) await c.delete('/off'); else await c.put('/off', new Response('1')); } catch(err){}
+  try { msgUI(); } catch(err){} toast(b.checked ? 'Badge on' : 'Badge off'); });
 document.addEventListener('change', async e => { const c = e.target.closest('[data-pushp]'); if (!c) return; const P = pushPrefs(); P[c.dataset.pushp] = c.checked; ls.set('mme-pushp', P);
   try { await fapi('/push/prefs', { prefs: P }); } catch(err){ toast('Couldn’t save that: ' + (err && err.message || err)); } });
 async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy = true; $('#sync').textContent = 'Syncing with your account…';
