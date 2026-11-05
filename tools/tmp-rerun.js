@@ -20,4 +20,4 @@ return R.map(([name,corr])=>{let k=find(name);if(k)return [name,'series',N.s[k].
  const cs=String(corr).replace(/\s+is the series.*$/i,'');if(cs&&!/is the link|exclusive|specific|variant/i.test(cs)){k=find(cs);if(k)return [name,'series',N.s[k].n,'via your correction'];}
  return [name,'unmatched','',''];});})();
 const c={};_RR.forEach(r=>c[r[1]]=(c[r[1]]||0)+1);
-window._RRW=_api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`,{m:[{ownerId:'gid://shopify/Shop/19355029',namespace:'claude_tmp',key:'ed_rerun',type:'json',value:JSON.stringify(_RR)}]}));window._RRC=c;
+window._RRW=_api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`,{m:[{ownerId:'gid://shopify/Shop/19355029',namespace:'claude_tmp',key:'ed_rerun',type:'json',value:JSON.stringify(_RR)}]});window._RRC=c;
