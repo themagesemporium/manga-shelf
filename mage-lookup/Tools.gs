@@ -73,8 +73,16 @@ function toolsAdd(code, haul) {
     add = add.filter(t => t && tags.indexOf(t) < 0);
     if (add.length) toolsGql_(`mutation($id:ID!,$t:[String!]!){tagsAdd(id:$id,tags:$t){userErrors{message}}}`, { id: v.product.id, t: add });
     if (remove.length) toolsGql_(`mutation($id:ID!,$t:[String!]!){tagsRemove(id:$id,tags:$t){userErrors{message}}}`, { id: v.product.id, t: remove });
+    // RECHECKPRICES (Megan, Nov 5 2026): placeholder listings priced without real sales data must be price-checked again
+    // before they go live. The first copy scanned in sets the listing to Draft and puts it on the price-check list.
+    let recheck = false;
+    if (tags.indexOf('RECHECKPRICES') >= 0 && v.product.status === 'ACTIVE') {
+      toolsGql_(`mutation($p:ProductUpdateInput!){productUpdate(product:$p){userErrors{message}}}`, { p: { id: v.product.id, status: 'DRAFT' } });
+      const p = props_(); const list = JSON.parse(p.getProperty('PRICECHECK') || '{}'); const k = 'RECHECK ' + (codes[codes.length - 1] || v.product.title);
+      list[k] = before + 1; p.setProperty('PRICECHECK', JSON.stringify(list)); recheck = true;
+    }
     const img = v.product.featuredMedia && v.product.featuredMedia.preview && v.product.featuredMedia.preview.image ? v.product.featuredMedia.preview.image.url : '';
-    return { ok: true, t: v.product.title, qty: before + 1, back: before <= 0, draft: v.product.status !== 'ACTIVE', img };
+    return { ok: true, t: v.product.title, qty: before + 1, back: before <= 0, draft: v.product.status !== 'ACTIVE' || recheck, recheck, img };
   } finally { lock.releaseLock(); }
 }
 

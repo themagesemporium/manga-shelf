@@ -138,7 +138,7 @@
       if (!r.ok){ say(r.msg,'bad'); buzz(false); return; }
       var li=document.createElement('li'); var log=$('log'); if (log.firstChild && log.firstChild.className==='sub') log.innerHTML='';
       if (r.isNew){ li.innerHTML='<span>🆕 '+esc(r.isbn)+' — new book, on the price-check list (×'+r.count+')</span>'; say('New book '+r.isbn+': added to the price-check list ('+r.total+' waiting).','ok'); }
-      else { li.innerHTML='<img src="'+esc(r.img)+'" alt=""><span>'+esc(r.t)+' — now <b>'+r.qty+'</b>'+(r.back?' · back in stock':'')+(r.draft?' · ⚠️ listing is a draft':'')+'</span>';
+      else { li.innerHTML='<img src="'+esc(r.img)+'" alt=""><span>'+esc(r.t)+' — now <b>'+r.qty+'</b>'+(r.back?' · back in stock':'')+(r.recheck?' · 💲 needs a price check, set to draft':(r.draft?' · ⚠️ listing is a draft':''))+'</span>';
         say('+1 '+r.t+' (now '+r.qty+')'+(r.draft?' — note: this listing is a draft':''),'ok'); }
       log.insertBefore(li, log.firstChild); buzz(true); }, function(){ busy=false; }); }
 
