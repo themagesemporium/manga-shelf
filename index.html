@@ -2143,7 +2143,7 @@ function friendBingoHTML(f){ const a = f && f.act; let me; try { me = monthChal(
   return `<div class="st-sec"><h3>🎱 ${esc(f.name)}’s ${esc(me.label)} Bingo</h3><p class="sub" style="margin:0 0 6px">📖 ${a.rd || 0} volumes read this month${a.pg ? ` (≈${a.pg.toLocaleString()} pages)` : ''} · 🎯 ${a.cd || 0} of ${a.ct || 3} challenges · 🔥 ${a.cur || 0}-day streak (best ${a.best || 0})${a.bl ? ` · <b>${a.bl} Bingo${a.bl > 1 ? 's' : ''}! 🎉</b>` : ''}</p>
     <div class="bingo">${me.sq.map(([l], i) => `<div class="${i === 12 ? 'free' : bm[i] ? 'on' : ''}${win.has(i) ? ' win' : ''}">${esc(l)}</div>`).join('')}</div></div>`; }
 /* ---------- avatars: shown to friends. A personal picture (preset per account), an emoji, or a favorite book cover from the shelf ---------- */
-const AV_PRESET = { '99230547976': 'avatars/megan.jpg', '6676800504126': 'avatars/katie.jpg' };
+const AV_PRESET = { '99230547976': 'avatars/megan.jpg', '6676800504126': 'avatars/katie.jpg', '398442135607': 'avatars/ryan.jpg' };
 const AV_EMOJI = ['📚','🔮','🧙‍♀️','🧙‍♂️','🐉','🦊','🐱','🐶','🐰','🐼','🦄','🌸','⭐','🌙','🍙','🍜','🍓','☕','⚔️','🛡️','👻','🎀','🎮','🎨','🌊','🔥','💜','🍀'];
 function myCid(){ return String(acct && acct.cid || '').split('/').pop(); }
 function avOk(a){ if (!a || typeof a !== 'object') return null; if (a.e && AV_EMOJI.includes(a.e)) return { e: a.e }; if (a.u && /^(avatars\/[a-z0-9-]+\.(jpg|png)|https:\/\/cdn\.shopify\.com\/[^"'<>\s]+)$/.test(a.u)) return { u: a.u }; return null; }
