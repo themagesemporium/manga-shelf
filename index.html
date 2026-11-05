@@ -684,7 +684,7 @@ function canUse(feature){ return !PAID_LOCKS[feature] || isPaid(); }
 function memberChip(){ return isPaid() ? `<span class="badge" style="background:rgba(255,215,90,.35);font-size:12.5px">⭐ Member through ${esc(new Date(acct.paid + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }))}</span>` : ''; }
 /* ---------- monthly challenges + Manga Bingo (same card for everyone each month) ---------- */
 function seeded(seed){ let x = seed >>> 0 || 1; return () => { x ^= x << 13; x >>>= 0; x ^= x >> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; }; }
-function serMeta(key){ const s = shelf.series[key] || {}; const h = snapEntry(key); const e = h ? h[1] : null; const em = (e && e.m) || {};
+function serMeta(key){ const s = shelf.series[key] || (shelf.other || {})[key] || {}; const h = snapEntry(key); const e = h ? h[1] : null; const em = (e && e.m) || {};
   const g = (s.m && s.m.g && s.m.g.length) ? s.m.g : String(em.gen || '').split(/,\s*/).filter(Boolean);
   return { g, a: (s.m && s.m.a) || em.aud || '', an: /yes|true/i.test(String(em.an || '')), sp: parseInt(em.sp) || 0, gr: /yes|true/i.test(String(em.gr || '')), t: (e && e.t) || s.fin || 0, ln: isLN(key, s), ss: em.ss || '', t0: s.t || 0 }; }
 const BINGO_POOL = [
@@ -703,16 +703,17 @@ function monthChal(){
   const now = new Date(), mk = dayKey(now).slice(0, 7), label = now.toLocaleDateString(undefined, { month: 'long' });
   const seed = now.getFullYear() * 12 + now.getMonth(); const rnd = seeded(seed * 2654435761);
   const R = shelf.rl || {}, L = shelf.log || {};
+  const known = k => !!(shelf.series[k] || (shelf.other || {})[k]); // books read that left the shelf (or were never owned) still count
   const reads = []; Object.keys(R).filter(d => d.slice(0, 7) === mk).forEach(d => R[d].forEach(t => { const i = t.lastIndexOf('|'); reads.push({ key: t.slice(0, i), v: +t.slice(i + 1), day: d }); }));
   const readN = Object.keys(L).filter(d => d.slice(0, 7) === mk).reduce((a, d) => a + (L[d] || 0), 0);
   const readDays = Object.keys(L).filter(d => d.slice(0, 7) === mk && L[d] > 0).length;
   const metaC = {}; const M = k => metaC[k] || (metaC[k] = serMeta(k));
-  const before = new Set(); Object.keys(R).filter(d => d.slice(0, 7) < mk).forEach(d => R[d].forEach(t => { const k = t.slice(0, t.lastIndexOf('|')); if (shelf.series[k]) M(k).g.forEach(g => before.add(g)); }));
-  const newG = new Set(); reads.forEach(r => { if (shelf.series[r.key]) M(r.key).g.forEach(g => { if (!before.has(g)) newG.add(g); }); });
+  const before = new Set(); Object.keys(R).filter(d => d.slice(0, 7) < mk).forEach(d => R[d].forEach(t => { const k = t.slice(0, t.lastIndexOf('|')); if (known(k)) M(k).g.forEach(g => before.add(g)); }));
+  const newG = new Set(); reads.forEach(r => { if (known(r.key)) M(r.key).g.forEach(g => { if (!before.has(g)) newG.add(g); }); });
   const started = Object.keys(shelf.series).filter(k => shelf.series[k].t && dayKey(new Date(shelf.series[k].t)).slice(0, 7) === mk).length;
   const vol1 = new Set(reads.filter(r => r.v === 1).map(r => r.key)).size;
-  const genres = new Set(); reads.forEach(r => { if (shelf.series[r.key]) M(r.key).g.forEach(g => genres.add(g)); });
-  const finals = new Set(reads.filter(r => shelf.series[r.key] && M(r.key).t > 1 && r.v === M(r.key).t).map(r => r.key)).size;
+  const genres = new Set(); reads.forEach(r => { if (known(r.key)) M(r.key).g.forEach(g => genres.add(g)); });
+  const finals = new Set(reads.filter(r => known(r.key) && M(r.key).t > 1 && r.v === M(r.key).t).map(r => r.key)).size;
   const POOL = [
     ['📚 Bookworm month', 'Read 10 volumes this month.', readN, 10], ['📅 Steady reader', 'Read on 8 different days this month.', readDays, 8],
     ['🌱 Fresh start', 'Add a brand-new series to your shelf.', started, 1], ['🧭 Explorer', 'Read a genre you haven’t logged before.', newG.size, 1],
@@ -725,7 +726,7 @@ function monthChal(){
   const sq = BINGO_POOL.map((p, i) => [rnd(), i]).sort((a, b) => a[0] - b[0]).slice(0, 24).map(x => BINGO_POOL[x[1]]);
   sq.splice(12, 0, ['FREE ⭐', null]);
   // each volume read can fill only one square (best possible matching), so a Bingo needs 5 different reads
-  const uniq = []; const seenR = new Set(); reads.forEach(r => { const id = r.key + '|' + r.v; if (!seenR.has(id) && shelf.series[r.key]){ seenR.add(id); uniq.push(r); } });
+  const uniq = []; const seenR = new Set(); reads.forEach(r => { const id = r.key + '|' + r.v; if (!seenR.has(id) && known(r.key)){ seenR.add(id); uniq.push(r); } });
   const cand = sq.map(([lbl, fn]) => fn ? uniq.map((r, j) => { try { return fn(M(r.key), r.v, mk, r.key, r.day) ? j : -1; } catch(e){ return -1; } }).filter(j => j >= 0) : []);
   const owner = new Array(uniq.length).fill(-1);
   const tryS = (i, seen) => { for (const j of cand[i]){ if (seen[j]) continue; seen[j] = 1; if (owner[j] < 0 || tryS(owner[j], seen)){ owner[j] = i; return true; } } return false; };
@@ -1020,7 +1021,7 @@ function allVolReviews(){ const out = []; Object.keys(shelf.series).forEach(k =>
 /* Books leaving the shelf (removed, sold, unmarked) keep their reviews, ratings and read marks: they move to shelf.other
    (the same place as books you read but don't own) and come back if the series is added again. */
 function keepReviews(key, prev){ if (!prev || !(prev.st || prev.rv || Object.keys(prev.vr || {}).length || (prev.r || []).length)) return;
-  const O = shelf.other || (shelf.other = {}); const K = O[key] || {}; O[key] = Object.assign(K, { n: prev.n, rm: Date.now() }, prev.st ? { st: prev.st } : {}, prev.rv ? { rv: prev.rv } : {}, { vr: Object.assign({}, K.vr || {}, prev.vr || {}) }, (prev.r || []).length ? { r: [...new Set([...(K.r || []), ...prev.r])] } : {}); }
+  const O = shelf.other || (shelf.other = {}); const K = O[key] || {}; O[key] = Object.assign(K, { n: prev.n, rm: Date.now() }, prev.m ? { m: prev.m } : {}, prev.fin ? { fin: prev.fin } : {}, prev.ln ? { ln: prev.ln } : {}, prev.st ? { st: prev.st } : {}, prev.rv ? { rv: prev.rv } : {}, { vr: Object.assign({}, K.vr || {}, prev.vr || {}) }, (prev.r || []).length ? { r: [...new Set([...(K.r || []), ...prev.r])] } : {}); }
 function restoreReviews(key){ const O = (shelf.other || {})[key]; const S = shelf.series[key]; if (!O || !S || !(O.vr || O.st || O.rv || O.r)) return;
   if (O.st && !S.st) S.st = O.st; if (O.rv && !S.rv) S.rv = O.rv; if (O.vr) S.vr = Object.assign({}, O.vr, S.vr || {}); if (O.r) S.r = [...new Set([...(S.r || []), ...O.r])].sort((a, b) => a - b); delete shelf.other[key]; }
 function vrRow(r){ return `<div class="srow"${r.gone ? ' style="cursor:default"' : ` data-vrk="${esc(r.k)}"`}><span>${esc(r.n)} · Vol ${r.v}${r.gone ? ' <small style="display:inline">(no longer on your shelf)</small>' : ''}${r.t ? `<small>“${esc(r.t.length > 90 ? r.t.slice(0, 90) + '…' : r.t)}”</small>` : ''}</span><span class="r" style="color:#c8860a">${r.st ? '★'.repeat(r.st) : ''}</span></div>`; }
