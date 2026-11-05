@@ -9,7 +9,7 @@
 //   notes:     [[customerId, seriesName, note, date, vols, key], ...] -> notes customers left from the app's "needs a volume number" list;
 //              plus messages sent from the app's Messages screen (key 'fb', name '(message)', date = timestamp);
 //              mark handled with _agMarkSeen(["note|<customerId>|<key>|<date>"] or ["fb|<customerId>|<timestamp>"])
-// Reply to a customer (shows in their app's Messages): _agReply('<customerId>', 'text')
+// Reply to a customer (shows in their app's Messages): _agReply('<customerId>', 'text'). Load tools/push-queue.js first to also send a push notification.
 window._agRun = async (opt = {}) => {
   const AG = window._AG = { st: 'snap', shelves: 0, unmatched: 0, volGaps: 0, fin: false, err: [] };
   const SKIP = new Set(['99230547976']);
@@ -92,5 +92,7 @@ window._agReply = async (cid, text) => {
   let L = []; try { L = JSON.parse(r0.data.customer.metafield.value) || []; } catch (e) {}
   L.push({ t: String(text).slice(0, 1000), at: Date.now(), from: 'shop' }); L = L.slice(-50);
   const r = await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: id, namespace: 'custom', key: 'app_msgs', type: 'json', value: JSON.stringify(L) }] });
+  // also a push notification, if they turned them on (needs tools/push-queue.js loaded; skipped otherwise)
+  if (window._pqAdd) { try { await window._pqAdd([{ cid, k: 'msgs', t: '💬 The Mage’s Emporium replied', b: 'Tap to read it in the app.', u: '/' }]); } catch (e) {} }
   return JSON.stringify(r.data && r.data.metafieldsSet.userErrors);
 };
