@@ -1015,8 +1015,15 @@ function mergeSeries(keys){ const [t, ...rest] = keys; const T = shelf.series[t]
   rest.forEach(k => { const S = shelf.series[k]; if (!S) return; T.v = uni(T.v, S.v); if (S.r) T.r = uni(T.r, S.r); if (S.want) T.want = uni(T.want, S.want).filter(v => !T.v.includes(v)); if (S.sell) T.sell = uni(T.sell, S.sell);
     ['ln','cn'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); ['loc','st','rv','c','m','cond','h'].forEach(f => { if (S[f] != null && T[f] == null) T[f] = S[f]; }); delete shelf.series[k]; });
   save(); toast(`Merged into ${T.n}`, () => { shelf.series = prev; save(); }); }
-function allVolReviews(){ const out = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; Object.entries(s.vr||{}).forEach(([v,o]) => out.push({ k, n: s.n, v: +v, st: o.st || 0, t: o.t || '', d: o.d || '' })); }); return out; }
-function vrRow(r){ return `<div class="srow" data-vrk="${esc(r.k)}"><span>${esc(r.n)} · Vol ${r.v}${r.t ? `<small>“${esc(r.t.length > 90 ? r.t.slice(0, 90) + '…' : r.t)}”</small>` : ''}</span><span class="r" style="color:#c8860a">${r.st ? '★'.repeat(r.st) : ''}</span></div>`; }
+function allVolReviews(){ const out = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; Object.entries(s.vr||{}).forEach(([v,o]) => out.push({ k, n: s.n, v: +v, st: o.st || 0, t: o.t || '', d: o.d || '' })); });
+  Object.entries(shelf.other || {}).forEach(([k, s]) => { if (shelf.series[k]) return; Object.entries(s.vr || {}).forEach(([v, o]) => out.push({ k, n: s.n, v: +v, st: o.st || 0, t: o.t || '', d: o.d || '', gone: 1 })); }); return out; }
+/* Books leaving the shelf (removed, sold, unmarked) keep their reviews, ratings and read marks: they move to shelf.other
+   (the same place as books you read but don't own) and come back if the series is added again. */
+function keepReviews(key, prev){ if (!prev || !(prev.st || prev.rv || Object.keys(prev.vr || {}).length || (prev.r || []).length)) return;
+  const O = shelf.other || (shelf.other = {}); const K = O[key] || {}; O[key] = Object.assign(K, { n: prev.n, rm: Date.now() }, prev.st ? { st: prev.st } : {}, prev.rv ? { rv: prev.rv } : {}, { vr: Object.assign({}, K.vr || {}, prev.vr || {}) }, (prev.r || []).length ? { r: [...new Set([...(K.r || []), ...prev.r])] } : {}); }
+function restoreReviews(key){ const O = (shelf.other || {})[key]; const S = shelf.series[key]; if (!O || !S || !(O.vr || O.st || O.rv || O.r)) return;
+  if (O.st && !S.st) S.st = O.st; if (O.rv && !S.rv) S.rv = O.rv; if (O.vr) S.vr = Object.assign({}, O.vr, S.vr || {}); if (O.r) S.r = [...new Set([...(S.r || []), ...O.r])].sort((a, b) => a - b); delete shelf.other[key]; }
+function vrRow(r){ return `<div class="srow"${r.gone ? ' style="cursor:default"' : ` data-vrk="${esc(r.k)}"`}><span>${esc(r.n)} · Vol ${r.v}${r.gone ? ' <small style="display:inline">(no longer on your shelf)</small>' : ''}${r.t ? `<small>“${esc(r.t.length > 90 ? r.t.slice(0, 90) + '…' : r.t)}”</small>` : ''}</span><span class="r" style="color:#c8860a">${r.st ? '★'.repeat(r.st) : ''}</span></div>`; }
 function vrSort(a, b){ return (b.st - a.st) || (b.d > a.d ? 1 : b.d < a.d ? -1 : 0); }
 function openYear(yr){ current = null;
   const L = shelf.log || {}, R = shelf.rl || {}; const months = Array(12).fill(0); let total = 0;
@@ -1365,11 +1372,11 @@ function patchSeries(key, fields){
 }
 function setVols(key, vols, name, extra){
   const prev = shelf.series[key] ? JSON.parse(JSON.stringify(shelf.series[key])) : null;
-  if (!vols.length && !(prev && (edCount(prev) || Object.values(prev.ed || {}).some(o => (o.want || []).length)))){ delete shelf.series[key]; }
-  else shelf.series[key] = Object.assign({}, prev || {}, extra || {}, { n: (prev && prev.n) || name, v: [...new Set(vols)].sort((a,b)=>a-b), t: Date.now() });
+  if (!vols.length && !(prev && (edCount(prev) || Object.values(prev.ed || {}).some(o => (o.want || []).length)))){ keepReviews(key, prev); delete shelf.series[key]; }
+  else { shelf.series[key] = Object.assign({}, prev || {}, extra || {}, { n: (prev && prev.n) || name, v: [...new Set(vols)].sort((a,b)=>a-b), t: Date.now() }); if (!prev) restoreReviews(key); }
   try { const had = new Set(prev ? prev.v || [] : []), add = vols.filter(v => !had.has(v)); if (add.length) feedNote(key, shelf.series[key].n, add); } catch(e){}
   save();
-  return () => { if (prev) shelf.series[key] = prev; else delete shelf.series[key]; save(); };
+  return () => { if (prev){ shelf.series[key] = prev; if (shelf.other && shelf.other[key] && shelf.other[key].rm) delete shelf.other[key]; } else delete shelf.series[key]; save(); };
 }
 
 /* ---------- store lookups (Shopify, live) ---------- */
@@ -2049,7 +2056,7 @@ document.addEventListener('click', async e => {
   const ux = e.target.closest('[data-unsell]'); if (ux){ const [k, v] = ux.dataset.unsell.split('|'); const s = shelf.series[k]; if (s){ const prev = (s.sell||[]).slice(); s.sell = prev.filter(x => x !== +v); if (!s.sell.length) delete s.sell; save(); renderLists(); toast(`Vol ${v} removed from the sell list`, () => { s.sell = prev; save(); renderLists(); }); } return; }
   const ua = e.target.closest('[data-unsellall]'); if (ua){ const k = ua.dataset.unsellall; const s = shelf.series[k]; if (s){ const prev = (s.sell||[]).slice(); delete s.sell; save(); renderLists(); toast(`${s.n} removed from the sell list`, () => { s.sell = prev; save(); renderLists(); }); } return; }
   const sd = e.target.closest('[data-sold]'); if (sd){ const prev = JSON.parse(JSON.stringify(shelf.series)); let n = 0;
-    Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s.sell) return; n += s.sell.length; s.v = s.v.filter(v => !s.sell.includes(v)); if (s.r) s.r = s.r.filter(v => !s.sell.includes(v)); delete s.sell; if (!s.v.length && !s.ed) delete shelf.series[k]; });
+    Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s.sell) return; n += s.sell.length; keepReviews(k, Object.assign({}, s, { v: s.v.filter(v => s.sell.includes(v)), r: (s.r || []).filter(v => s.sell.includes(v)), vr: Object.fromEntries(Object.entries(s.vr || {}).filter(([v]) => s.sell.includes(+v))), st: null, rv: null })); s.v = s.v.filter(v => !s.sell.includes(v)); if (s.r) s.r = s.r.filter(v => !s.sell.includes(v)); if (s.vr) s.vr = Object.fromEntries(Object.entries(s.vr).filter(([v]) => !s.sell.includes(+v))); delete s.sell; if (!s.v.length && !s.ed){ keepReviews(k, s); delete shelf.series[k]; } });
     save(); toast(`Removed ${n} sold ${n===1?'book':'books'} from your shelf`, () => { shelf.series = prev; save(); }); }
 });
 
