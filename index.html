@@ -230,6 +230,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .vol.o{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .vol.oe{background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.28) 5px 9px)}
 .vol small.edr{display:block;font-size:9px;line-height:1;opacity:.8;margin-top:1px}
+.fixwrap{border:1px solid var(--gold);border-radius:12px;padding:10px 12px;margin:12px 0 4px;background:color-mix(in srgb,var(--gold) 10%,transparent)}.fixwrap h4{margin:0 0 4px}.fixrow{border-top:1px solid var(--line);padding:8px 0}.fixrow small{display:block;color:var(--muted)}.fixin{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.fixin input{flex:1 1 90px;min-width:0}.fixrow textarea{width:100%;min-height:44px;margin:0 0 4px}
 .edblk{margin:10px 0 4px}.edblk h5{margin:0 0 6px;font-size:14px;display:flex;gap:8px;align-items:baseline}.edblk h5 small{font-weight:400;color:var(--muted)}
 .edform{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.edform select{flex:0 0 auto}.edform input{flex:1 1 120px;min-width:0}
 .vol.s{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
@@ -396,6 +397,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       <textarea id="impTxt" placeholder="Fruits Basket, 1-12&#10;Spy x Family Vol 3&#10;Bungo Stray Dogs (Light Novel), 1, 2, 4"></textarea>
       <div class="row2"><button class="btn sm" id="impBtn">Add to my shelf</button></div>
       <p class="sub" id="impMsg" style="margin:6px 0 0"></p>
+      <div id="fixBox"></div>
     </div>
     <div class="st-sec" id="photoBox"><h3>📸 Send us photos instead</h3>
       <p class="sub" style="margin:0 0 8px">Big collection? Take photos of your shelves with the spines readable and email them to us. We’ll add every book to your shelf for you.</p>
@@ -1080,13 +1082,39 @@ async function doImport(text){ if (!text || !text.trim()){ $('#impMsg').textCont
   lastCsv = null; try { r = importData(text); } catch(e){ $('#impMsg').textContent = 'Couldn’t read that: ' + (e.message || e) + '. Email the file to us and we’ll add your books for you.'; track('import-fail'); return; }
   if (!r.ns && !r.nb){ $('#impMsg').textContent = 'We couldn’t find any books in that file. Email it to us (reply to any of our emails) and we’ll add your collection for you.'; track('import-empty'); return; }
   save(); track('import-ok'); $('#impMsg').textContent = `Added ${r.ns} new series and ${r.nb} books.` + (lastCsv ? ` (${lastCsv.isbn} matched by ISBN${lastCsv.skipped.length ? ', ' + lastCsv.skipped.length + ' rows skipped' : ''})` : ''); toast(`Imported: ${r.ns} new series, ${r.nb} books`, () => { shelf.series = prev; save(); });
-  $('#impTxt').value = ''; }
+  $('#impTxt').value = ''; try { const n = fixHTML(); if (n) $('#impMsg').textContent += ` ${n} ${n === 1 ? 'book needs' : 'books need'} a volume number (see below).`; } catch(e){} }
 $('#impBtn').onclick = () => doImport($('#impTxt').value);
 $('#snapBtn').onclick = () => buildSnap($('#snapBtn'), $('#snapMsg'));
 $('#impFile').onchange = async e => { const f = e.target.files && e.target.files[0]; if (!f) return; if (f.size > 15e6){ $('#impMsg').textContent = 'That file is too big.'; return; } await doImport(await f.text()); e.target.value = ''; };
 function coverOf(k){ const s = shelf.series[k]; if (!s) return ''; if (s.c) return s.c; const L = live.get(k); if (!L) return ''; const own = new Set(ints(s)); const it = L.items.find(p => p.img && own.has(p.vol)) || L.items.find(p => p.img); return it ? it.img : ''; }
 function coverHTML(k){ const u = coverOf(k); const n = shelf.series[k].n.replace(/^(the|a)\s+/i,'');
   return `<span class="cover" aria-hidden="true">${u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">` : esc(n[0] || '?')}</span>`; }
+/* ---------- needs a volume number: shelf entries that look like a shop series but have the volume missing or stuck in the name ---------- */
+function fixFind(n, ln){ const q = normName(n); const qs = ln ? [q + '|ln', q] : [q, q + '|ln']; for (const x of qs){ const k = snapNorm.get(x) || (SNAP.al && SNAP.al[x]); if (k && SNAP.s[k]) return k; } return null; }
+function fixList(){ if (!SNAP) return []; const out = [];
+  Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s || langOf(k) || s.fxNo || s.ed || snapEntry(k)) return;
+    const ln = isLN(k, s); const n = String(s.n).replace(/\(light novel\)/ig, ' ').replace(/\s+/g, ' ').trim(); let cand = null, vols = [];
+    const m = n.match(/^(.*?)[\s,:#-]*(?:\b(?:vol(?:ume)?\.?|episode|ep\.?|part|book|no\.?)\s*)?#?\s*(\d{1,3})(?:\s*(?:\/|of)\s*\d{1,3})?\s*$/i);
+    if (m && m[1].trim().length >= 3){ const c = fixFind(m[1], ln); if (c){ cand = c; vols = [+m[2]]; } }
+    if (!cand){ const q = normName(n); if (q.length >= 5){ const hits = new Set(); snapNorm.forEach((key, nn) => { const [b, l] = nn.split('|'); if (!!l !== ln) return; if (b !== q && b.length >= 5 && (b.startsWith(q) || (q.startsWith(b) && b.length >= 8))) hits.add(key); }); if (hits.size === 1) cand = [...hits][0]; } }
+    if (cand) out.push({ k, n: s.n, cand, sname: SNAP.s[cand].n, have: (SNAP.s[cand].i || []).map(x => x[0]), vols: vols.length ? vols : ints(s) }); });
+  return out; }
+function fixHTML(){ const L = fixList(); const box = $('#fixBox'); fixBadge(L.length); if (!box) return L.length;
+  box.innerHTML = !L.length ? '' : `<div class="fixwrap"><h4>⚠️ ${L.length} ${L.length === 1 ? 'book needs' : 'books need'} a volume number</h4><p class="sub" style="margin:0 0 4px">Volume number missing: these look like series the shop carries, but the volume is missing or stuck in the name, so they can’t show covers, prices or gaps. Type the volume(s) and tap Fix. Not sure? Leave a note and the shop will sort it out.</p>${L.map(x => { const S = shelf.series[x.k]; return `<div class="fixrow" data-fk="${esc(x.k)}"><div><b>${esc(x.n)}</b><small>Shop series: ${esc(x.sname)}${x.have.length ? ` · Vol ${compactVols(x.have)}` : ''}</small></div><div class="fixin"><input class="fxv" inputmode="numeric" value="${esc(x.vols.join(', '))}" placeholder="Volume(s), e.g. 2" aria-label="Volume numbers for ${esc(x.n)}"><button class="btn sm" data-fixgo="${esc(x.cand)}">Fix</button><button class="btn ghost sm" data-fixno="1">Not this series</button></div><textarea class="fxn" rows="2" aria-label="Note for the shop about ${esc(x.n)}" placeholder="Note for the shop (optional): edition, ISBN, anything that helps">${esc((S.fxNote || {}).t || '')}</textarea><button class="btn ghost sm" data-fixnote="1">${S.fxNote ? 'Update note ✓' : 'Send note to the shop'}</button></div>`; }).join('')}</div>`;
+  return L.length; }
+function fixBadge(n){ if (n == null) n = fixList().length; document.querySelectorAll('[data-openacct="io"]').forEach(b => { b.textContent = '⤓ Back up or bring in a collection' + (n ? ` · ⚠️ ${n} to fix` : ''); }); }
+document.addEventListener('click', e => { const g = e.target.closest('[data-fixgo],[data-fixno],[data-fixnote]'); if (!g) return; const row = g.closest('.fixrow'); if (!row) return; const k = row.dataset.fk; const s = shelf.series[k]; if (!s) return;
+  const note = row.querySelector('.fxn').value.trim(); const who = acct && acct.at ? '' : ' Log in so the shop can see it.';
+  if (g.dataset.fixgo){ const vols = parseVols(row.querySelector('.fxv').value).filter(v => v > 0); if (!vols.length) return toast('Type the volume number(s) first');
+    const sk = g.dataset.fixgo, E = SNAP.s[sk]; const to = shelfKeyFor(sk) || sk; const prev = JSON.parse(JSON.stringify(shelf.series));
+    const T = shelf.series[to] = shelf.series[to] || { n: E.n + (E.ln && !/light novel/i.test(E.n) ? ' (Light Novel)' : ''), v: [], t: Date.now() };
+    const one = s.v.length === 1 && vols.length === 1 ? (x => x === s.v[0] ? vols[0] : x) : (x => x);
+    T.v = [...new Set(T.v.concat(vols))].sort((a, b) => a - b);
+    ['r','want','sell'].forEach(f => { if (s[f] && s[f].length) T[f] = [...new Set((T[f] || []).concat(s[f].map(one)))].sort((a, b) => a - b); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
+    ['st','rv','loc','cond'].forEach(f => { if (s[f] != null && T[f] == null) T[f] = s[f]; }); if (note) T.fxNote = { t: note + ' (was: ' + s.n + ')', at: dayKey() };
+    delete shelf.series[k]; save(); renderAll(); fixHTML(); toast(`Moved to ${T.n}, Vol ${compactVols(vols)}`, () => { shelf.series = prev; save(); renderAll(); fixHTML(); }); return; }
+  if (g.dataset.fixno){ s.fxNo = 1; if (note) s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); toast('Okay, we’ll leave that one as it is.' + (note ? who : '')); return; }
+  if (g.dataset.fixnote){ if (!note) return toast('Type a note first'); s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); toast('Note saved. The shop sees it the next time they check.' + who); } });
 function renderAll(){ renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
 $('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; if (t.dataset.b === 'secret'){ openSheet(`<h2>🔒 Secret achievements</h2><p>${BADGES.filter(b => b[4] && b[2] < b[3]).length} achievements are hidden until you earn them. Keep collecting, reading, reviewing and lending to discover them.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); return; } const [name, how, have, need] = BADGES[+t.dataset.b];
   current = null;
@@ -1273,7 +1301,7 @@ function applySnap(){ if (!SNAP) return; let miss = []; Object.keys(shelf.series
     live.set(k, { at: Date.now(), v2: 1, items, total: e.t || 0, snap: SNAP.at });
     const s = shelf.series[k]; if (e.m && !s.m) s.m = { a: e.m.aud || '', g: e.m.gen ? String(e.m.gen).split(/,\s*/).filter(Boolean) : [], au: e.m.au || '', p: e.m.pub || '' };
     if (!s.c){ const own = new Set(ints(s)); const it = items.find(p => p.img && own.has(p.vol)) || items.find(p => p.img); if (it) s.c = it.img; } });
-  renderAll(); renderFinds(); if (current) renderSeries(current); if (typeof miss !== 'undefined' && miss.length) olCovers(miss); }
+  renderAll(); renderFinds(); try { fixBadge(); } catch(e){} if (current) renderSeries(current); if (typeof miss !== 'undefined' && miss.length) olCovers(miss); }
 // books the shop doesn't carry: borrow an English cover from Open Library (a few at a time, remembered on the shelf)
 let olBusy = false;
 async function olCovers(keys){ if (olBusy || window.claude) return; olBusy = true; let n = 0;
@@ -2070,6 +2098,7 @@ function photoMailto(){ const em = acct && acct.email || ''; const subj = 'Colle
 function openAcct(focus){ current = null; openSheet(`<h2>${ACCT.client && !window.claude ? 'Account & backup' : 'Backup'}</h2><p style="margin:0 0 10px"><button class="btn sm" data-feedback>💬 Send feedback or report a bug</button></p><div id="acctSlot"></div><p style="margin:10px 0 4px;font-size:14px"><a class="helpLink" href="help.html" target="_top" style="font-weight:600">❓ How to use the app</a> &nbsp;·&nbsp; <a href="https://themagesemporium.com" target="_top" style="font-weight:600">🛍️ Back to the shop</a> &nbsp;·&nbsp; <a class="privLink" href="privacy.html" target="_top" style="font-weight:600">🔒 Privacy</a></p><div class="row2" style="margin-top:6px"><button class="btn ghost" data-close>Close</button></div>`);
   if (window.claude){ document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium'); document.querySelectorAll('.privLink').forEach(a => a.href = 'https://app.themagesemporium.com/privacy.html'); }
   const slot = $('#acctSlot'); renderAcct(); slot.appendChild($('#acctBox')); slot.appendChild($('#ioBox')); slot.appendChild($('#photoBox')); $('#photoMail').href = photoMailto();
+  try { fixHTML(); } catch(e){}
   if (focus === 'io') setTimeout(() => $('#ioBox').scrollIntoView({ block: 'start', behavior: 'smooth' }), 50); }
 document.addEventListener('click', e => { const t = e.target.closest('[data-achtog]'); if (t){ ls.set('mme-achopen', !ls.get('mme-achopen')); renderStats(); } const m = e.target.closest('#dupBox [data-merge]'); if (m) mergeSeries(m.dataset.merge.split('|')); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-openacct]'); if (b) openAcct(b.dataset.openacct); });
