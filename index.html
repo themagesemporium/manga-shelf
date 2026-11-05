@@ -794,7 +794,7 @@ function renderReadTab(){
   const goal = shelf.goal && shelf.goal[yr] ? shelf.goal[yr] : 0; const gp = goal ? Math.min(100, Math.round(year/goal*100)) : 0;
   const fact = (b, t) => `<div class="fact"><b>${b}</b><small>${t}</small></div>`;
   const y = calM.getFullYear(), m = calM.getMonth(); const first = new Date(y, m, 1).getDay(); const days = new Date(y, m+1, 0).getDate();
-  const mine = myPreorders(); if (!preorders) loadPreorders(); const arr = arrivals(); if (!evAt) loadEvents(); const evs = (shopEvents || []).filter(e => e.e >= dayKey()); const cx = arr.concat(evDays(evs));
+  const mine = myPreorders(); if (!preorders) loadPreorders(); const arr = arrivals(); if (!evAt) loadEvents(); const evs = (shopEvents || []).filter(e => e.e >= dayKey()); const cx = arr.concat(evDays(evs), saleDays(y, m));
   let cells = ['S','M','T','W','T','F','S'].map(d => `<span class="dow">${d}</span>`).join('');
   for (let i=0;i<first;i++) cells += '<span></span>';
   for (let d=1; d<=days; d++){ const k = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'); const n = L[k] || 0; const today = k === dayKey();
@@ -2148,6 +2148,10 @@ function parseEvents(html){ const out = [];
 async function loadEvents(){ evAt = Date.now(); try { const j = await sfq('{page(handle:"upcoming-events"){body}}'); if (j.data && j.data.page){ shopEvents = parseEvents(j.data.page.body); ls.set('mme-events', shopEvents); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); } } catch(e){} }
 function evRange(e){ const f = (k, o) => new Date(k + 'T12:00:00').toLocaleDateString(undefined, o); if (e.s === e.e) return f(e.s, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   return e.s.slice(0, 7) === e.e.slice(0, 7) ? `${f(e.s, { month: 'short', day: 'numeric' })}–${+e.e.slice(8)}, ${e.e.slice(0, 4)}` : `${f(e.s, { month: 'short', day: 'numeric' })} – ${f(e.e, { month: 'short', day: 'numeric', year: 'numeric' })}`; }
+function saleDays(y, m){ const out = [], mk = dayKey(new Date(y, m, 1));
+  out.push({ d: mk, ic: '🏷️', t: 'Discount day', sub: 'New price drops go live on the 1st of every month' });
+  ((SNAP && SNAP.sales) || []).forEach(([t, s, e]) => { for (let k = s, i = 0; k <= e && i < 40; k = addDays(k, 1), i++) out.push({ d: k, ic: '🏷️', t, sub: 'Sale at The Mage’s Emporium' + (s === e ? '' : ' · through ' + new Date(e + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })) }); });
+  return out; }
 function evDays(evs){ const out = []; evs.forEach(e => { for (let k = e.s, i = 0; k <= e.e && i < 10; k = addDays(k, 1), i++) out.push({ d: k, ic: '🎪', t: e.n + (e.pend ? ' (pending)' : ''), sub: 'Convention' + (e.p ? ' · ' + e.p : '') + ' · come see our booth!' }); }); return out; }
 /* ---------- orders on the way + mystery boxes ----------
    ships: the customer's recent orders with an estimated arrival day (from the shipment date, or the order date if not shipped yet).
