@@ -1148,6 +1148,7 @@ function setVols(key, vols, name, extra){
   const prev = shelf.series[key] ? JSON.parse(JSON.stringify(shelf.series[key])) : null;
   if (!vols.length){ delete shelf.series[key]; }
   else shelf.series[key] = Object.assign({}, prev || {}, extra || {}, { n: (prev && prev.n) || name, v: [...new Set(vols)].sort((a,b)=>a-b), t: Date.now() });
+  try { const had = new Set(prev ? prev.v || [] : []), add = vols.filter(v => !had.has(v)); if (add.length) feedNote(key, shelf.series[key].n, add); } catch(e){}
   save();
   return () => { if (prev) shelf.series[key] = prev; else delete shelf.series[key]; save(); };
 }
@@ -1888,7 +1889,7 @@ function applyStoreWish(){ if (!storeWish || !Array.isArray(storeWish.items)) re
     const k = shelf.series[k0] ? k0 : Object.keys(shelf.series).find(x => normName(shelf.series[x].n) === normName(it.s) && /-ln$/.test(x) === ln); seen.delete(id); if (!k) return; const s = shelf.series[k];
     if ((s.want || []).includes(v)){ s.want = s.want.filter(x => x !== v); if (!s.want.length){ delete s.want; if (!(s.v || []).length && !(s.sell || []).length) delete shelf.series[k]; } r++; } });
   ls.set('mme-swseen', [...seen]); if (n || r){ save(); toast([n ? `Added ${n} ${n === 1 ? 'book' : 'books'} from your website wishlist` : '', r ? `removed ${r} you took off it there` : ''].filter(Boolean).join(', ') + ' (♥ Wishlist)'); } }
-function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null }; }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null, feed: shelf.feed || null }; }
 // copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
 function siteMirror(){ const owned = {}; let tb = 0;
   Object.entries(shelf.series).forEach(([k, s]) => { const hit = SNAP ? snapEntry(k) : null; const key = hit ? hit[0] : k; const vs = ints(s);
@@ -1909,7 +1910,7 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
   Object.entries(b.series || {}).forEach(([k, S]) => { const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
@@ -2154,7 +2155,7 @@ function avHTML(a, name, lg){ a = avOk(a); const cls = 'av' + (lg ? ' lg' : '');
   if (a && a.e) return `<span class="${cls}">${a.e}</span>`;
   return `<span class="${cls} avl">${esc((String(name || '?').trim().charAt(0) || '?').toUpperCase())}</span>`; }
 function avRowHTML(){ const nm = (shelf.card && shelf.card.name) || (acct && acct.name) || 'You';
-  return `<div class="st-sec" style="display:flex;align-items:center;gap:12px;padding:10px 14px">${avHTML(myAv(), nm, true)}<div style="flex:1;min-width:0"><b>${esc(nm)}</b><div class="sub" style="margin:0">Your avatar, shown to friends</div></div><button class="btn ghost" data-avpick style="width:auto;margin:0">Change</button></div>`; }
+  return `<div class="st-sec" style="display:flex;align-items:center;gap:12px;padding:10px 14px">${avHTML(myAv(), nm, true)}<div style="flex:1;min-width:0"><b>${esc(nm)}</b><div class="sub" style="margin:0">Your avatar, shown to friends</div></div><button class="btn ghost" data-avpick style="width:auto;margin:0">Change</button></div><label class="sub" style="display:flex;gap:8px;align-items:center;margin:-4px 0 12px 14px"><input type="checkbox" data-feedtog${feedOn() ? ' checked' : ''}> Share my activity feed (books I add and read) with friends</label>`; }
 function avCovers(q){ q = String(q || '').toLowerCase(); const out = [];
   Object.entries(shelf.series || {}).forEach(([k, s]) => { if (q && !String(s.n).toLowerCase().includes(q)) return; const se = snapEntry(k); if (!se) return; const r = (se[1].i || []).find(x => x[4]); if (r) out.push([s.n, snapImg(r[4])]); });
   return out.sort((a, b) => a[0].localeCompare(b[0])).slice(0, 30); }
@@ -2168,14 +2169,38 @@ function avPick(){ const cur = myAv(), pre = AV_PRESET[myCid()];
     <div class="row2" style="margin-top:12px">${cur ? '<button class="btn ghost" data-avclear>Use my initial</button>' : ''}<button class="btn ghost" data-close>Close</button></div>`);
   let tm; $('#avq').oninput = () => { clearTimeout(tm); tm = setTimeout(() => { $('#avcov').innerHTML = grid(covers($('#avq').value.trim())); }, 250); }; }
 function avSet(a){ shelf.card = Object.assign({}, shelf.card, { av: a }); save(); closeSheet(); renderLists(); try { renderAcct(); } catch(e){} if (typeof livePush === 'function') livePush(true); toast('Avatar updated'); }
+document.addEventListener('change', e => { if (!e.target.matches('[data-feedtog]')) return; shelf.card = Object.assign({}, shelf.card, { noFeed: !e.target.checked, feedAck: (shelf.card && shelf.card.feedAck) || Date.now() }); save(); if (typeof livePush === 'function') livePush(true); toast(e.target.checked ? 'Friends will see your activity feed' : 'Activity feed turned off. Friends won’t see it.'); });
 document.addEventListener('click', e => { const t = e.target.closest('[data-avpick],[data-avu],[data-ave],[data-avclear]'); if (!t) return;
   if (t.matches('[data-avpick]')){ avPick(); return; }
   if (t.dataset.avu){ avSet({ u: t.dataset.avu }); return; } if (t.dataset.ave){ avSet({ e: t.dataset.ave }); return; }
   if (t.matches('[data-avclear]')) avSet({ none: 1 }); });
+/* ---------- friend activity feed: books added and read lately, shared with friends unless turned off ---------- */
+function feedNote(key, name, vols){ const F = shelf.feed || (shelf.feed = []); const now = Date.now(); const last = F[F.length - 1];
+  if (last && last.k === key && now - last.t < 6e5) last.v = [...new Set(last.v.concat(vols))].sort((a, b) => a - b); else F.push({ t: now, k: key, n: name, v: vols.slice(0, 50) });
+  while (F.length > 40) F.shift(); }
+function feedOn(){ return !(shelf.card && shelf.card.noFeed); }
+function feedPack(){ if (!feedOn()) return null; const out = [], cut = Date.now() - 14 * 864e5;
+  (shelf.feed || []).forEach(e => { if (e.t >= cut) out.push({ t: e.t, a: 'add', n: e.n, v: e.v }); });
+  const R = shelf.rl || {}; Object.keys(R).forEach(d => { const t = new Date(d + 'T12:00:00').getTime(); if (t < cut) return; const by = {};
+    R[d].forEach(x => { const i = x.lastIndexOf('|'), k = x.slice(0, i), v = +x.slice(i + 1); const s = shelf.series[k]; (by[k] = by[k] || { n: s ? s.n : k, v: [] }).v.push(v); });
+    Object.values(by).forEach(o => out.push({ t, a: 'read', n: o.n, v: o.v.sort((a, b) => a - b) })); });
+  return out.sort((a, b) => b.t - a.t).slice(0, 12); }
+function feedText(e){ const vv = e.v && e.v.length ? (e.v.length > 1 ? 'Vol ' + compactVols(e.v) : 'Vol ' + e.v[0]) : '';
+  return (e.a === 'read' ? '📖 read ' : '📚 added ') + esc(e.n) + (vv ? ' ' + vv : ''); }
+function feedAgo(t){ const d = Math.floor((Date.now() - t) / 864e5); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'; }
+function feedAllHTML(F){ const rows = []; Object.values(F).forEach(f => (Array.isArray(f.feed) ? f.feed : []).forEach(e => { if (e && e.n && e.t) rows.push([f, e]); }));
+  if (!rows.length) return ''; rows.sort((a, b) => b[1].t - a[1].t);
+  return `<div class="st-sec"><h3 style="margin:0 0 6px">✨ Friends’ activity</h3>${rows.slice(0, 8).map(([f, e]) => `<div class="srow" style="cursor:default;align-items:center;gap:10px">${avHTML(f.av, f.name)}<span style="flex:1;min-width:0"><b>${esc(f.name)}</b> ${feedText(e)}</span><small class="sub" style="white-space:nowrap">${feedAgo(e.t)}</small></div>`).join('')}</div>`; }
+function shareGate(go){ if (shelf.card && shelf.card.feedAck){ go(); return; }
+  openSheet(`<h2>👯 What friends will see</h2><p>Friends you share with can see your shelf, your wishlist and your monthly bingo.</p>
+    <p>They also see a short <b>activity feed</b> that updates on its own: books you add and volumes you mark as read in the last two weeks, like “📖 read Given Vol 3”.</p>
+    <label style="display:flex;gap:10px;align-items:center;margin:12px 0"><input type="checkbox" id="feedChk" checked> Share my activity feed with friends</label>
+    <p class="sub">You can change this anytime at the top of the Friends page.</p><div class="row2"><button class="btn" id="feedGo">Continue</button><button class="btn ghost" data-close>Cancel</button></div>`);
+  $('#feedGo').onclick = () => { shelf.card = Object.assign({}, shelf.card, { feedAck: Date.now(), noFeed: !$('#feedChk').checked }); save(); closeSheet(); go(); }; }
 function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
   let act = null; try { const c = monthChal(), st = streaks(); act = { mk: c.mk, rd: c.readsN, cd: c.doneN, ct: c.list.length, bm: c.marks.map(x => x ? 1 : 0).join(''), bl: c.bingoLines, cur: st.cur, best: st.best, pg: estPages(c.mk) }; } catch(e){}
-  return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out, act, av: myAv() || (shelf.card && shelf.card.av && shelf.card.av.none ? { none: 1 } : null) }; }
-async function friendShare(){ track('friend-share'); const pk = friendPack(); let nm = pk.name;
+  return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out, act, feed: feedPack(), av: myAv() || (shelf.card && shelf.card.av && shelf.card.av.none ? { none: 1 } : null) }; }
+async function friendShare(){ if (!(shelf.card && shelf.card.feedAck)){ shareGate(friendShare); return; } track('friend-share'); const pk = friendPack(); let nm = pk.name;
   if (!nm){ nm = prompt('Your first name (so your friend knows whose shelf this is):', '') || ''; nm = nm.trim(); if (nm){ shelf.card = Object.assign({}, shelf.card, { name: nm }); save(); pk.name = nm; } }
   const json = JSON.stringify(pk); const b = (await gzB64(json)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); const url = (window.claude ? 'https://app.themagesemporium.com/' : location.origin + location.pathname.replace(/[^/]*$/, '')) + '#f=' + b;
   const text = `${nm ? nm + '’s' : 'My'} manga shelf on My Manga Emporium. Open it to compare our collections!`;
@@ -2185,7 +2210,7 @@ async function friendShare(){ track('friend-share'); const pk = friendPack(); le
   if (navigator.canShare && navigator.canShare({ files: [file] })){ try { await navigator.share({ files: [file], title: 'My manga shelf', text: text + ' (Friends → Add a friend’s file)' }); return; } catch(e){ if (e.name === 'AbortError') return; } }
   const u = URL.createObjectURL(file), a = document.createElement('a'); a.href = u; a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); toast('Your shelf file is saved. Send it to your friend.'); }
 function friendAdd(pk){ if (!pk || pk.app !== 'mme-friend' || !pk.s) { toast('That isn’t a friend shelf from this app'); return; } shelf.friends = shelf.friends || {};
-  const id = (pk.name || 'friend').toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'friend'; shelf.friends[id] = { name: pk.name || 'Friend', at: pk.at || Date.now(), s: pk.s, av: avOk(pk.av) }; friendSel = id; save();
+  const id = (pk.name || 'friend').toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'friend'; shelf.friends[id] = { name: pk.name || 'Friend', at: pk.at || Date.now(), s: pk.s, av: avOk(pk.av), feed: Array.isArray(pk.feed) ? pk.feed.slice(0, 12) : null }; friendSel = id; save();
   toast(`👯 Added ${pk.name || 'your friend'}’s shelf (${Object.keys(pk.s).length} series)`); listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); }
 async function friendFromHash(){ const m = location.hash.match(/#f=([A-Za-z0-9_-]+)/); if (!m) return; history.replaceState(null, '', location.pathname);
   try { let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '='; const pk = JSON.parse(await unGzB64(b)); setTimeout(() => { const nm = pk.name || 'your friend'; openSheet(`<h2>👯 Would you like to view ${esc(nm)}’s collection?</h2><p>${esc(nm)} sent you a copy of their shelf (${Object.keys(pk.s || {}).length} series). It’ll show up in your Friends so you can compare.</p><div class="row2"><button class="btn" id="invYes">Yes, add it</button><button class="btn ghost" id="invNo">No thanks</button></div>`); $('#invYes').onclick = () => { closeSheet(); friendAdd(pk); }; $('#invNo').onclick = () => { closeSheet(); toast('Invitation declined'); }; }, 600); } catch(e){ toast('That friend link didn’t open. Ask them to send it again.'); } }
@@ -2197,7 +2222,8 @@ function holdsHTML(){ const it = holds.items; const by = {}; it.forEach(x => { (
     ${Object.entries(by).sort((a, b) => a[0].localeCompare(b[0])).map(([n, a]) => `<div class="srow" style="cursor:default"><span>${esc(n)}<small>${a.sort((x, y) => (x.v || 0) - (y.v || 0)).map(x => (x.v != null ? 'Vol ' + x.v : esc(x.t || '')) + (x.p ? ' · $' + (+x.p).toFixed(2) : '')).join(', ')}</small></span><span class="r">${a.length}</span></div>`).join('')}
     ${tot ? `<p style="margin:8px 0 0"><b>Total: $${tot.toFixed(2)}</b></p>` : ''}${holds.note ? `<p class="sub" style="margin:6px 0 0">${esc(holds.note)}</p>` : ''}
     <p class="sub" style="margin:8px 0 0">Questions about your holds? <a href="#" data-feedback>Message us</a>.</p></div>`; }
-function friendsHTML(){ return avRowHTML() + friendsHTML0(); }
+let feedAsked = false;
+function friendsHTML(){ if (!feedAsked && !(shelf.card && shelf.card.feedAck) && ((shelf.friends && Object.keys(shelf.friends).length) || (liveF && liveF.me && (liveF.me.live || (liveF.me.viewers || []).length)))){ feedAsked = true; setTimeout(() => shareGate(() => {}), 400); } return avRowHTML() + friendsHTML0(); }
 function friendsHTML0(){ const F = Object.assign({}, shelf.friends || {}); const ids = Object.keys(F);
   let h = '', setup = `<div class="st-sec"><h3>📁 Share with a file</h3><p class="sub" style="margin:0 0 8px">Swap shelves with a friend to see what you both have, what you can borrow from each other, and gift ideas from their wishlist.</p>
     <div class="row2" style="flex-wrap:wrap"><button class="btn sm" data-fshare>📤 Send my shelf to a friend</button><label class="btn ghost sm" style="cursor:pointer">📥 Add a friend’s file<input type="file" id="fFile" accept=".json,application/json" hidden></label></div>
@@ -2216,16 +2242,18 @@ function friendsHTML0(){ const F = Object.assign({}, shelf.friends || {}); const
            
            <p style="margin:10px 0 4px"><b>Can see your shelf</b> (${ok.length})</p>${ok.length ? ok.map(v => `<div class="srow" style="cursor:default"><span>${esc(v.name)}</span><span class="r"><button class="btn ghost sm" data-liverev="${esc(v.cid)}">Revoke</button></span></div>`).join('') : '<p class="sub" style="margin:0">Nobody yet.</p>'}`
         : `<p class="sub" style="margin:0 0 8px">Let friends see your shelf as it changes. They ask, you approve, and you can revoke anytime.</p><button class="btn sm" data-liveon>🔴 Share my shelf live</button>`) + `<p class="sub" style="margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--surface-2)">🔒 <b>Private by default.</b> Only people you approve on this list can see your shelf. Nobody else can, not even with your link, until you tap Approve. (The Mage’s Emporium can always see shelves, to avoid sending you duplicates.)</p></div>`;
-      liveF.following.forEach(f => { if (f.st === 'ok' && f.pk){ const nm = f.pk.name || f.name; Object.keys(F).forEach(id => { if (!F[id].live && normName(F[id].name) === normName(nm)){ delete F[id]; if (shelf.friends && shelf.friends[id]){ delete shelf.friends[id]; setTimeout(save, 0); } } }); F['live:' + f.cid] = { name: nm, at: f.pk.at || Date.now(), s: f.pk.s, live: 1, cid: f.cid, act: f.pk.act || null, av: avFor(f.pk.av, f.cid) }; } });
+      liveF.following.forEach(f => { if (f.st === 'ok' && f.pk){ const nm = f.pk.name || f.name; Object.keys(F).forEach(id => { if (!F[id].live && normName(F[id].name) === normName(nm)){ delete F[id]; if (shelf.friends && shelf.friends[id]){ delete shelf.friends[id]; setTimeout(save, 0); } } }); F['live:' + f.cid] = { name: nm, at: f.pk.at || Date.now(), s: f.pk.s, live: 1, cid: f.cid, act: f.pk.act || null, av: avFor(f.pk.av, f.cid), feed: Array.isArray(f.pk.feed) ? f.pk.feed.slice(0, 12) : null }; } });
       const waiting = liveF.following.filter(f => f.st !== 'ok' || !f.pk);
       if (waiting.length) h += `<div class="st-sec">${waiting.map(f => `<div class="srow" style="cursor:default"><span>${esc(f.name)}<small>${f.st === 'ok' ? 'Approved! Their shelf shows up here once they open the app' : f.st === 'ask' ? (String(f.cid).startsWith('mail:') ? 'Request sent. Waiting for them to log in and approve' : 'Waiting for them to approve your request') : 'Stopped sharing with you'}</small></span><span class="r"><button class="btn ghost sm" data-liveunf="${esc(f.cid)}">${f.st === 'ok' ? 'Remove' : f.st === 'ask' ? 'Cancel' : 'Remove'}</button></span></div>`).join('')}</div>`; } }
   try { const A = shelf.ach || (shelf.ach = {}); const fn = Object.keys(F).length; const fv = liveF && liveF.me && liveF.me.viewers ? liveF.me.viewers.filter(v => v.st === 'ok').length : 0; if (fn > (A.frn || 0) || fv > (A.frv || 0)){ A.frn = Math.max(A.frn || 0, fn); A.frv = Math.max(A.frv || 0, fv); setTimeout(save, 0); } } catch(e){}
   const addBox = open => setup ? `<details class="st-sec addf"${open ? ' open' : ''}><summary>➕ Add friends &amp; sharing settings</summary>${setup}</details>` : '';
   const ids2 = Object.keys(F); if (!ids2.length) return h + addBox(true); if (!friendSel || !F[friendSel]) friendSel = ids2[0];
+  h += feedAllHTML(F);
   h += friendBoardHTML(F);
   h += `<div class="seg2" style="margin:0 0 10px;flex-wrap:wrap">${ids2.map(id => `<button data-fsel="${esc(id)}" aria-pressed="${id === friendSel}">${avHTML(F[id].av, F[id].name)} ${F[id].live ? '🔴 ' : ''}${esc(F[id].name)}</button>`).join('')}</div>`;
   const f = F[friendSel]; const both = [], borrow = [], lend = [], gifts = [], theirsOnly = [];
   h += friendBingoHTML(f);
+  if (Array.isArray(f.feed) && f.feed.length) h += `<div class="st-sec"><h3 style="margin:0 0 6px">✨ ${esc(f.name)}’s recent activity</h3>${f.feed.slice(0, 8).map(e => `<div class="srow" style="cursor:default"><span style="flex:1">${feedText(e)}</span><small class="sub">${feedAgo(e.t)}</small></div>`).join('')}</div>`;
   Object.entries(f.s).forEach(([fk, o]) => { const mk = friendKey(fk, o); const fv = new Set(o.v || []);
     if (mk){ const i = info(mk); const mine = new Set(i.own); const common = (o.v || []).filter(v => mine.has(v)); if (common.length) both.push([o.n, common.length]);
       const canB = i.gaps.concat(i.next ? [i.next] : []).filter(v => fv.has(v) && !mine.has(v)); if (canB.length) borrow.push([o.n, canB]);
@@ -2253,6 +2281,7 @@ document.addEventListener('click', async e => { const t = e.target.closest('[dat
     try { await fapi('/ask', { email: mail }); track('friend-ask'); toast('Request saved! Now send them a quick email.'); const me = (acct && acct.name) || '';
       location.href = 'mailto:' + encodeURIComponent(mail) + '?subject=' + encodeURIComponent('Can I see your manga shelf? 📚') + '&body=' + encodeURIComponent('Hi! I’d love to see your manga collection on My Manga Emporium.\n\n1. Open https://app.themagesemporium.com\n2. Log in with this email (' + mail + ')\n3. Tap 👯 Friends and approve my request\n\nYou can stop sharing anytime.' + (me ? '\n\n' + me : ''));
       liveLoad(); } catch(err){ toast(err.message); } return; }
+  if (!(shelf.card && shelf.card.feedAck) && (t.dataset.liveon !== undefined || t.dataset.liveok || (t.dataset.liveans && /\|1$/.test(t.dataset.liveans)))){ shareGate(() => t.click()); return; }
   if (t.dataset.liveans){ const [cid, yes] = t.dataset.liveans.split('|'); try { await fapi('/answer', { cid, yes: yes === '1' }); toast(yes === '1' ? 'Approved! They can see your shelf now 👯' : 'Request declined'); if (yes === '1') await liveSendShelf(); await liveLoad(); } catch(err){ toast(err.message); } return; }
   try { if (t.dataset.liveon !== undefined){ await fapi('/on', {}); await liveLoad(); await livePush(true); toast('🔴 Live sharing is on. Send your invite link!'); }
     else if (t.dataset.liveoff !== undefined){ if (!confirm('Stop sharing your shelf with everyone? Friends will no longer see it, and your invite link stops working.')) return; await fapi('/off', {}); toast('Live sharing is off'); }
