@@ -1158,8 +1158,11 @@ document.addEventListener('click', e => { const g = e.target.closest('[data-fixg
   if (g.dataset.fixnote){ if (!note) return toast('Type a note first'); s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); if (current === k) renderSeries(k); toast('Note saved. The shop sees it the next time they check.' + who); } });
 /* ---------- messages: fixes to check, notes and feedback to the shop, replies from the shop (custom.app_msgs) ---------- */
 let shopMsgs = ls.get('mme-msgs') || [];
+/* app icon badge (home-screen app on iPhone 16.4+, Android, desktop): unread shop messages + books to check. Notifications add to it while the app is closed; opening the app resets it to this count. */
+function appBadge(n){ try { if (!navigator.setAppBadge) return; (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {}); if (window.caches) caches.open('mme-badge').then(c => c.delete('/n')).catch(() => {}); } catch(e){} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') try { msgUI(); } catch(e){} });
 function msgUnread(){ const seen = shelf.msgSeen || 0; return (shopMsgs || []).filter(m => (m.at || 0) > seen).length; }
-function msgUI(){ let nFix = 0; try { nFix = fixMap().size; } catch(e){} const nNew = msgUnread(); const dot = $('#msgDot'); if (dot){ dot.hidden = !(nFix + nNew); dot.textContent = nFix + nNew; }
+function msgUI(){ let nFix = 0; try { nFix = fixMap().size; } catch(e){} const nNew = msgUnread(); appBadge(nFix + nNew); const dot = $('#msgDot'); if (dot){ dot.hidden = !(nFix + nNew); dot.textContent = nFix + nNew; }
   const bar = $('#msgBar'); if (bar){ const parts = []; if (nNew) parts.push(`💬 ${nNew} new ${nNew === 1 ? 'message' : 'messages'} from the shop`); if (nFix) parts.push(`⚠️ ${nFix} ${nFix === 1 ? 'book needs' : 'books need'} a quick check`);
     bar.innerHTML = parts.length ? `<button data-openmsg>${parts.join(' · ')} <b style="float:right">Open ›</b></button>` : ''; } }
 function openMsgs(){ current = null; FIXC = null; const L = [...fixMap().values()];
