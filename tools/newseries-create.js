@@ -56,7 +56,7 @@ window._ncCreate = async (jobs, rows) => {
       const mf = [['series', 'single_line_text_field', name], ['volume', 'number_decimal', vol + '.0'], ['genre', 'single_line_text_field', genre], ['genres', 'list.single_line_text_field', JSON.stringify(genre === 'Romance' ? ['Romance'] : romance ? ['Romance', genre] : [genre])],
         ['age_rating', 'single_line_text_field', agr], ['series_volumes', 'number_integer', String(vols)], ['series_status', 'single_line_text_field', oneShot ? 'One-shot' : 'Ongoing'], ['has_anime', 'boolean', 'false'],
         ['language', 'single_line_text_field', 'English'], ['condition', 'single_line_text_field', 'Used'], ['size', 'single_line_text_field', 'Standard'], ['format', 'single_line_text_field', kind], ['color_type', 'single_line_text_field', 'Black & White']]
-        .concat(author ? [['author', 'single_line_text_field', author]] : []).concat(yr ? [['original_publication_year', 'single_line_text_field', yr]] : [])
+        .concat(author ? [['author', 'single_line_text_field', author]] : []).concat(yr ? [['original_publication_year', 'number_integer', String(+yr)]] : [])
         .concat(spice ? [['spice_level', 'single_line_text_field', spice]] : []).concat(notes ? [['content_notes', 'list.single_line_text_field', JSON.stringify(notes)]] : [])
         .map(([key, type, value]) => ({ namespace: 'custom', key, type, value }))
         .concat([{ namespace: 'global', key: 'title_tag', type: 'single_line_text_field', value: seoT }, { namespace: 'global', key: 'description_tag', type: 'single_line_text_field', value: seoD },

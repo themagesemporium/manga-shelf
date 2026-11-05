@@ -27,7 +27,7 @@
     for (const v of vols){
       let r = []; try { r = await srch(ser + (ln ? ' light novel' : '') + (vols.length > 1 || v > 1 ? ' vol ' + v : '')); } catch (e) { continue; }
       const re = new RegExp('(vol\\.?|volume|\\b)\\s*0?' + v + '(?![\\d\\-–])', 'i');
-      const c = r.filter(x => { const t = norm(x.t); if (!kw.every(w => t.split(' ').includes(w))) return false;
+      const ns = norm(ser); const c = r.filter(x => { const t = norm(x.t); if (!(t.includes(ns) || (kw.length >= 3 && kw.every(w => t.split(' ').includes(w))))) return false;
         if (!/paperback|hardcover/i.test(x.f)) return false;
         if (/german|french|italian|spanish|portuguese|japanese edition|box set|\b\d+\s*-\s*\d+\b|coloring|calendar|art ?book|guide/i.test(x.t)) return false;
         const hasNum = /(vol\.?|volume|book|#)\s*\d+|,\s*\d+\s*(\(|$)|\s\d+\s*(:|\(|$)/i.test(x.t);
