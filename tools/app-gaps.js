@@ -68,3 +68,15 @@ window._agMarkSeen = async (keys) => {
   const r = await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: 'gid://shopify/Shop/19355029', namespace: 'mme_app', key: 'gaps_seen', type: 'json', value: JSON.stringify([...seen]) }] });
   return seen.size + ' seen ' + JSON.stringify(r.data && r.data.metafieldsSet.userErrors);
 };
+// Turn volume gaps into back-fill input: sets window._NEWSNAP (= _SN), window._HB (rows for backfill-create.js _prep/_create)
+// and returns the _B1 rows to paste into the Amazon tab for amazon-finder.js. maxVols caps how many volumes this run handles.
+window._agToHB = (maxVols = 20) => {
+  window._NEWSNAP = window._NEWSNAP || _SN; const HB = window._HB = []; let n = 0, i = 0;
+  for (const [k, name, ln, vols] of _AGOUT.volGaps){
+    const e = _NEWSNAP.s[k]; const rows = (e && e.i || []).filter(r => r[6]); if (!rows.length) continue;
+    const take = vols.slice(0, Math.max(0, maxVols - n)); if (!take.length) break; n += take.length;
+    const tpl = rows.find(r => r[2] > 0) || rows[0];
+    HB.push([k, e.n, ln ? 1 : 0, rows.length, Math.max(e.t || 0, ...rows.map(r => r[0]), ...take), take, rows.filter(r => r[2] > 0).length, tpl[6], i++]);
+  }
+  return JSON.stringify(HB.map(h => [h[8], h[1], h[2], h[5]]));
+};
