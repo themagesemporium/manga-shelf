@@ -7,7 +7,9 @@
 //   unmatched: [[name, ln(0/1), users, [vols]], ...]  -> fix with an alias in the snapshot "al" map, or create the series
 //   volGaps:   [[snapKey, seriesName, ln, [vols], users], ...] -> back-fill those volumes (tools/backfill-create.js)
 //   notes:     [[customerId, seriesName, note, date, vols, key], ...] -> notes customers left from the app's "needs a volume number" list;
-//              mark handled with _agMarkSeen(["note|<customerId>|<key>|<date>"])
+//              plus messages sent from the app's Messages screen (key 'fb', name '(message)', date = timestamp);
+//              mark handled with _agMarkSeen(["note|<customerId>|<key>|<date>"] or ["fb|<customerId>|<timestamp>"])
+// Reply to a customer (shows in their app's Messages): _agReply('<customerId>', 'text')
 window._agRun = async (opt = {}) => {
   const AG = window._AG = { st: 'snap', shelves: 0, unmatched: 0, volGaps: 0, fin: false, err: [] };
   const SKIP = new Set(['99230547976']);
@@ -33,8 +35,9 @@ window._agRun = async (opt = {}) => {
       let b = ''; for (let i = 0; i < 8; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
       try {
         const sh = JSON.parse(await unGz(b)); AG.shelves++;
+        (sh.fb || []).forEach(m => { if (m && m.t && !seen.has('fb|' + cid + '|' + m.at)) notes.push([cid, '(message)', m.t, m.at, '', 'fb']); });
         Object.entries(sh.series || {}).forEach(([key, s]) => {
-          if (s.fxNote && s.fxNote.t && !seen.has('note|' + cid + '|' + key + '|' + s.fxNote.at)) notes.push([cid, s.n, s.fxNote.t, s.fxNote.at, (s.v || []).join(','), key]);
+                    if (s.fxNote && s.fxNote.t && !seen.has('note|' + cid + '|' + key + '|' + s.fxNote.at)) notes.push([cid, s.n, s.fxNote.t, s.fxNote.at, (s.v || []).join(','), key]);
           const ln = /-ln$/.test(key) || /light novel/i.test(s.n); const vols = [...new Set([...(s.v || []), ...(s.want || [])].map(x => Math.round(+x)).filter(x => x > 0))];
           const k = resolve(key, s.n, ln);
           if (!k){ const q = normName(s.n) + (ln ? '|ln' : ''); if (seen.has(q)) return; let e = un.get(q); if (!e){ e = { n: String(s.n).replace(/\s*\(light novel\)\s*/i, '').trim(), ln, who: new Set(), v: new Set(), q }; un.set(q, e); } e.who.add(cid); vols.forEach(x => e.v.add(x)); return; }
@@ -68,7 +71,7 @@ window._agMarkSeen = async (keys) => {
   const normName = n => String(n || '').toLowerCase().replace(/\((manga|english|paperback|light novel)\)/g, ' ').replace(/^(the|a|an)\s+/, '').replace(/[’']/g, '').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '');
   const r0 = await _api(`{shop{metafield(namespace:"mme_app",key:"gaps_seen"){value}}}`);
   const seen = new Set(JSON.parse((r0.data.shop.metafield && r0.data.shop.metafield.value) || '[]'));
-  (keys || [..._AGOUT.unmatched.map(u => normName(u[0]) + (u[1] ? '|ln' : '')), ..._AGOUT.volGaps.map(v => 'vol|' + v[0] + '|' + v[3].join(',')), ...(_AGOUT.notes || []).map(n => 'note|' + n[0] + '|' + n[5] + '|' + n[3])]).forEach(k => seen.add(k));
+  (keys || [..._AGOUT.unmatched.map(u => normName(u[0]) + (u[1] ? '|ln' : '')), ..._AGOUT.volGaps.map(v => 'vol|' + v[0] + '|' + v[3].join(',')), ...(_AGOUT.notes || []).map(n => n[5] === 'fb' ? 'fb|' + n[0] + '|' + n[3] : 'note|' + n[0] + '|' + n[5] + '|' + n[3])]).forEach(k => seen.add(k));
   const r = await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: 'gid://shopify/Shop/19355029', namespace: 'mme_app', key: 'gaps_seen', type: 'json', value: JSON.stringify([...seen]) }] });
   return seen.size + ' seen ' + JSON.stringify(r.data && r.data.metafieldsSet.userErrors);
 };
@@ -83,4 +86,11 @@ window._agToHB = (maxVols = 20) => {
     HB.push([k, e.n, ln ? 1 : 0, rows.length, Math.max(e.t || 0, ...rows.map(r => r[0]), ...take), take, rows.filter(r => r[2] > 0).length, tpl[6], i++]);
   }
   return JSON.stringify(HB.map(h => [h[8], h[1], h[2], h[5]]));
+};
+window._agReply = async (cid, text) => {
+  const id = 'gid://shopify/Customer/' + cid; const r0 = await _api(`{customer(id:"${id}"){metafield(namespace:"custom",key:"app_msgs"){value}}}`);
+  let L = []; try { L = JSON.parse(r0.data.customer.metafield.value) || []; } catch (e) {}
+  L.push({ t: String(text).slice(0, 1000), at: Date.now(), from: 'shop' }); L = L.slice(-50);
+  const r = await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: id, namespace: 'custom', key: 'app_msgs', type: 'json', value: JSON.stringify(L) }] });
+  return JSON.stringify(r.data && r.data.metafieldsSet.userErrors);
 };

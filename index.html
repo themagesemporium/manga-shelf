@@ -79,7 +79,12 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .brand{display:flex;align-items:center;gap:10px}
 .brand svg{flex:none}
 .brand h1{font-size:21px}
+.top{gap:6px}.top .iconbtn,.top .btn{flex:0 0 auto}.brand{min-width:0;flex:1 1 auto}.brand h1{overflow-wrap:anywhere}
+@media (max-width:420px){.brand h1{font-size:17px}.brand svg{width:28px;height:28px}.top .iconbtn{width:34px;height:34px}#acctHdr{padding-inline:8px}}
 .brand small{display:block;font:500 12px Figtree,sans-serif;color:var(--muted);letter-spacing:.02em}
+.mdot{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#d9417a;color:#fff;font:700 11px/18px system-ui;font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--surface)}
+#msgBar button{display:block;width:calc(100% - 32px);margin:8px 16px 0;text-align:left;border:1px solid var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--surface));color:var(--ink);border-radius:12px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+.msg{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:6px 0;max-width:88%}.msg.me{margin-left:auto;background:color-mix(in srgb,var(--accent) 10%,var(--surface))}.msg.shop{background:color-mix(in srgb,var(--gold) 12%,var(--surface))}.msg small{display:block;color:var(--muted);font-size:12px}
 .iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;width:38px;height:38px;display:grid;place-items:center}
 
 /* rank card */
@@ -328,11 +333,13 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="3" y="6" width="7" height="24" rx="1.5" fill="var(--accent)"/><rect x="11.5" y="4" width="7" height="26" rx="1.5" fill="var(--gold)"/><rect x="20" y="8" width="7" height="22" rx="1.5" fill="var(--accent)" opacity=".55" transform="rotate(8 23.5 19)"/><path d="M14.9 8.5l.7 1.6 1.7.2-1.3 1.1.4 1.7-1.5-.9-1.5.9.4-1.7-1.3-1.1 1.7-.2z" fill="#fff"/></svg>
       <div><h1>My Manga Emporium</h1><small id="sync">Loading your shelf…</small></div>
     </div>
-    <button class="btn sm hidden" id="acctHdr" style="margin-left:auto;margin-right:6px;white-space:nowrap">Log in</button>
+    <button class="iconbtn" id="msgBtn" aria-label="Messages and fixes" title="Messages and fixes" style="margin-left:auto;margin-right:6px;position:relative;font-size:17px">💬<i id="msgDot" class="mdot" hidden></i></button>
+    <button class="btn sm hidden" id="acctHdr" style="margin-right:6px;white-space:nowrap">Log in</button>
     <button class="btn sm gold hidden" id="cartHdr" style="margin-right:6px;white-space:nowrap">🛒 0</button>
     <a class="iconbtn" id="shopLink" href="https://themagesemporium.com" target="_top" aria-label="Back to The Mage’s Emporium shop" title="Back to the shop" style="margin-right:6px;text-decoration:none;font-size:18px;display:grid;place-items:center">🛍️</a>
     <button class="iconbtn" id="theme" aria-label="Change colors"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1.1 0 1.6-.9 1.2-1.8-.5-1.1.2-2.2 1.4-2.2H17a4 4 0 004-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg></button>
   </header>
+  <div id="msgBar"></div>
 
   <section class="rank" id="rank" aria-live="polite">
     <div class="lbl">Collector rank</div>
@@ -1114,7 +1121,7 @@ function editDist(a, b, max){ let prev = Array.from({ length: b.length + 1 }, (_
 let FIXC = null; function fixMap(){ if (!FIXC) FIXC = new Map(fixList().map(x => [x.k, x])); return FIXC; }
 function fixRowHTML(x){ const S = shelf.series[x.k]; const what = !x.cand ? 'Which volume(s) do you have? Check the spine or cover.' : x.kind === 'spell' ? `Did you mean <b>${esc(x.sname)}</b>?${x.have.length ? ` The shop has Vol ${compactVols(x.have)}.` : ''}` : `Shop series: ${esc(x.sname)}${x.have.length ? ` · Vol ${compactVols(x.have)}` : ''}`;
   return `<div class="fixrow" data-fk="${esc(x.k)}"><div><b>${esc(x.n)}</b><small>${x.kind === 'spell' ? 'Spelling: ' : x.kind === 'name' ? 'Name: is this the shop’s series? ' : 'Volume number missing. '}${what}</small></div><div class="fixin"><input class="fxv" inputmode="numeric" value="${esc(x.vols.join(', '))}" placeholder="Volume(s), e.g. 2" aria-label="Volume numbers for ${esc(x.n)}"><button class="btn sm" data-fixgo="${esc(x.cand || '-')}">${x.kind === 'spell' ? 'Use this name' : 'Fix'}</button><button class="btn ghost sm" data-fixno="1">${x.cand ? 'Not this series' : 'Leave as is'}</button></div><textarea class="fxn" rows="2" aria-label="Note for the shop about ${esc(x.n)}" placeholder="Note for the shop (optional): edition, ISBN, anything that helps">${esc((S.fxNote || {}).t || '')}</textarea><button class="btn ghost sm" data-fixnote="1">${S.fxNote ? 'Update note ✓' : 'Send note to the shop'}</button></div>`; }
-function fixHTML(){ FIXC = null; const L = [...fixMap().values()]; const box = $('#fixBox'); fixBadge(L.length); if (!box) return L.length;
+function fixHTML(){ FIXC = null; const L = [...fixMap().values()]; const box = $('#fixBox'); fixBadge(L.length); try { msgUI(); } catch(e){} if (!box) return L.length;
   box.innerHTML = !L.length ? '' : `<div class="fixwrap"><h4>⚠️ ${L.length} ${L.length === 1 ? 'book needs' : 'books need'} a quick check</h4><p class="sub" style="margin:0 0 4px">These look like series the shop carries, but the volume number is missing or stuck in the name, or the spelling is a little off, so they can’t show covers, prices or gaps. Fix them here or on the series page (look for ⚠️). Not sure? Leave a note and the shop will sort it out.</p>${L.map(fixRowHTML).join('')}</div>`;
   return L.length; }
 function fixBadge(n){ if (n == null) n = fixList().length; document.querySelectorAll('[data-openacct="io"]').forEach(b => { b.textContent = '⤓ Back up or bring in a collection' + (n ? ` · ⚠️ ${n} to check` : ''); }); }
@@ -1131,7 +1138,25 @@ document.addEventListener('click', e => { const g = e.target.closest('[data-fixg
     delete shelf.series[k]; shelf.gone = Object.assign({}, shelf.gone, { [k]: Date.now() }); save(); fixHTML(); renderAll(); if (current === k) openSeries(to); toast(`Moved to ${T.n}, Vol ${compactVols(vols)}`, () => { shelf.series = prev; save(); renderAll(); fixHTML(); }); return; }
   if (g.dataset.fixno){ s.fxNo = 1; if (note) s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); renderAll(); if (current === k) renderSeries(k); toast('Okay, we’ll leave that one as it is.' + (note ? who : '')); return; }
   if (g.dataset.fixnote){ if (!note) return toast('Type a note first'); s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); if (current === k) renderSeries(k); toast('Note saved. The shop sees it the next time they check.' + who); } });
-function renderAll(){ FIXC = null; renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
+/* ---------- messages: fixes to check, notes and feedback to the shop, replies from the shop (custom.app_msgs) ---------- */
+let shopMsgs = ls.get('mme-msgs') || [];
+function msgUnread(){ const seen = shelf.msgSeen || 0; return (shopMsgs || []).filter(m => (m.at || 0) > seen).length; }
+function msgUI(){ let nFix = 0; try { nFix = fixMap().size; } catch(e){} const nNew = msgUnread(); const dot = $('#msgDot'); if (dot){ dot.hidden = !(nFix + nNew); dot.textContent = nFix + nNew; }
+  const bar = $('#msgBar'); if (bar){ const parts = []; if (nNew) parts.push(`💬 ${nNew} new ${nNew === 1 ? 'message' : 'messages'} from the shop`); if (nFix) parts.push(`⚠️ ${nFix} ${nFix === 1 ? 'book needs' : 'books need'} a quick check`);
+    bar.innerHTML = parts.length ? `<button data-openmsg>${parts.join(' · ')} <b style="float:right">Open ›</b></button>` : ''; } }
+function openMsgs(){ current = null; FIXC = null; const L = [...fixMap().values()];
+  const thread = [...(shopMsgs || []).map(m => ({ who: 'shop', t: m.t, at: m.at || 0 })), ...(shelf.fb || []).map(m => ({ who: 'me', t: m.t, at: m.at })),
+    ...Object.values(shelf.series).filter(x => x.fxNote).map(x => ({ who: 'me', t: x.n + ': ' + x.fxNote.t, at: new Date(x.fxNote.at).getTime() || 0 }))].sort((a, b) => a.at - b.at);
+  const when = t => t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+  openSheet(`<h2>Messages</h2><p class="sub">We check every shelf daily and read every message. When something needs fixing on our side we fix it, and our replies show up here${acct && acct.at ? '' : ' (log in so we can reply)'}.</p>
+    ${L.length ? `<div class="fixwrap"><h4>⚠️ ${L.length} ${L.length === 1 ? 'book needs' : 'books need'} a quick check</h4><p class="sub" style="margin:0 0 4px">Fix it here or on the series page, or leave us a note.</p>${L.map(fixRowHTML).join('')}</div>` : `<p class="note">✓ Nothing on your shelf needs checking right now.</p>`}
+    <div class="sec"><h4>Your messages with the shop</h4>${thread.length ? thread.map(m => `<div class="msg ${m.who}">${esc(m.t)}<small>${m.who === 'shop' ? 'The Mage’s Emporium' : 'You'}${m.at ? ' · ' + when(m.at) : ''}</small></div>`).join('') : '<p class="sub">No messages yet.</p>'}
+    <textarea id="fbTxt" class="rv" rows="3" placeholder="Something wrong with a book, cover or series? An idea? Tell us here."></textarea>
+    <div class="row2"><button class="btn sm" data-fbsend>Send to the shop</button><button class="btn ghost sm" data-close>Close</button></div></div>`);
+  if (msgUnread()){ shelf.msgSeen = Date.now(); save(); } msgUI(); }
+document.addEventListener('click', e => { if (e.target.closest('#msgBtn,[data-openmsg]')) return openMsgs();
+  if (e.target.closest('[data-fbsend]')){ const t = ($('#fbTxt') || {}).value; if (!t || !t.trim()) return toast('Type a message first'); shelf.fb = (shelf.fb || []).concat({ t: t.trim().slice(0, 1000), at: Date.now() }); save(); toast(acct && acct.at ? 'Sent. We’ll reply here.' : 'Saved. Log in so the shop can see it and reply.'); openMsgs(); } });
+function renderAll(){ FIXC = null; setTimeout(() => { try { msgUI(); } catch(e){} }, 0); renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
 $('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; if (t.dataset.b === 'secret'){ openSheet(`<h2>🔒 Secret achievements</h2><p>${BADGES.filter(b => b[4] && b[2] < b[3]).length} achievements are hidden until you earn them. Keep collecting, reading, reviewing and lending to discover them.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); return; } const [name, how, have, need] = BADGES[+t.dataset.b];
   current = null;
   openSheet(`<h2>${name}</h2><p class="sub">${have >= need ? 'Earned!' : 'Not earned yet'}</p><p>${how}</p><div class="bprog"><i style="width:${Math.min(100, Math.round(have/need*100))}%"></i></div><p class="sub">${Math.min(have,need)} of ${need}${have>=need ? ' ✓' : ` · ${need-have} to go`}</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); };
@@ -2024,7 +2049,8 @@ async function gzB64(str){ const cs = new Blob([str]).stream().pipeThrough(new C
 async function unGzB64(b){ const bin = atob(b); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
   return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
 const MF = Array.from({ length: PARTS }, (_, i) => `m${i}:metafield(namespace:"mme",key:"shelf${i}"){value}`).join(' ');
-async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress marketingState} hd:metafield(namespace:"custom",key:"app_holds"){value} sw:metafield(namespace:"custom",key:"store_wishlist"){value} mb:metafield(namespace:"custom",key:"app_member_until"){value} ${MF}}}`); const c = d.customer;
+async function acctPull(){ const d = await acctGql(`{customer{id firstName emailAddress{emailAddress marketingState} hd:metafield(namespace:"custom",key:"app_holds"){value} sw:metafield(namespace:"custom",key:"store_wishlist"){value} mb:metafield(namespace:"custom",key:"app_member_until"){value} ms:metafield(namespace:"custom",key:"app_msgs"){value} ${MF}}}`); const c = d.customer;
+  try { shopMsgs = c.ms && c.ms.value ? JSON.parse(c.ms.value) : []; if (!Array.isArray(shopMsgs)) shopMsgs = []; ls.set('mme-msgs', shopMsgs); setTimeout(msgUI, 0); } catch(e){}
   acct.paid = c.mb && c.mb.value ? c.mb.value : '';
   try { const hv = c.hd && c.hd.value ? JSON.parse(c.hd.value) : null; holds = hv && hv.items && hv.items.length ? hv : null; ls.set('mme-holds', holds); } catch(e){}
   try { storeWish = c.sw && c.sw.value ? JSON.parse(c.sw.value) : null; } catch(e){ storeWish = null; }
@@ -2042,7 +2068,7 @@ function applyStoreWish(){ if (!storeWish || !Array.isArray(storeWish.items)) re
     const k = shelf.series[k0] ? k0 : Object.keys(shelf.series).find(x => normName(shelf.series[x].n) === normName(it.s) && /-ln$/.test(x) === ln); seen.delete(id); if (!k) return; const s = shelf.series[k];
     if ((s.want || []).includes(v)){ s.want = s.want.filter(x => x !== v); if (!s.want.length){ delete s.want; if (!(s.v || []).length && !(s.sell || []).length && !s.ed) delete shelf.series[k]; } r++; } });
   ls.set('mme-swseen', [...seen]); if (n || r){ save(); toast([n ? `Added ${n} ${n === 1 ? 'book' : 'books'} from your website wishlist` : '', r ? `removed ${r} you took off it there` : ''].filter(Boolean).join(', ') + ' (♥ Wishlist)'); } }
-function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null, feed: shelf.feed || null, gone: shelf.gone || null }; }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null, feed: shelf.feed || null, gone: shelf.gone || null, fb: shelf.fb || null, msgSeen: shelf.msgSeen || null }; }
 // copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
 function siteMirror(){ const owned = {}; let tb = 0;
   Object.entries(shelf.series).forEach(([k, s]) => { const hit = SNAP ? snapEntry(k) : null; const key = hit ? hit[0] : k; const vs = ints(s);
@@ -2063,9 +2089,10 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; if (o.gone) shelf.gone = o.gone; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); if (SNAP) setTimeout(() => { try { edMigrate(); } catch(e){} }, 0); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; if (o.gone) shelf.gone = o.gone; if (o.fb) shelf.fb = o.fb; if (o.msgSeen) shelf.msgSeen = o.msgSeen; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); if (SNAP) setTimeout(() => { try { edMigrate(); } catch(e){} }, 0); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
   const gone = Object.assign({}, b.gone || {}, a.gone || {}); out.gone = Object.keys(gone).length ? gone : null;
+  { const fb = [...(a.fb || []), ...(b.fb || [])].filter((x, i, A) => A.findIndex(y => y.at === x.at && y.t === x.t) === i).sort((x, y) => x.at - y.at); out.fb = fb.length ? fb : null; out.msgSeen = Math.max(a.msgSeen || 0, b.msgSeen || 0) || null; }
   Object.keys(out.series).forEach(k => { if (gone[k] && !((b.series || {})[k] && (b.series[k].t || 0) > gone[k]) && (out.series[k].t || 0) <= gone[k]) delete out.series[k]; });
   Object.entries(b.series || {}).forEach(([k, S]) => { if (gone[k] && (S.t || 0) <= gone[k]) return; const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
