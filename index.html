@@ -1333,7 +1333,9 @@ const snapKey = (ser, ln) => handleize(baseName(ser)) + (ln ? '-ln' : '');
 function snapImg(u){ return !u ? '' : (u.startsWith('http') ? u : CDN + u); }
 function snapEntry(key){ if (!SNAP) return null; const s = shelf.series[key]; const ln = s ? isLN(key, s) : /-ln$/.test(key);
   const c = [key, key.replace(/-light-novel$/, '-ln')]; if (s) c.push(snapKey(s.n, ln)); for (const k of c){ if (SNAP.s[k]) return [k, SNAP.s[k]]; }
-  const q = normName(s ? s.n : key) + (ln ? '|ln' : ''); const nk = snapNorm.get(q) || (SNAP.al && SNAP.al[q]); if (nk && SNAP.s[nk]) return [nk, SNAP.s[nk]]; return null; }
+  const q = normName(s ? s.n : key) + (ln ? '|ln' : ''); const nk = snapNorm.get(q) || (SNAP.al && SNAP.al[q]) || AL0[q]; if (nk && SNAP.s[nk]) return [nk, SNAP.s[nk]]; return null; }
+// built-in aliases for names the shop keeps as their own series (so the edition rules don't fold them into the main series)
+const AL0 = { sailormooneternaledition: 'pretty-guardian-sailor-moon-eternal-edition' };
 function snapItems(e){ return (e.i || []).map(x => ({ vol: x[0], price: x[1], inv: x[2], handle: x[3], img: snapImg(x[4]), title: e.n + (e.ln ? ' Light Novel' : '') + ' Vol ' + x[0], ser: e.n, sv: e.t || 0, isbn: x[5] || '' })); }
 async function loadSnap(){
   if (SNAP || snapLoading || Date.now() - snapTried < 60e3) return SNAP; snapLoading = true; snapTried = Date.now();
