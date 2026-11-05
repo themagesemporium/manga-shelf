@@ -1246,13 +1246,50 @@ function renderHL(q){ const el = $('#list'); el.classList.remove('compact','shel
   const st = r => r.kind === 'hold' ? `<span class="chip" style="color:#8a5a00">📦 On hold at the shop${r.p ? ' · $' + (+r.p).toFixed(2) : ''}</span>` : r.kind === 'out' ? `<span class="chip" style="color:var(--accent)">↗ Lent to ${esc(r.who)}</span>` : `<span class="chip" style="color:#1d5aae">↙ Borrowed from ${esc(r.who)}</span>`;
   const ow = r => r.own ? `<span class="chip good">✓ Owned</span>` : `<span class="chip">Not owned${r.kind === 'hold' ? ' yet' : ''}</span>`;
   el.innerHTML = R.map(r => `<div class="${r.k ? 'crow ' : ''}hlrow"${r.k ? ` data-k="${esc(r.k)}"` : ''}><div><b>${esc(r.n)}</b>${r.v != null ? ' Vol ' + r.v : (r.t ? ' <small>' + esc(r.t) + '</small>' : '')}${r.at ? `<small>since ${esc(r.at)}</small>` : ''}</div><div class="hlchips">${st(r)}${ow(r)}</div></div>`).join(''); }
+/* ---------- Find Your Perfect Manga quiz (same questions as the website's quiz page), picks from in-stock shop books in the snapshot ---------- */
+const QZ_CARD = `<div class="st-sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px"><div><h3 style="margin:0">✨ Find your perfect manga</h3><p class="sub" style="margin:2px 0 0">A quick quiz. Great for picking a gift too!</p></div><button class="btn gold sm" data-quiz>Take the quiz</button></div>`;
+const QG = { action: ['Action & battles', ['Action','Shonen']], fantasy: ['Fantasy & adventure', ['Fantasy','Adventure']], romance: ['Romance', ['Romance','Shojo']], comedy: ['Comedy', ['Comedy']], drama: ['Drama & slice of life', ['Drama','Seinen','Slice of Life']], mystery: ['Mystery & thrillers', ['Mystery']], spooky: ['Horror & the supernatural', ['Horror','Supernatural']], scifi: ['Sci-fi', ['Sci-Fi']], bl: ["Boys' love (BL)", ['Yaoi/BL']], gl: ["Girls' love (yuri)", ['Yuri']], howto: ['How-to-draw & art books', ['Educational','Informational','Non-Fiction']], ecchi: ['Fan service (ecchi)', ['Ecchi']] };
+const QAGES = ['All Ages','Teen','Older Teen','Mature'];
+const QQ = [
+  { id: 'who', q: () => 'Who are we shopping for?', o: [['me','Me!'],['gift','Someone else (it’s a gift)']] },
+  { id: 'age', q: a => a.who === 'gift' ? 'How old is the lucky reader?' : 'How old are you?', h: 'So we only suggest books that fit.', o: [['0','Under 13'],['1','13 to 15'],['2','16 or 17'],['3','18 or older']] },
+  { id: 'love', multi: 1, q: a => a.who === 'gift' ? 'What kinds of stories do they like?' : 'What are you in the mood for?', h: 'Pick as many as you like, or none if you’re not sure.', o: ['action','fantasy','romance','comedy','drama','mystery','spooky','scifi','bl','gl','howto'].map(k => [k, QG[k][0]]) },
+  { id: 'avoid', multi: 1, q: () => 'Anything to steer clear of?', h: 'We’ll leave these out completely.', o: ['spooky','romance','bl','gl','ecchi','action','drama','scifi'].map(k => [k, QG[k][0]]) },
+  { id: 'kind', q: () => 'Manga or novel?', o: [['any','Either is great'],['manga','Manga (comics)'],['ln','Light novel (mostly text, some art)']] },
+  { id: 'start', q: a => a.who === 'gift' ? 'Should it be easy to start reading?' : 'Starting something new?', o: [['first','Yes, a first volume or a stand-alone'],['any','Any volume is fine']] },
+  { id: 'budget', q: () => 'Budget per book?', o: [['10','Under $10'],['20','Under $20'],['0','No limit']] } ];
+let QA = {}, QS = 0, QR = [], QP = 0;
+function quizOpen(){ QA = {}; QS = 0; track('quiz-open'); if (!SNAP) loadSnap(); quizDraw(); }
+function quizDraw(){ const s = QQ[QS], cur = QA[s.id] || (s.multi ? [] : null);
+  openSheet(`<h2>✨ Find your perfect manga</h2><div class="bprog" style="margin:0 0 12px"><i style="width:${Math.round(QS / QQ.length * 100)}%"></i></div><p style="font-weight:700;margin:0 0 4px">${esc(s.q(QA))}</p>${s.h ? `<p class="sub" style="margin:0 0 10px">${esc(s.h)}</p>` : ''}<div style="display:flex;flex-wrap:wrap;gap:8px">${s.o.map(([v, l]) => { const on = s.multi ? cur.includes(v) : cur === v; return `<button class="btn ${on ? '' : 'ghost '}sm" data-qv="${v}" aria-pressed="${on}">${esc(l)}</button>`; }).join('')}</div><div class="row2" style="margin-top:14px">${QS ? '<button class="btn ghost sm" data-qback>← Back</button>' : ''}${s.multi ? `<button class="btn sm" data-qnext>${cur.length ? 'Next' : 'Skip'}</button>` : ''}</div>`); }
+function quizPick(){ const maxAge = +QA.age; let love = [], avoid = []; (QA.love || []).forEach(k => love = love.concat(QG[k][1])); (QA.avoid || []).forEach(k => avoid = avoid.concat(QG[k][1])); avoid = avoid.filter(g => !love.includes(g)); const budget = +QA.budget || 0;
+  const mine = new Set(Object.keys(shelf.series).map(k => { const h = snapEntry(k); return h ? h[0] : k; })); const out = [];
+  Object.entries(SNAP.s).forEach(([k, e]) => { if (mine.has(k)) return; const L = (e.i || []).filter(x => x[2] > 0 && x[3]); if (!L.length) return;
+    const m = e.m || {}; const gs = String(m.gen || '').split(/,\s*/).filter(Boolean); const g = gs[0] || ''; const ai = QAGES.indexOf(m.age);
+    if (maxAge < 3 && (ai < 0 || ai > maxAge)) return; if (gs.some(x => avoid.includes(x))) return;
+    if (QA.kind === 'manga' && e.ln) return; if (QA.kind === 'ln' && !e.ln) return;
+    let v = L[0]; if (QA.start === 'first'){ v = L.find(x => x[0] === 1) || (e.t === 1 || L.length === 1 && !e.t ? L[0] : null); if (!v) return; }
+    if (budget && +v[1] > budget) return;
+    let sc = Math.random(); const hit = gs.find(x => love.includes(x)); if (love.length){ if (hit) sc += 10; else if (!g) sc -= 1; } if (v[0] === 1) sc += 2;
+    out.push({ k, e, v, g: hit || g, a: m.age || '', sc, m: !!hit }); });
+  return out.sort((a, b) => b.sc - a.sc); }
+async function quizResults(){ openSheet(`<h2>✨ Finding your perfect match…</h2><p class="sub"><span class="spin"></span></p>`); if (!SNAP) await loadSnap(); if (!SNAP){ openSheet('<h2>Sorry!</h2><p>We couldn’t load the shop right now. Try again in a minute.</p>'); return; } QR = quizPick(); QP = 0; track('quiz-done'); quizPage(); }
+function quizPage(){ const view = QR.slice(QP * 3, QP * 3 + 3), last = (QP + 1) * 3 >= QR.length;
+  openSheet(`<h2>${view.length ? (QA.who === 'gift' ? 'We think they’ll love these' : 'Your perfect matches') : 'Hmm, nothing in stock fits all of that'}</h2>${view.length ? `<div style="display:grid;gap:8px">${view.map(r => `<div class="find"><img src="${esc(snapImg(r.v[4]))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(r.v[3])}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(r.e.n)}${r.e.ln ? ' (Light Novel)' : ''}${r.e.t === 1 ? '' : ' Vol ' + r.v[0]}</a></b><small>${esc([r.g, r.a].filter(Boolean).join(' · '))}${r.m ? ' · matches your pick' : ''}</small></div><span class="price">$${(+r.v[1] || 0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(r.v[3])}">🛒 Add</button></div>`).join('')}</div>${QR.length > 3 ? `<p class="sub" style="text-align:center;margin:8px 0 0">Showing ${QP * 3 + 1}–${QP * 3 + view.length} of ${QR.length} matches</p>` : ''}` : '<p>Try loosening one answer, like the budget.</p>'}<div class="row2" style="margin-top:12px"><button class="btn ghost sm" data-qrestart>↺ Start over</button>${QR.length > 3 ? `<button class="btn sm" data-qmore>${last ? 'Back to the first 3 ↺' : 'Show me 3 more →'}</button>` : ''}</div>`); }
+document.addEventListener('click', e => { const t = e.target.closest('[data-quiz],[data-qv],[data-qnext],[data-qback],[data-qrestart],[data-qmore]'); if (!t) return;
+  if (t.hasAttribute('data-quiz') || t.hasAttribute('data-qrestart')) return quizOpen();
+  if (t.hasAttribute('data-qmore')){ QP = (QP + 1) * 3 >= QR.length ? 0 : QP + 1; return quizPage(); }
+  if (t.hasAttribute('data-qback')){ QS = Math.max(0, QS - 1); return quizDraw(); }
+  const s = QQ[QS]; const nx = () => { QS++; if (QS >= QQ.length) quizResults(); else quizDraw(); };
+  if (t.hasAttribute('data-qnext')) return nx();
+  const v = t.dataset.qv; if (s.multi){ const a = QA[s.id] = QA[s.id] || []; const i = a.indexOf(v); if (i > -1) a.splice(i, 1); else a.push(v); quizDraw(); } else { QA[s.id] = v; nx(); } });
 function renderRecs(q){
   const el = $('#list'); el.classList.remove('compact', 'shelfv');
   if (!SNAP){ el.innerHTML = `<div class="empty"><span class="spin"></span></div>`; $('#count').textContent = ''; loadSnap().then(() => { if (shelfFilter === 'recs') renderList(); }); return; }
   let R = recList(); if (q) R = R.filter(r => r.e.n.toLowerCase().includes(q));
   $('#count').textContent = R.length ? `${R.length} series to try · Vol 1 is in stock for each` : '';
-  if (!R.length){ el.innerHTML = `<div class="empty">${q ? `No recommendations match “${esc(q)}”.` : 'Add a few series to your shelf and we’ll suggest new ones to start.'}</div>`; return; }
-  el.innerHTML = `<div style="display:grid;gap:8px">` + R.map(r => { const h = r.v1[3]; return `<div class="find"><img src="${esc(snapImg(r.v1[4]))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(h)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(r.e.n)}${r.e.ln ? ' (Light Novel)' : ''} Vol 1</a></b><small>${esc(r.why)}${r.e.t ? ` · ${r.e.t} vols` : ''}</small></div><span class="price">$${(+r.v1[1] || 0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(h)}">🛒 Add</button></div>`; }).join('') + `</div>`;
+  if (!R.length){ el.innerHTML = (q ? '' : QZ_CARD) + `<div class="empty">${q ? `No recommendations match “${esc(q)}”.` : 'Add a few series to your shelf and we’ll suggest new ones to start.'}</div>`; return; }
+  el.innerHTML = QZ_CARD + `<div style="display:grid;gap:8px">` + R.map(r => { const h = r.v1[3]; return `<div class="find"><img src="${esc(snapImg(r.v1[4]))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(h)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(r.e.n)}${r.e.ln ? ' (Light Novel)' : ''} Vol 1</a></b><small>${esc(r.why)}${r.e.t ? ` · ${r.e.t} vols` : ''}</small></div><span class="price">$${(+r.v1[1] || 0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(h)}">🛒 Add</button></div>`; }).join('') + `</div>`;
 }
 
 const savedSort = ls.get('mme-sort'); if (savedSort) $('#sort').value = savedSort;
