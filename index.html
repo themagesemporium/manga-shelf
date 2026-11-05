@@ -809,7 +809,7 @@ function renderReadTab(){
     dayHTML = `<div class="st-sec"><h3>${new Date(calDay+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</h3>
     ${ard.map(a => `<div class="srow" style="cursor:default"><span>${a.ic} ${esc(a.t)}<small>${esc(a.sub)}</small></span></div>`).join('')}
     ${rel.map(p => `<div class="srow" style="cursor:default"><span>📦 ${esc(p.title)}<small>Comes out this day · $${p.price.toFixed(2)}</small></span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Pre-order</a></div>`).join('')}
-    ${items.map(t => { const [k,v] = t.split('|'); const s = shelf.series[k] || (shelf.other||{})[k]; return `<div class="srow" style="cursor:default"><span>📖 ${esc(s ? s.n : k)}<small>Vol ${esc(v)}${k.startsWith('x_') ? ' · not on your shelf' : ''}</small></span><button class="btn ghost sm" data-unlog="${esc(t)}">Remove</button></div>`; }).join('')}
+    ${items.map(t => { const [k,v] = t.split('|'); const s = shelf.series[k] || (shelf.other||{})[k]; return `<div class="srow" style="cursor:default"><span>📖 ${esc(s ? s.n : k)}<small>Vol ${esc(v)}${!shelf.series[k] ? ' · not on your shelf' : ''}</small></span><button class="btn ghost sm" data-unlog="${esc(t)}">Remove</button></div>`; }).join('')}
     ${!items.length && !rel.length && !ard.length ?`<p class="sub" style="margin:0">${n ? `${n} read (details weren't saved for this day)` : 'Nothing read this day yet.'}</p>` : ''}
     ${past ? `<div class="locrow" style="margin-top:12px"> <input id="logSer" list="logSl" placeholder="Title (yours or not)" autocomplete="off" style="flex:2"><input id="logVol" placeholder="Vol, e.g. 3 or 3-5" inputmode="numeric" style="flex:1"></div><datalist id="logSl">${Object.values(shelf.series).map(s => `<option value="${esc(s.n)}">`).join('')}</datalist><div class="row2"><button class="btn sm" data-logday="${calDay}">Log as read this day</button></div>` : ''}</div>`; }
   el.innerHTML = `
@@ -841,10 +841,12 @@ document.addEventListener('click', e => {
     if (!nm){ toast('Type what you read'); return; } if (!vols.length){ toast('Type a volume number (1 for a one-shot)'); return; }
     let s;
     if (!k || shelf.series[k].n.toLowerCase() !== nm && !Object.keys(shelf.series).some(x => shelf.series[x].n.toLowerCase() === nm) && !confirmOwnMatch(k, nm)){
-      const raw = $('#logSer').value.trim(); k = 'x_' + handleize(raw).replace(/-/g,'_'); const O = shelf.other || (shelf.other = {}); O[k] = O[k] || { n: raw }; s = O[k];
+      const raw = $('#logSer').value.trim(); const sk = SNAP ? fixFind(raw, /light novel/i.test(raw)) : null; const own = sk && Object.keys(shelf.series).find(x => { const h = snapEntry(x); return h && h[0] === sk; });
+      if (own){ k = own; s = shelf.series[k]; const r = new Set(s.r || []); vols.forEach(v => r.add(v)); s.r = [...r].sort((a,b)=>a-b); }
+      else { k = sk || ('x_' + handleize(raw).replace(/-/g,'_')); const O = shelf.other || (shelf.other = {}); O[k] = O[k] || { n: sk ? SNAP.s[sk].n : raw }; s = O[k]; } // matched to the shop's series: cover, genres and Bingo squares work
     } else { s = shelf.series[k]; const r = new Set(s.r || []); vols.forEach(v => r.add(v)); s.r = [...r].sort((a,b)=>a-b); }
     const R = shelf.rl || (shelf.rl = {}); const already = vols.filter(v => !(R[day]||[]).includes(k+'|'+v)); if (already.length) logRead(already.length, k, already, day);
-    save(); toast(`Logged ${s.n} Vol ${vols.join(', ')} on ${day}${k.startsWith('x_') ? ' (not on your shelf)' : ''}`); return; }
+    save(); toast(`Logged ${s.n} Vol ${vols.join(', ')} on ${day}${!shelf.series[k] ? ' (not on your shelf)' : ''}`); return; }
   const g = e.target.closest('[data-goal]'); if (g){ const v = parseInt($('#goalIn').value, 10); const yr = String(new Date().getFullYear()); shelf.goal = Object.assign({}, shelf.goal); if (v > 0) shelf.goal[yr] = v; else delete shelf.goal[yr]; save(); toast(v > 0 ? `Goal set: ${v} volumes in ${yr}` : 'Goal cleared'); return; }
   const yb = e.target.closest('[data-yir]'); if (yb){ openYear(yb.dataset.yir); return; }
   const r = e.target.closest('#readBody .srow'); if (r) openSeries(r.dataset.k);
@@ -1123,7 +1125,7 @@ async function doImport(text){ if (!text || !text.trim()){ $('#impMsg').textCont
 $('#impBtn').onclick = () => doImport($('#impTxt').value);
 $('#snapBtn').onclick = () => buildSnap($('#snapBtn'), $('#snapMsg'));
 $('#impFile').onchange = async e => { const f = e.target.files && e.target.files[0]; if (!f) return; if (f.size > 15e6){ $('#impMsg').textContent = 'That file is too big.'; return; } await doImport(await f.text()); e.target.value = ''; };
-function coverOf(k){ const s = shelf.series[k]; if (!s) return ''; if (s.c) return s.c; const L = live.get(k); if (!L) return ''; const own = new Set(ints(s)); const it = L.items.find(p => p.img && own.has(p.vol)) || L.items.find(p => p.img); return it ? it.img : ''; }
+function coverOf(k){ const s = shelf.series[k]; if (!s){ const e = SNAP && SNAP.s[k]; const it = e && (e.i || []).find(x => x[4]); return it ? snapImg(it[4]) : ''; } if (s.c) return s.c; const L = live.get(k); if (!L) return ''; const own = new Set(ints(s)); const it = L.items.find(p => p.img && own.has(p.vol)) || L.items.find(p => p.img); return it ? it.img : ''; }
 function coverHTML(k){ const u = coverOf(k); const n = shelf.series[k].n.replace(/^(the|a)\s+/i,'');
   return `<span class="cover" aria-hidden="true">${u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">` : esc(n[0] || '?')}</span>`; }
 /* ---------- needs a volume number: shelf entries that look like a shop series but have the volume missing or stuck in the name ---------- */
@@ -1406,7 +1408,16 @@ async function loadSnap(){
     if (!crownsData && SNAP.cr) crownsData = SNAP.cr; if (!preorders && SNAP.pre) preorders = SNAP.pre.map(x => ({ handle: x[0], title: x[1], ser: x[2], vol: x[3], rd: x[4], ln: !!x[5], price: x[6], img: snapImg(x[7]) }));
     if (!mcp) applySnap(); }
   snapLoading = false; return SNAP; }
-function applySnap(){ if (!SNAP) return; let miss = []; Object.keys(shelf.series).forEach(k => { const s0 = shelf.series[k]; if (langOf(k)){ if (!s0.c){ const en = snapNorm.get(normName(s0.n.replace(/\([^)]*\)/g, ' '))); const e0 = en && SNAP.s[en]; const im = e0 && (e0.i || []).find(x => x[4]); if (im) s0.c = snapImg(im[4]); else if ((s0.ct||0) < 2) miss.push(k); } return; } const hit = snapEntry(k); if (!hit){ const cv = SNAP.cv && SNAP.cv[normName(s0.n)]; if (!s0.c && cv) s0.c = snapImg(cv); else if (!s0.c && (s0.ct||0) < 2) miss.push(k); return; } const e = hit[1]; const items = snapItems(e);
+/* reads logged for books not on the shelf (keys x_...) get linked to the shop's series once the name matches, so they show a cover and count for genre Bingo squares */
+function linkOtherReads(){ const O = shelf.other || {}; let ch = 0;
+  Object.keys(O).filter(k => k.startsWith('x_')).forEach(k => { const sk = fixFind(O[k].n, /light novel/i.test(O[k].n)); if (!sk) return;
+    const to = Object.keys(shelf.series).find(x => { const h = snapEntry(x); return h && h[0] === sk; }) || sk;
+    Object.keys(shelf.rl || {}).forEach(d => { shelf.rl[d] = [...new Set(shelf.rl[d].map(t => t.startsWith(k + '|') ? to + t.slice(k.length) : t))]; });
+    if (shelf.series[to]){ const S = shelf.series[to]; if (O[k].vr) S.vr = Object.assign({}, O[k].vr, S.vr || {}); }
+    else { const T = O[to] || (O[to] = { n: SNAP.s[sk].n }); if (O[k].vr) T.vr = Object.assign({}, O[k].vr, T.vr || {}); if (O[k].st && !T.st) T.st = O[k].st; if (O[k].rv && !T.rv) T.rv = O[k].rv; }
+    delete O[k]; ch = 1; });
+  if (ch) save(); }
+function applySnap(){ if (!SNAP) return; try { linkOtherReads(); } catch(e){} let miss = []; Object.keys(shelf.series).forEach(k => { const s0 = shelf.series[k]; if (langOf(k)){ if (!s0.c){ const en = snapNorm.get(normName(s0.n.replace(/\([^)]*\)/g, ' '))); const e0 = en && SNAP.s[en]; const im = e0 && (e0.i || []).find(x => x[4]); if (im) s0.c = snapImg(im[4]); else if ((s0.ct||0) < 2) miss.push(k); } return; } const hit = snapEntry(k); if (!hit){ const cv = SNAP.cv && SNAP.cv[normName(s0.n)]; if (!s0.c && cv) s0.c = snapImg(cv); else if (!s0.c && (s0.ct||0) < 2) miss.push(k); return; } const e = hit[1]; const items = snapItems(e);
     live.set(k, { at: Date.now(), v2: 1, items, total: e.t || 0, snap: SNAP.at });
     const s = shelf.series[k]; if (e.m && !s.m) s.m = { a: e.m.aud || '', g: e.m.gen ? String(e.m.gen).split(/,\s*/).filter(Boolean) : [], au: e.m.au || '', p: e.m.pub || '' };
     if (!s.c){ const own = new Set(ints(s)); const it = items.find(p => p.img && own.has(p.vol)) || items.find(p => p.img); if (it) s.c = it.img; } });

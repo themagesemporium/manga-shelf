@@ -1,4 +1,4 @@
-// App gaps: series and volumes on customers' app shelves (owned or wishlist) that the shop has no listing for.
+// App gaps: series and volumes on customers' app shelves (owned, wishlist, or logged as read without owning) that the shop has no listing for.
 // Run in a Shopify admin tab with window._api defined, then _agRun(). Progress in window._AG.
 // Loads the live app snapshot (config.json "snap") itself. Skips Megan's own account.
 // Names already handled are kept in the shop metafield mme_app.gaps_seen (json list of "normName|ln" keys),
@@ -44,6 +44,13 @@ window._agRun = async (opt = {}) => {
           const have = new Set((SN.s[k].i || []).map(x => x[0])); const miss = vols.filter(x => !have.has(x)); if (!miss.length) return;
           let e = vg.get(k); if (!e){ e = { n: SN.s[k].n, ln: SN.s[k].ln ? 1 : 0, who: new Set(), v: new Set() }; vg.set(k, e); } e.who.add(cid); miss.forEach(x => e.v.add(x));
         });
+        // books logged as read that aren't on the shelf (reading calendar), counted like shelf series so unknown titles get listed too
+        const rv = {}; Object.values(sh.rl || {}).forEach(L => L.forEach(t => { const i = t.lastIndexOf('|'); const kk = t.slice(0, i); (rv[kk] = rv[kk] || new Set()).add(Math.round(+t.slice(i + 1))); }));
+        Object.entries(sh.other || {}).forEach(([key, o]) => { if (!o || !o.n || (sh.series || {})[key]) return; const ln = /light novel/i.test(o.n); const vols = [...(rv[key] || [])].filter(x => x > 0);
+          const k = SN.s[key] ? key : resolve(key, o.n, ln);
+          if (!k){ const q = normName(o.n) + (ln ? '|ln' : ''); if (seen.has(q)) return; let e = un.get(q); if (!e){ e = { n: String(o.n).trim(), ln, who: new Set(), v: new Set(), q }; un.set(q, e); } e.who.add(cid); vols.forEach(x => e.v.add(x)); return; }
+          const have = new Set((SN.s[k].i || []).map(x => x[0])); const miss = vols.filter(x => !have.has(x)); if (!miss.length) return;
+          let e = vg.get(k); if (!e){ e = { n: SN.s[k].n, ln: SN.s[k].ln ? 1 : 0, who: new Set(), v: new Set() }; vg.set(k, e); } e.who.add(cid); miss.forEach(x => e.v.add(x)); });
       } catch (e) { AG.err.push('shelf ' + cid); }
     }
     a = r.data.customers.pageInfo.hasNextPage ? r.data.customers.pageInfo.endCursor : null;
