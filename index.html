@@ -230,6 +230,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .vol.o{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .vol.oe{background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.28) 5px 9px)}
 .vol small.edr{display:block;font-size:9px;line-height:1;opacity:.8;margin-top:1px}
+.chip.warn{background:color-mix(in srgb,var(--gold) 25%,transparent);color:var(--ink)}
 .fixwrap{border:1px solid var(--gold);border-radius:12px;padding:10px 12px;margin:12px 0 4px;background:color-mix(in srgb,var(--gold) 10%,transparent)}.fixwrap h4{margin:0 0 4px}.fixrow{border-top:1px solid var(--line);padding:8px 0}.fixrow small{display:block;color:var(--muted)}.fixin{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.fixin input{flex:1 1 90px;min-width:0}.fixrow textarea{width:100%;min-height:44px;margin:0 0 4px}
 .edblk{margin:10px 0 4px}.edblk h5{margin:0 0 6px;font-size:14px;display:flex;gap:8px;align-items:baseline}.edblk h5 small{font-weight:400;color:var(--muted)}
 .edform{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.edform select{flex:0 0 auto}.edform input{flex:1 1 120px;min-width:0}
@@ -396,6 +397,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       <label class="sub" for="impTxt" style="display:block;margin:10px 0 4px">…or paste a list (one series per line, like <i>Fruits Basket, 1-12</i> or <i>Spy x Family Vol 3</i>)</label>
       <textarea id="impTxt" placeholder="Fruits Basket, 1-12&#10;Spy x Family Vol 3&#10;Bungo Stray Dogs (Light Novel), 1, 2, 4"></textarea>
       <div class="row2"><button class="btn sm" id="impBtn">Add to my shelf</button></div>
+      <p class="sub" style="margin:8px 0 0">Every collection is checked daily for spelling and consistency, and matched to the shop’s series so the right covers and info show up. If something can’t be matched, you’ll see ⚠️ on that series and in the list below, where you can fix it or leave us a note.</p>
       <p class="sub" id="impMsg" style="margin:6px 0 0"></p>
       <div id="fixBox"></div>
     </div>
@@ -946,15 +948,17 @@ function renderList(){
     return;
   }
   if (!keys.length){ $('#list').innerHTML = `<div class="empty">${q ? `Nothing on your shelf matches “${esc(q)}”.` : shelfFilter === 'done' ? 'No complete series yet. Finish a run and it shows up here! ⭐' : 'Every series on your shelf is complete. 🎉'}</div>`; return; }
+  const FX = (() => { try { return fixMap(); } catch(e){ return new Map(); } })();
   const vmode = $('#view').value; const compact = vmode === 'compact'; $('#list').classList.toggle('compact', compact); $('#list').classList.toggle('shelfv', vmode === 'shelf');
   if (vmode === 'shelf'){ const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
     $('#list').innerHTML = keys.map(k => { const i = I[k]; const u = coverOf(k); const n = i.s.n;
       return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}, ${i.s.v.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.s.v.length}</b></button>`; }).join(''); return; }
   if (compact){ $('#list').innerHTML = keys.map(k => { const i = I[k]; const nTxt = i.total ? `${i.own.length}/${i.total}` : `${i.s.v.length}`;
-    return `<button class="crow" data-k="${esc(k)}"><span class="nm">${esc(i.s.n)}</span><span class="m">${nTxt}${i.gaps.length ? ` · ${i.gaps.length} gap${i.gaps.length>1?'s':''}` : ''}${i.complete ? ' · ✓' : ''}</span></button>`; }).join(''); return; }
+    return `<button class="crow" data-k="${esc(k)}"><span class="nm">${FX.has(k) ? '⚠️ ' : ''}${esc(i.s.n)}</span><span class="m">${nTxt}${i.gaps.length ? ` · ${i.gaps.length} gap${i.gaps.length>1?'s':''}` : ''}${i.complete ? ' · ✓' : ''}</span></button>`; }).join(''); return; }
   $('#list').innerHTML = keys.map(k => {
     const i = I[k]; const lang = langOf(k);
     const chips = [];
+    if (FX.has(k)) chips.push(`<span class="chip warn">⚠️ Check ${FX.get(k).kind === 'spell' ? 'name' : 'volume'}</span>`);
     if (i.complete) chips.push(`<span class="chip good">✓ Complete</span>`);
     if (i.gaps.length) chips.push(`<span class="chip">${i.gaps.length} ${i.gaps.length===1?'gap':'gaps'}</span>`);
     if (i.next && !i.complete && !lang) chips.push(`<span class="chip acc">Next: Vol ${i.next}</span>`);
@@ -1100,26 +1104,33 @@ function fixList(){ if (!SNAP) return []; const out = [];
     const m = n.match(/^(.*?)[\s,:#-]*(?:\b(?:vol(?:ume)?\.?|episode|ep\.?|part|book|no\.?)\s*)?#?\s*(\d{1,3})(?:\s*(?:\/|of)\s*\d{1,3})?\s*$/i);
     if (m && m[1].trim().length >= 3){ const c = fixFind(m[1], ln); if (c){ cand = c; vols = [+m[2]]; } }
     if (!cand){ const q = normName(n); if (q.length >= 5){ const hits = new Set(); snapNorm.forEach((key, nn) => { const [b, l] = nn.split('|'); if (!!l !== ln) return; if (b !== q && b.startsWith(q)) hits.add(key); }); if (hits.size === 1) cand = [...hits][0]; } }
-    if (cand) out.push({ k, n: s.n, cand, sname: SNAP.s[cand].n, have: (SNAP.s[cand].i || []).map(x => x[0]), vols: vols.length ? vols : ints(s) }); });
+    let kind = vols.length ? 'vol' : 'name';
+    if (!cand){ const q = normName(n); if (q.length >= 6){ const lim = q.length >= 12 ? 2 : 1; let best = null, bd = 9, tie = false; snapNorm.forEach((key, nn) => { const [b, l] = nn.split('|'); if (!!l !== ln || Math.abs(b.length - q.length) > lim) return; const d = editDist(q, b, lim); if (d <= lim){ if (d < bd){ bd = d; best = key; tie = false; } else if (d === bd && key !== best) tie = true; } }); if (best && !tie){ cand = best; kind = 'spell'; } } }
+    if (cand) out.push({ k, n: s.n, cand, kind, sname: SNAP.s[cand].n, have: (SNAP.s[cand].i || []).map(x => x[0]), vols: vols.length ? vols : ints(s) }); });
   return out; }
-function fixHTML(){ const L = fixList(); const box = $('#fixBox'); fixBadge(L.length); if (!box) return L.length;
-  box.innerHTML = !L.length ? '' : `<div class="fixwrap"><h4>⚠️ ${L.length} ${L.length === 1 ? 'book needs' : 'books need'} a volume number</h4><p class="sub" style="margin:0 0 4px">Volume number missing: these look like series the shop carries, but the volume is missing or stuck in the name, so they can’t show covers, prices or gaps. Type the volume(s) and tap Fix. Not sure? Leave a note and the shop will sort it out.</p>${L.map(x => { const S = shelf.series[x.k]; return `<div class="fixrow" data-fk="${esc(x.k)}"><div><b>${esc(x.n)}</b><small>${x.cand ? `Shop series: ${esc(x.sname)}${x.have.length ? ` · Vol ${compactVols(x.have)}` : ''}` : 'Which volume(s) do you have? Check the spine or cover.'}</small></div><div class="fixin"><input class="fxv" inputmode="numeric" value="${esc(x.vols.join(', '))}" placeholder="Volume(s), e.g. 2" aria-label="Volume numbers for ${esc(x.n)}"><button class="btn sm" data-fixgo="${esc(x.cand || '-')}">Fix</button><button class="btn ghost sm" data-fixno="1">Not this series</button></div><textarea class="fxn" rows="2" aria-label="Note for the shop about ${esc(x.n)}" placeholder="Note for the shop (optional): edition, ISBN, anything that helps">${esc((S.fxNote || {}).t || '')}</textarea><button class="btn ghost sm" data-fixnote="1">${S.fxNote ? 'Update note ✓' : 'Send note to the shop'}</button></div>`; }).join('')}</div>`;
+// edit distance with an early stop once it can't come in under `max`
+function editDist(a, b, max){ let prev = Array.from({ length: b.length + 1 }, (_, j) => j); for (let i = 1; i <= a.length; i++){ const cur = [i]; let lo = i; for (let j = 1; j <= b.length; j++){ cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (cur[j] < lo) lo = cur[j]; } if (lo > max) return max + 1; prev = cur; } return prev[b.length]; }
+let FIXC = null; function fixMap(){ if (!FIXC) FIXC = new Map(fixList().map(x => [x.k, x])); return FIXC; }
+function fixRowHTML(x){ const S = shelf.series[x.k]; const what = !x.cand ? 'Which volume(s) do you have? Check the spine or cover.' : x.kind === 'spell' ? `Did you mean <b>${esc(x.sname)}</b>?${x.have.length ? ` The shop has Vol ${compactVols(x.have)}.` : ''}` : `Shop series: ${esc(x.sname)}${x.have.length ? ` · Vol ${compactVols(x.have)}` : ''}`;
+  return `<div class="fixrow" data-fk="${esc(x.k)}"><div><b>${esc(x.n)}</b><small>${x.kind === 'spell' ? 'Spelling: ' : x.cand || !x.kind ? 'Volume number missing. ' : ''}${what}</small></div><div class="fixin"><input class="fxv" inputmode="numeric" value="${esc(x.vols.join(', '))}" placeholder="Volume(s), e.g. 2" aria-label="Volume numbers for ${esc(x.n)}"><button class="btn sm" data-fixgo="${esc(x.cand || '-')}">${x.kind === 'spell' ? 'Use this name' : 'Fix'}</button><button class="btn ghost sm" data-fixno="1">${x.cand ? 'Not this series' : 'Leave as is'}</button></div><textarea class="fxn" rows="2" aria-label="Note for the shop about ${esc(x.n)}" placeholder="Note for the shop (optional): edition, ISBN, anything that helps">${esc((S.fxNote || {}).t || '')}</textarea><button class="btn ghost sm" data-fixnote="1">${S.fxNote ? 'Update note ✓' : 'Send note to the shop'}</button></div>`; }
+function fixHTML(){ FIXC = null; const L = [...fixMap().values()]; const box = $('#fixBox'); fixBadge(L.length); if (!box) return L.length;
+  box.innerHTML = !L.length ? '' : `<div class="fixwrap"><h4>⚠️ ${L.length} ${L.length === 1 ? 'book needs' : 'books need'} a quick check</h4><p class="sub" style="margin:0 0 4px">These look like series the shop carries, but the volume number is missing or stuck in the name, or the spelling is a little off, so they can’t show covers, prices or gaps. Fix them here or on the series page (look for ⚠️). Not sure? Leave a note and the shop will sort it out.</p>${L.map(fixRowHTML).join('')}</div>`;
   return L.length; }
-function fixBadge(n){ if (n == null) n = fixList().length; document.querySelectorAll('[data-openacct="io"]').forEach(b => { b.textContent = '⤓ Back up or bring in a collection' + (n ? ` · ⚠️ ${n} to fix` : ''); }); }
+function fixBadge(n){ if (n == null) n = fixList().length; document.querySelectorAll('[data-openacct="io"]').forEach(b => { b.textContent = '⤓ Back up or bring in a collection' + (n ? ` · ⚠️ ${n} to check` : ''); }); }
 document.addEventListener('click', e => { const g = e.target.closest('[data-fixgo],[data-fixno],[data-fixnote]'); if (!g) return; const row = g.closest('.fixrow'); if (!row) return; const k = row.dataset.fk; const s = shelf.series[k]; if (!s) return;
   const note = row.querySelector('.fxn').value.trim(); const who = acct && acct.at ? '' : ' Log in so the shop can see it.';
   if (g.dataset.fixgo){ const vols = parseVols(row.querySelector('.fxv').value).filter(v => v > 0); if (!vols.length) return toast('Type the volume number(s) first');
-    if (g.dataset.fixgo === '-'){ const prev = JSON.parse(JSON.stringify(s)); s.v = [...new Set(vols)].sort((a, b) => a - b); s.fxOk = 1; if (note) s.fxNote = { t: note, at: dayKey() }; save(); renderAll(); fixHTML(); toast(`${s.n}: Vol ${compactVols(s.v)}`, () => { shelf.series[k] = prev; save(); renderAll(); fixHTML(); }); return; }
+    if (g.dataset.fixgo === '-'){ const prev = JSON.parse(JSON.stringify(s)); s.v = [...new Set(vols)].sort((a, b) => a - b); s.fxOk = 1; if (note) s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); renderAll(); if (current === k) renderSeries(k); toast(`${s.n}: Vol ${compactVols(s.v)}`, () => { shelf.series[k] = prev; save(); fixHTML(); renderAll(); }); return; }
     const sk = g.dataset.fixgo, E = SNAP.s[sk]; const to = shelfKeyFor(sk) || sk; const prev = JSON.parse(JSON.stringify(shelf.series));
     const T = shelf.series[to] = shelf.series[to] || { n: E.n + (E.ln && !/light novel/i.test(E.n) ? ' (Light Novel)' : ''), v: [], t: Date.now() };
     const one = s.v.length === 1 && vols.length === 1 ? (x => x === s.v[0] ? vols[0] : x) : (x => x);
     T.v = [...new Set(T.v.concat(vols))].sort((a, b) => a - b);
     ['r','want','sell'].forEach(f => { if (s[f] && s[f].length) T[f] = [...new Set((T[f] || []).concat(s[f].map(one)))].sort((a, b) => a - b); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
     ['st','rv','loc','cond'].forEach(f => { if (s[f] != null && T[f] == null) T[f] = s[f]; }); if (note) T.fxNote = { t: note + ' (was: ' + s.n + ')', at: dayKey() };
-    delete shelf.series[k]; shelf.gone = Object.assign({}, shelf.gone, { [k]: Date.now() }); save(); renderAll(); fixHTML(); toast(`Moved to ${T.n}, Vol ${compactVols(vols)}`, () => { shelf.series = prev; save(); renderAll(); fixHTML(); }); return; }
-  if (g.dataset.fixno){ s.fxNo = 1; if (note) s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); toast('Okay, we’ll leave that one as it is.' + (note ? who : '')); return; }
-  if (g.dataset.fixnote){ if (!note) return toast('Type a note first'); s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); toast('Note saved. The shop sees it the next time they check.' + who); } });
-function renderAll(){ renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
+    delete shelf.series[k]; shelf.gone = Object.assign({}, shelf.gone, { [k]: Date.now() }); save(); fixHTML(); renderAll(); if (current === k) openSeries(to); toast(`Moved to ${T.n}, Vol ${compactVols(vols)}`, () => { shelf.series = prev; save(); renderAll(); fixHTML(); }); return; }
+  if (g.dataset.fixno){ s.fxNo = 1; if (note) s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); renderAll(); if (current === k) renderSeries(k); toast('Okay, we’ll leave that one as it is.' + (note ? who : '')); return; }
+  if (g.dataset.fixnote){ if (!note) return toast('Type a note first'); s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); if (current === k) renderSeries(k); toast('Note saved. The shop sees it the next time they check.' + who); } });
+function renderAll(){ FIXC = null; renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
 $('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; if (t.dataset.b === 'secret'){ openSheet(`<h2>🔒 Secret achievements</h2><p>${BADGES.filter(b => b[4] && b[2] < b[3]).length} achievements are hidden until you earn them. Keep collecting, reading, reviewing and lending to discover them.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); return; } const [name, how, have, need] = BADGES[+t.dataset.b];
   current = null;
   openSheet(`<h2>${name}</h2><p class="sub">${have >= need ? 'Earned!' : 'Not earned yet'}</p><p>${how}</p><div class="bprog"><i style="width:${Math.min(100, Math.round(have/need*100))}%"></i></div><p class="sub">${Math.min(have,need)} of ${need}${have>=need ? ' ✓' : ` · ${need-have} to go`}</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); };
@@ -1575,6 +1586,7 @@ function renderSeries(key){
     store += mcp ? `<div class="row2"><button class="btn ghost sm" data-refresh>Refresh stock</button></div>` : (SNAP ? `<p class="sub" style="margin:8px 0 0">Stock as of ${snapAge()}.</p>` : '');
   }
   $('#sheetBody').innerHTML = `
+    ${(() => { const x = SNAP && (() => { try { return fixMap().get(key); } catch(e){ return null; } })(); return x ? `<div class="fixwrap" style="margin:0 0 12px"><h4>⚠️ Please check this one</h4>${fixRowHTML(x)}</div>` : ''; })()}
     <div class="shead">${coverHTML(key)}<div><h2>${esc(s.n)}</h2>
     <p class="sub" style="margin-bottom:0">${i.own.length} owned${edCount(s) ? ` (with ${edCount(s)} ${edCount(s) === 1 ? 'edition' : 'editions'})` : ''}${i.total ? ` of ${i.total}` : ''}${i.gaps.length ? ` · missing ${i.gaps.length > 12 ? i.gaps.length + ' volumes' : 'Vol ' + i.gaps.join(', ')}` : ''}${i.complete ? ' · complete!' : ''}</p>${lang ? '' : `<p class="sub" style="margin:2px 0 0">Worth <b class="worth">${money(worthOf(key))}</b> at shop prices${worthOf(key).est ? ' (estimate)' : ''}</p>`}</div></div>
     <div class="seg" style="margin-top:12px" role="radiogroup" aria-label="What tapping a volume does"><button data-mode="own" aria-selected="${tapMode==='own'}">Own<i class="mi" style="color:var(--accent)">■</i></button><button data-mode="read" aria-selected="${tapMode==='read'}">Read<i class="mi" style="color:#2f9e5f">✓</i></button><button data-mode="loan" aria-selected="${tapMode==='loan'}">Loan<i class="mi" style="color:var(--accent)">↗ ↙</i></button><button data-mode="want" aria-selected="${tapMode==='want'}">Want<i class="mi" style="color:#d9417a">♥</i></button><button data-mode="sell" aria-selected="${tapMode==='sell'}">Sell<i class="mi" style="color:#2f9e5f">$</i></button><button data-mode="note" aria-selected="${tapMode==='note'}">Note<i class="mi" style="color:#8a6d3b">✎</i></button></div>
@@ -1727,7 +1739,8 @@ function renderAdd(pre){
     <p class="note" id="tnHint" hidden style="margin:-4px 0 12px">We don’t recognize that title yet. Check the spelling, or <a href="#" id="tnScan">scan the ISBN barcode</a> on the back so we can match covers and prices. You can still add it as typed.</p>
     <label class="field"><span>Volumes</span><input id="tv" placeholder="e.g. 1-5, 7, 9"></label>
     <label class="field"><span>Edition</span><select id="ted"><option value="">Regular single volumes</option>${ED_TYPES.map(t => `<option>${t}</option>`).join('')}</select></label>
-    <button class="btn" id="tgo">Add to my shelf</button>`;
+    <button class="btn" id="tgo">Add to my shelf</button>
+    <p class="sub" style="margin:10px 0 0">Shelves are checked daily for spelling and matched to the shop’s series for covers and info. Anything that needs a second look gets a ⚠️ on its series.</p>`;
     let tnT; const tnCheck = () => { const n = $('#tn').value.trim(); const h = $('#tnHint'); if (!h) return;
       if (n.length < 3 || !SNAP){ h.hidden = true; return; }
       const ln = /light novel|\bln\b/i.test(n); const q = normName(n.replace(/\bln\b/ig, ''));
