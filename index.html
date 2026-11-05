@@ -485,11 +485,17 @@ function info(key){
 /* ---------- editions: omnibus, 2-in-1, 3-in-1, deluxe... live inside their main series (s.ed = {type: {v, want, c}}) ---------- */
 const ED_TYPES = ['2-in-1','3-in-1','Omnibus','Deluxe','Collector','Box Set','Variant'];
 let edForm = null;
-function edTypeOf(t){ t = String(t || ''); return /3[- ]?in[- ]?1/i.test(t) ? '3-in-1' : /2[- ]?in[- ]?1/i.test(t) ? '2-in-1' : /box ?set/i.test(t) ? 'Box Set' : /deluxe|vizbig|perfect edition|ultimate edition/i.test(t) ? 'Deluxe' : /collector'?s?\s+edition|collector'?s?\)/i.test(t) ? 'Collector' : /omnibus/i.test(t) ? 'Omnibus' : ''; }
-function edParseName(n){ n = String(n || ''); const type = edTypeOf(n); if (!type) return null; const ln = /light novel/i.test(n);
-  const m = n.match(/-\s*(\d+)\s*(?:omnibus|[23][- ]?in[- ]?1)/i); const end = m ? +m[1] : null;
-  const base = n.replace(/\(light novel\)/ig, ' ').replace(/\(([^)]*(omnibus|edition|in-?1|in 1|deluxe|collector|box ?set)[^)]*)\)/ig, ' ').replace(/\s*-\s*\d+\s*(?=(omnibus|[23][- ]?in))/i, ' ')
-    .replace(/\b(the\s+)?(complete\s+)?(collection\s+)?(omnibus|[23][- ]?in[- ]?1|deluxe|collector'?s?|vizbig|big|perfect|ultimate|box ?set)(\s+(edition|collection))?\b.*$/i, '').replace(/[\s,:\-–]+$/, '').replace(/\s+/g, ' ').trim();
+function edTypeOf(t){ t = String(t || '').replace(/\((japanese|spanish|french|german|italian|korean|chinese)[^)]*\)/ig, ' ');
+  return /3[- ]?in[- ]?1/i.test(t) ? '3-in-1' : /2[- ]?in[- ]?1/i.test(t) ? '2-in-1' : /box ?set/i.test(t) ? 'Box Set'
+    : /deluxe|vizbig|perfect edition|ultimate edition|eternal edition|oversized|big edition|full ?metal edition|fully compiled/i.test(t) ? 'Deluxe'
+    : /collector'?s?\s+edition|collector'?s?\)|special collector/i.test(t) ? 'Collector' : /omnibus|\bomni\b/i.test(t) ? 'Omnibus'
+    : /limited edition|special edition|anniversary edition|exclusive|\bbam\b|\bbn special\b|\bb&n\b|barnes|books a million|bebeautiful edition/i.test(t) ? 'Variant'
+    : /\S\s*&\s*\d+$/.test(t) ? 'Omnibus' : ''; }
+function edParseName(n){ n = String(n || '').trim(); const type = edTypeOf(n); if (!type) return null; const ln = /light novel/i.test(n);
+  const m = n.match(/-\s*(\d+)\s*(?:omnibus|omni\b|[23][- ]?in[- ]?1)/i) || n.match(/&\s*(\d+)$/); const end = m ? +m[1] : null;
+  const base = n.replace(/^omnibus\s+(under|of|for)\s+/i, '').replace(/\(light novel\)/ig, ' ').replace(/\(([^)]*(omnibus|edition|in-?1|in 1|deluxe|collector|box ?set)[^)]*)\)/ig, ' ').replace(/\s*-\s*\d+\s*(?=(omni|[23][- ]?in))/i, ' ').replace(/\s*&\s*\d+$/, '')
+    .replace(/\b(the\s+)?(complete\s+)?(collection\s+)?(omnibus|omni|[23][- ]?in[- ]?1|deluxe|collector'?s?|special collectors?|vizbig|big|perfect|ultimate|eternal|oversized|full ?metal edition|fully compiled|limited|special|\d+(st|nd|rd|th)\s+anniversary|anniversary|box ?set|bam|bn special|b&n|bebeautiful|exclusive)(\s+(edition|collection|ex))?\b.*$/i, '')
+    .replace(/[\s,:\-–]+$/, '').replace(/\s+(series|vol\.?|volume)$/i, '').replace(/\s+/g, ' ').trim();
   return base ? { type, base, end, ln } : null; }
 function edKeyFor(base, ln){ const q = normName(base) + (ln ? '|ln' : '');
   const sk = SNAP ? (snapNorm.get(q) || (SNAP.al && SNAP.al[q]) || (SNAP.s[snapKey(base, ln)] ? snapKey(base, ln) : null)) : null;
@@ -511,14 +517,17 @@ function edAdd(key, name, type, nums, o = {}){ const prev = shelf.series[key] ? 
   save(); return () => { if (prev) shelf.series[key] = prev; else delete shelf.series[key]; save(); }; }
 // "Maid-sama! -10 Omnibus" Vol 9 -> Omnibus #5 holding Vol 9-10; plain numbers are the edition's own numbers
 function edNums(p, vols){ const v = vols.filter(x => Number.isInteger(x) && x > 0); if (p.end && v.length === 1 && v[0] < p.end){ const a = v[0], z = p.end - a + 1, num = p.end % z === 0 ? p.end / z : a; return { nums: [num], c: { [num]: a + '-' + p.end } }; } return { nums: v, c: null }; }
-function edAddNamed(name, vols, o = {}){ const p = edParseName(name); if (!p) return null; const key = edKeyFor(p.base, p.ln); const r = edNums(p, vols); if (!r.nums.length) return null;
+const ED_FAM = ['Omnibus','2-in-1','3-in-1'];
+// a typed "Omnibus" files under the shop's own omnibus type for that series (e.g. its 2-in-1 edition) when the shop has just one
+function edPickType(key, type){ if (!ED_FAM.includes(type) || !SNAP) return type; const hit = (shelf.series[key] && snapEntry(key)) || (SNAP.s[key] ? [key, SNAP.s[key]] : null); const X = hit && hit[1].x; if (!X) return type; const fam = Object.keys(X).filter(t => ED_FAM.includes(t)); return fam.length === 1 ? fam[0] : type; }
+function edAddNamed(name, vols, o = {}){ const p = edParseName(name); if (!p) return null; const key = edKeyFor(p.base, p.ln); p.type = edPickType(key, p.type); const r = edNums(p, vols); if (!r.nums.length) return null;
   return { key, type: p.type, nums: r.nums, undo: edAdd(key, edNameFor(key, p.base, p.ln), p.type, r.nums, Object.assign({}, o, r.c ? { c: r.c } : {})) }; }
 // move old shelf entries for omnibus/special editions (their own "series") into the main series
 function edMigrate(){ if (!SNAP) return 0; let n = 0; const xm = SNAP.xm || {}; const keep = new Set(['n','v','t','want','c','m','ct','h']);
   Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s || s.ed || Object.keys(s).some(f => !keep.has(f))) return;
     let tg = null; const ln = isLN(k, s);
     if (xm[k]){ const bk = shelfKeyFor(xm[k][0]) || xm[k][0]; tg = { key: bk, type: xm[k][1], name: edNameFor(bk, s.n, ln), end: null }; }
-    else { const p = edParseName(s.n); if (p && !snapEntry(k)){ const bk = edKeyFor(p.base, p.ln); tg = { key: bk, type: p.type, name: edNameFor(bk, p.base, p.ln), end: p.end }; } }
+    else { const p = edParseName(s.n); if (p && !snapEntry(k)){ const bk = edKeyFor(p.base, p.ln); tg = { key: bk, type: edPickType(bk, p.type), name: edNameFor(bk, p.base, p.ln), end: p.end }; } }
     if (!tg || tg.key === k) return;
     const r = edNums(tg, ints(s)); const w = edNums(tg, (s.want || []).map(Number)).nums;
     const T = shelf.series[tg.key] = shelf.series[tg.key] || { n: tg.name, v: [], t: Date.now() }; T.ed = T.ed || {}; const E = T.ed[tg.type] = T.ed[tg.type] || { v: [] };
