@@ -81,6 +81,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .brand h1{font-size:21px}
 .top{gap:6px}.top .iconbtn,.top .btn{flex:0 0 auto}.brand{min-width:0;flex:1 1 auto}.brand h1{overflow-wrap:anywhere}
 @media (max-width:420px){.brand h1{font-size:17px}.brand svg{width:28px;height:28px}.top .iconbtn{width:34px;height:34px}#acctHdr{padding-inline:8px}}
+.hicons{display:grid;grid-template-columns:repeat(2,auto);gap:5px;flex:none}.hicons .iconbtn{width:34px;height:34px}
 .brand small{display:block;font:500 12px Figtree,sans-serif;color:var(--muted);letter-spacing:.02em}
 .mdot{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#d9417a;color:#fff;font:700 11px/18px system-ui;font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--surface)}
 #msgBar button{display:block;width:calc(100% - 32px);margin:8px 16px 0;text-align:left;border:1px solid var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--surface));color:var(--ink);border-radius:12px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
@@ -333,11 +334,14 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="3" y="6" width="7" height="24" rx="1.5" fill="var(--accent)"/><rect x="11.5" y="4" width="7" height="26" rx="1.5" fill="var(--gold)"/><rect x="20" y="8" width="7" height="22" rx="1.5" fill="var(--accent)" opacity=".55" transform="rotate(8 23.5 19)"/><path d="M14.9 8.5l.7 1.6 1.7.2-1.3 1.1.4 1.7-1.5-.9-1.5.9.4-1.7-1.3-1.1 1.7-.2z" fill="#fff"/></svg>
       <div><h1>My Manga Emporium</h1><small id="sync">Loading your shelf…</small></div>
     </div>
-    <button class="iconbtn" id="msgBtn" aria-label="Messages and fixes" title="Messages and fixes" style="margin-left:auto;margin-right:6px;position:relative;font-size:17px">💬<i id="msgDot" class="mdot" hidden></i></button>
-    <button class="btn sm hidden" id="acctHdr" style="margin-right:6px;white-space:nowrap">Log in</button>
-    <button class="btn sm gold hidden" id="cartHdr" style="margin-right:6px;white-space:nowrap">🛒 0</button>
-    <a class="iconbtn" id="shopLink" href="https://themagesemporium.com" target="_top" aria-label="Back to The Mage’s Emporium shop" title="Back to the shop" style="margin-right:6px;text-decoration:none;font-size:18px;display:grid;place-items:center">🛍️</a>
-    <button class="iconbtn" id="theme" aria-label="Change colors"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1.1 0 1.6-.9 1.2-1.8-.5-1.1.2-2.2 1.4-2.2H17a4 4 0 004-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg></button>
+    <button class="btn sm hidden" id="acctHdr" style="margin-left:auto;white-space:nowrap">Log in</button>
+    <button class="btn sm gold hidden" id="cartHdr" style="white-space:nowrap">🛒 0</button>
+    <div class="hicons">
+      <button class="iconbtn" id="msgBtn" aria-label="Messages and fixes" title="Messages and fixes" style="position:relative;font-size:17px">💬<i id="msgDot" class="mdot" hidden></i></button>
+      <button class="iconbtn" id="theme" aria-label="Change colors"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 100 18c1.1 0 1.6-.9 1.2-1.8-.5-1.1.2-2.2 1.4-2.2H17a4 4 0 004-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.3" fill="currentColor"/><circle cx="10.5" cy="7" r="1.3" fill="currentColor"/><circle cx="15" cy="7.5" r="1.3" fill="currentColor"/></svg></button>
+      <a class="iconbtn" id="shopLink" href="https://themagesemporium.com" target="_top" aria-label="Back to The Mage’s Emporium shop" title="Back to the shop" style="text-decoration:none;font-size:18px;display:grid;place-items:center">🛍️</a>
+      <button class="iconbtn" id="calBtn" aria-label="Calendar: reading, releases and orders on the way" title="Calendar" style="font-size:17px">📅</button>
+    </div>
   </header>
   <div id="msgBar"></div>
 
@@ -1165,7 +1169,7 @@ function openMsgs(){ current = null; FIXC = null; const L = [...fixMap().values(
     <textarea id="fbTxt" class="rv" rows="3" placeholder="Something wrong with a book, cover or series? An idea? Tell us here."></textarea>
     <div class="row2"><button class="btn sm" data-fbsend>Send to the shop</button><button class="btn ghost sm" data-close>Close</button></div></div>`);
   if (msgUnread()){ shelf.msgSeen = Date.now(); save(); } msgUI(); }
-document.addEventListener('click', e => { if (e.target.closest('#msgBtn,[data-openmsg]')) return openMsgs();
+document.addEventListener('click', e => { if (e.target.closest('#calBtn')){ const t = document.querySelector('[data-tab="reading"]'); if (t) t.click(); setTimeout(() => { const c = document.querySelector('#readBody .cal'); if (c) c.closest('.st-sec').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150); return; } if (e.target.closest('#msgBtn,[data-openmsg]')) return openMsgs();
   if (e.target.closest('[data-fbsend]')){ const t = ($('#fbTxt') || {}).value; if (!t || !t.trim()) return toast('Type a message first'); shelf.fb = (shelf.fb || []).concat({ t: t.trim().slice(0, 1000), at: Date.now() }); save(); toast(acct && acct.at ? 'Sent. We’ll reply here.' : 'Saved. Log in so the shop can see it and reply.'); openMsgs(); } });
 function renderAll(){ FIXC = null; setTimeout(() => { try { msgUI(); } catch(e){} }, 0); renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
 $('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; if (t.dataset.b === 'secret'){ openSheet(`<h2>🔒 Secret achievements</h2><p>${BADGES.filter(b => b[4] && b[2] < b[3]).length} achievements are hidden until you earn them. Keep collecting, reading, reviewing and lending to discover them.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); return; } const [name, how, have, need] = BADGES[+t.dataset.b];
