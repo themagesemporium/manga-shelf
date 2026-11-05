@@ -957,6 +957,33 @@ function openYear(yr){ current = null;
     <div class="row2"><button class="btn ghost" data-close>Close</button></div>`); }
 function exportShelf(){ return JSON.stringify({ app: 'my-manga-emporium', v: 1, at: new Date().toISOString(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {} }); }
 function parseVols(t){ const out = []; String(t).split(/[,;]+/).forEach(part => { const m = part.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+)/); if (m){ for (let v = +m[1]; v <= +m[2] && out.length < 500; v++) out.push(v); } else { const n = part.match(/\d+(?:\.\d+)?/); if (n) out.push(+n[0]); } }); return out; }
+/* CSV exports from other apps (Goodreads, Libib, spreadsheets...): find the title / series / volume / ISBN columns by their header.
+   ISBNs are matched to the shop's catalog first, so "Samurai Deeper Kyo, Vol. 3" style titles and odd series names still land right. */
+function csvRows(text){ const rows = []; let row = [], cell = '', q = false; text = String(text).replace(/^﻿/, '');
+  for (let i = 0; i < text.length; i++){ const c = text[i];
+    if (q){ if (c === '"'){ if (text[i + 1] === '"'){ cell += '"'; i++; } else q = false; } else cell += c; continue; }
+    if (c === '"') q = true; else if (c === ',' || c === '\t' || c === ';' && !text.includes(',')) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r'){ if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c; }
+  if (cell || row.length){ row.push(cell); rows.push(row); } return rows.map(r => r.map(x => x.trim())).filter(r => r.some(Boolean)); }
+function csvHeaderish(text){ const first = String(text).replace(/^﻿/, '').split(/\r?\n/)[0] || ''; return /(^|[,\t;"])\s*"?(title|series|name|book title|isbn|isbn13|isbn 13|volume|vol\.?)"?\s*([,\t;]|$)/i.test(first); }
+function isbnTo13(s){ s = String(s || '').replace(/[^0-9Xx]/g, ''); if (/^97[89]\d{10}$/.test(s)) return s; if (!/^\d{9}[\dXx]$/.test(s)) return '';
+  const b = '978' + s.slice(0, 9); let t = 0; for (let k = 0; k < 12; k++) t += (+b[k]) * (k % 2 ? 3 : 1); return b + ((10 - t % 10) % 10); }
+let lastCsv = null;
+function importCsvTable(text, put){ const rows = csvRows(text); const head = rows.shift().map(h => h.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim());
+  const col = (...names) => { for (const n of names){ const i = head.findIndex(h => h === n); if (i >= 0) return i; } for (const n of names){ const i = head.findIndex(h => h.includes(n)); if (i >= 0) return i; } return -1; };
+  const cS = col('series', 'series name'), cT = col('title', 'book title', 'name'), cV = col('volume', 'vol', 'volumes', 'number'), cI = col('isbn13', 'isbn 13', 'ean', 'isbn', 'barcode', 'upc');
+  const st = lastCsv = { rows: rows.length, isbn: 0, title: 0, skipped: [] };
+  rows.forEach(r => {
+    const isbn = cI >= 0 ? isbnTo13(r[cI]) : ''; const hit = isbn && snapBar.get(isbn);
+    if (hit && SNAP && SNAP.s[hit[0]]){ const e = SNAP.s[hit[0]]; put(e.n + (e.ln ? ' (Light Novel)' : ''), [hit[1]]); st.isbn++; return; }
+    let name = cS >= 0 && r[cS] ? r[cS] : (cT >= 0 ? r[cT] : r[0]); let vols = cV >= 0 && r[cV] ? parseVols(r[cV]) : [];
+    name = String(name || '').replace(/\s*\((?!light novel)[^)]*#\s*\d+[^)]*\)\s*$/i, '').trim();
+    const m = name.match(/^(.*?)[,:\s]+(?:vol(?:ume)?\.?|#|book|bk\.?)\s*(\d+(?:\.\d+)?)\b.*$/i) || name.match(/^(.*?)[,:\s]+(\d{1,3})$/);
+    if (m){ if (!vols.length) vols = [+m[2]]; name = m[1].replace(/[,:\s]+$/, ''); }
+    if (!name){ st.skipped.push(r.join(' ').slice(0, 60)); return; }
+    put(name, vols.length ? vols : [1]); st.title++; });
+}
 function importData(text){
   const add = {}; const put = (name, vols, extra) => { name = String(name || '').trim(); if (!name) return; const isln = /light novel|\(ln\)/i.test(name); let k = handleize(name.replace(/\(?\s*(light novel|ln)\s*\)?/ig, ' ')) + (isln ? '-ln' : '');
     const a = add[k] = add[k] || { n: name, v: new Set(), x: {} }; vols.forEach(v => { if (v > 0 && v < 2000) a.v.add(+v); }); if (extra) Object.assign(a.x, extra); };
@@ -965,6 +992,8 @@ function importData(text){
     const src = j.series || j.owned || j;
     if (Array.isArray(src)) src.forEach(r => Array.isArray(r) ? put(r[0], (r[1]||[]).map(Number)) : put(r.n || r.name || r.title, (r.v || r.vols || []).map(Number)));
     else Object.entries(src).forEach(([k, o]) => { if (!o || typeof o !== 'object') return; const vs = (o.v || o.vols || []).map(Number); if (j.series && j.app === 'my-manga-emporium'){ add[k] = { n: o.n, v: new Set(vs), x: o, full: true }; } else put(o.n || o.name || k, vs); });
+  } else if (csvHeaderish(text)){
+    importCsvTable(text, put);
   } else {
     String(text).split(/\r?\n/).forEach(line => { line = line.trim(); if (!line || /^series\b.*vol/i.test(line)) return;
       const cells = line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
@@ -986,8 +1015,10 @@ $('#expDl').onclick = async () => { const t = exportShelf(); const name = 'manga
   try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); } catch(e){ $('#impTxt').value = t; toast('Saving files isn’t allowed here: the backup is in the box below.'); } };
 async function doImport(text){ if (!text || !text.trim()){ $('#impMsg').textContent = 'Nothing to import yet.'; return; }
   const prev = JSON.parse(JSON.stringify(shelf.series)); let r;
-  try { r = importData(text); } catch(e){ $('#impMsg').textContent = 'Couldn’t read that: ' + (e.message || e); return; }
-  save(); $('#impMsg').textContent = `Added ${r.ns} new series and ${r.nb} books.`; toast(`Imported: ${r.ns} new series, ${r.nb} books`, () => { shelf.series = prev; save(); });
+  if (csvHeaderish(text)){ $('#impMsg').textContent = 'Reading your file…'; try { await loadSnap(); } catch(e){} }
+  lastCsv = null; try { r = importData(text); } catch(e){ $('#impMsg').textContent = 'Couldn’t read that: ' + (e.message || e) + '. Email the file to us and we’ll add your books for you.'; track('import-fail'); return; }
+  if (!r.ns && !r.nb){ $('#impMsg').textContent = 'We couldn’t find any books in that file. Email it to us (reply to any of our emails) and we’ll add your collection for you.'; track('import-empty'); return; }
+  save(); track('import-ok'); $('#impMsg').textContent = `Added ${r.ns} new series and ${r.nb} books.` + (lastCsv ? ` (${lastCsv.isbn} matched by ISBN${lastCsv.skipped.length ? ', ' + lastCsv.skipped.length + ' rows skipped' : ''})` : ''); toast(`Imported: ${r.ns} new series, ${r.nb} books`, () => { shelf.series = prev; save(); });
   $('#impTxt').value = ''; }
 $('#impBtn').onclick = () => doImport($('#impTxt').value);
 $('#snapBtn').onclick = () => buildSnap($('#snapBtn'), $('#snapMsg'));
