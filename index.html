@@ -507,7 +507,7 @@ function edMigrate(){ if (!SNAP) return 0; let n = 0; const xm = SNAP.xm || {}; 
   Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s || s.ed || Object.keys(s).some(f => !keep.has(f))) return;
     let tg = null; const ln = isLN(k, s);
     if (xm[k]){ const bk = shelfKeyFor(xm[k][0]) || xm[k][0]; tg = { key: bk, type: xm[k][1], name: edNameFor(bk, s.n, ln), end: null }; }
-    else { const p = edParseName(s.n); if (p && !SNAP.s[k]){ const bk = edKeyFor(p.base, p.ln); tg = { key: bk, type: p.type, name: edNameFor(bk, p.base, p.ln), end: p.end }; } }
+    else { const p = edParseName(s.n); if (p && !snapEntry(k)){ const bk = edKeyFor(p.base, p.ln); tg = { key: bk, type: p.type, name: edNameFor(bk, p.base, p.ln), end: p.end }; } }
     if (!tg || tg.key === k) return;
     const r = edNums(tg, ints(s)); const w = edNums(tg, (s.want || []).map(Number)).nums;
     const T = shelf.series[tg.key] = shelf.series[tg.key] || { n: tg.name, v: [], t: Date.now() }; T.ed = T.ed || {}; const E = T.ed[tg.type] = T.ed[tg.type] || { v: [] };
