@@ -1099,7 +1099,7 @@ function fixList(){ if (!SNAP) return []; const out = [];
     const ln = isLN(k, s); const n = String(s.n).replace(/\(light novel\)/ig, ' ').replace(/\s+/g, ' ').trim(); let cand = null, vols = [];
     const m = n.match(/^(.*?)[\s,:#-]*(?:\b(?:vol(?:ume)?\.?|episode|ep\.?|part|book|no\.?)\s*)?#?\s*(\d{1,3})(?:\s*(?:\/|of)\s*\d{1,3})?\s*$/i);
     if (m && m[1].trim().length >= 3){ const c = fixFind(m[1], ln); if (c){ cand = c; vols = [+m[2]]; } }
-    if (!cand){ const q = normName(n); if (q.length >= 5){ const hits = new Set(); snapNorm.forEach((key, nn) => { const [b, l] = nn.split('|'); if (!!l !== ln) return; if (b !== q && b.length >= 5 && (b.startsWith(q) || (q.startsWith(b) && b.length >= 8))) hits.add(key); }); if (hits.size === 1) cand = [...hits][0]; } }
+    if (!cand){ const q = normName(n); if (q.length >= 5){ const hits = new Set(); snapNorm.forEach((key, nn) => { const [b, l] = nn.split('|'); if (!!l !== ln) return; if (b !== q && b.startsWith(q)) hits.add(key); }); if (hits.size === 1) cand = [...hits][0]; } }
     if (cand) out.push({ k, n: s.n, cand, sname: SNAP.s[cand].n, have: (SNAP.s[cand].i || []).map(x => x[0]), vols: vols.length ? vols : ints(s) }); });
   return out; }
 function fixHTML(){ const L = fixList(); const box = $('#fixBox'); fixBadge(L.length); if (!box) return L.length;
@@ -1116,7 +1116,7 @@ document.addEventListener('click', e => { const g = e.target.closest('[data-fixg
     T.v = [...new Set(T.v.concat(vols))].sort((a, b) => a - b);
     ['r','want','sell'].forEach(f => { if (s[f] && s[f].length) T[f] = [...new Set((T[f] || []).concat(s[f].map(one)))].sort((a, b) => a - b); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
     ['st','rv','loc','cond'].forEach(f => { if (s[f] != null && T[f] == null) T[f] = s[f]; }); if (note) T.fxNote = { t: note + ' (was: ' + s.n + ')', at: dayKey() };
-    delete shelf.series[k]; save(); renderAll(); fixHTML(); toast(`Moved to ${T.n}, Vol ${compactVols(vols)}`, () => { shelf.series = prev; save(); renderAll(); fixHTML(); }); return; }
+    delete shelf.series[k]; shelf.gone = Object.assign({}, shelf.gone, { [k]: Date.now() }); save(); renderAll(); fixHTML(); toast(`Moved to ${T.n}, Vol ${compactVols(vols)}`, () => { shelf.series = prev; save(); renderAll(); fixHTML(); }); return; }
   if (g.dataset.fixno){ s.fxNo = 1; if (note) s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); toast('Okay, we’ll leave that one as it is.' + (note ? who : '')); return; }
   if (g.dataset.fixnote){ if (!note) return toast('Type a note first'); s.fxNote = { t: note, at: dayKey() }; save(); fixHTML(); toast('Note saved. The shop sees it the next time they check.' + who); } });
 function renderAll(){ renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
@@ -2028,7 +2028,7 @@ function applyStoreWish(){ if (!storeWish || !Array.isArray(storeWish.items)) re
     const k = shelf.series[k0] ? k0 : Object.keys(shelf.series).find(x => normName(shelf.series[x].n) === normName(it.s) && /-ln$/.test(x) === ln); seen.delete(id); if (!k) return; const s = shelf.series[k];
     if ((s.want || []).includes(v)){ s.want = s.want.filter(x => x !== v); if (!s.want.length){ delete s.want; if (!(s.v || []).length && !(s.sell || []).length && !s.ed) delete shelf.series[k]; } r++; } });
   ls.set('mme-swseen', [...seen]); if (n || r){ save(); toast([n ? `Added ${n} ${n === 1 ? 'book' : 'books'} from your website wishlist` : '', r ? `removed ${r} you took off it there` : ''].filter(Boolean).join(', ') + ' (♥ Wishlist)'); } }
-function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null, feed: shelf.feed || null }; }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, friends: shelf.friends || null, wst: shelf.wst || null, feed: shelf.feed || null, gone: shelf.gone || null }; }
 // copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
 function siteMirror(){ const owned = {}; let tb = 0;
   Object.entries(shelf.series).forEach(([k, s]) => { const hit = SNAP ? snapEntry(k) : null; const key = hit ? hit[0] : k; const vs = ints(s);
@@ -2049,9 +2049,11 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); if (SNAP) setTimeout(() => { try { edMigrate(); } catch(e){} }, 0); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; if (o.gone) shelf.gone = o.gone; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); if (SNAP) setTimeout(() => { try { edMigrate(); } catch(e){} }, 0); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
-  Object.entries(b.series || {}).forEach(([k, S]) => { const T = out.series[k]; if (!T){ out.series[k] = S; return; }
+  const gone = Object.assign({}, b.gone || {}, a.gone || {}); out.gone = Object.keys(gone).length ? gone : null;
+  Object.keys(out.series).forEach(k => { if (gone[k] && !((b.series || {})[k] && (b.series[k].t || 0) > gone[k]) && (out.series[k].t || 0) <= gone[k]) delete out.series[k]; });
+  Object.entries(b.series || {}).forEach(([k, S]) => { if (gone[k] && (S.t || 0) <= gone[k]) return; const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
     if (S.ed && T.ed) Object.entries(S.ed).forEach(([t, E]) => { const D = T.ed[t]; if (!D){ T.ed[t] = E; return; } D.v = uni(D.v, E.v); if (E.want) D.want = uni(D.want, E.want).filter(v => !D.v.includes(v)); if (E.c) D.c = Object.assign({}, E.c, D.c || {}); });
     ['ln','cn','vr'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); Object.keys(S).forEach(f => { if (T[f] == null) T[f] = S[f]; }); });
