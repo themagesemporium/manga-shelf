@@ -1589,8 +1589,16 @@ function renderAdd(pre){
   } else {
     b.innerHTML = `<label class="field"><span>Series</span><input id="tn" list="tnl" placeholder="Series name" value="${esc(pre && pre.name || '')}"></label>
     <datalist id="tnl">${Object.values(shelf.series).map(s => `<option value="${esc(s.n)}">`).join('')}</datalist>
+    <p class="note" id="tnHint" hidden style="margin:-4px 0 12px">We don’t recognize that title yet. Check the spelling, or <a href="#" id="tnScan">scan the ISBN barcode</a> on the back so we can match covers and prices. You can still add it as typed.</p>
     <label class="field"><span>Volumes</span><input id="tv" placeholder="e.g. 1-5, 7, 9"></label>
     <button class="btn" id="tgo">Add to my shelf</button>`;
+    let tnT; const tnCheck = () => { const n = $('#tn').value.trim(); const h = $('#tnHint'); if (!h) return;
+      if (n.length < 3 || !SNAP){ h.hidden = true; return; }
+      const ln = /light novel|\bln\b/i.test(n); const q = normName(n.replace(/\bln\b/ig, ''));
+      const known = Object.values(shelf.series).some(s => s.n.toLowerCase() === n.toLowerCase()) || [q, q + '|ln'].some(x => snapNorm.has(x) || (SNAP.al && SNAP.al[x])) || !!SNAP.s[snapKey(n, ln)];
+      h.hidden = known; };
+    $('#tn').addEventListener('input', () => { clearTimeout(tnT); tnT = setTimeout(tnCheck, 500); }); $('#tn').addEventListener('change', tnCheck);
+    $('#tnScan').onclick = e => { e.preventDefault(); const t = document.querySelector('[data-at="scan"]'); if (t) t.click(); };
     $('#tgo').onclick = () => {
       const name = $('#tn').value.trim(); const vols = parseVols($('#tv').value);
       if (!name || !vols.length) return toast('Add a series name and at least one volume');
