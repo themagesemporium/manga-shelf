@@ -344,6 +344,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
     </div>
   </header>
   <div id="msgBar"></div>
+  <div id="a2hs" hidden style="margin:6px 0 0"><div class="st-sec" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin:0"><span style="font-size:22px">📲</span><div style="flex:1;min-width:0"><b style="font-size:14px">Get the app on your home screen</b><small class="sub" style="display:block">No App Store needed. Takes 10 seconds.</small></div><button class="btn gold sm" data-a2hs>How</button><button class="iconbtn" data-a2hsx aria-label="Dismiss" style="width:30px;height:30px;font-size:14px">✕</button></div></div>
 
   <section class="rank" id="rank" aria-live="polite">
     <div class="lbl">Collector rank</div>
@@ -2230,6 +2231,17 @@ async function boxReveal(){ const due = (boxes || []).filter(b => b.items && b.i
   const adv = shown.some(x => isAdvent(x.b));
   openSheet(`<h2>${adv ? '🎄 Merry Christmas!' : '🎁 Your mystery box is here!'}</h2>${shown.map(({ b, got }) => `<p class="sub" style="margin:10px 0 4px"><b>${esc(b.t || 'Mystery box')}</b> · order ${esc(b.o)}</p>${got.map(g => { const cv = coverOf(g.k); return `<button class="srow" data-k="${esc(g.k)}">${cv ? `<img src="${esc(cv)}" alt="" style="width:34px;height:48px;object-fit:cover;border-radius:4px;margin-right:8px" onerror="this.remove()">` : ''}<span>${esc(g.n)}<small>Vol ${esc(g.v)}</small></span></button>`; }).join('')}`).join('')}<p class="sub">We added ${shown.reduce((a, x) => a + x.got.length, 0)} books to your shelf. Happy reading!</p><div class="row2"><button class="btn" data-close>Yay!</button></div>`); }
 setTimeout(() => { if ((boxes || []).length) boxReveal().catch(() => {}); }, 1500);
+/* ---------- "add to home screen" banner: phones in a normal browser tab only, until added or dismissed ---------- */
+let a2hsEvt = null; window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); a2hsEvt = e; a2hsShow(); });
+function a2hsShow(){ const el = $('#a2hs'); if (!el) return; const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone; const phone = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+  el.hidden = !!(window.claude || standalone || !phone || ls.get('mme-a2hs')); }
+document.addEventListener('click', async e => { if (e.target.closest('[data-a2hsx]')){ ls.set('mme-a2hs', Date.now()); a2hsShow(); track('a2hs-dismiss'); return; }
+  if (!e.target.closest('[data-a2hs]')) return; track('a2hs-open');
+  if (a2hsEvt){ a2hsEvt.prompt(); const r = await a2hsEvt.userChoice.catch(() => null); a2hsEvt = null; if (r && r.outcome === 'accepted'){ ls.set('mme-a2hs', Date.now()); a2hsShow(); } return; }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  openSheet(`<h2>📲 Add My Manga Emporium to your home screen</h2><p class="sub">It’s a web app, so it isn’t in the App Store or Google Play. Add it once and it gets its own icon and opens full screen, just like any other app.</p>${ios ? `<ol style="padding-left:20px;line-height:1.6"><li>Make sure this page is open in <b>Safari</b></li><li>Tap the <b>Share</b> button (the square with the arrow)</li><li>Scroll down and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol>` : `<ol style="padding-left:20px;line-height:1.6"><li>Make sure this page is open in <b>Chrome</b></li><li>Tap the <b>⋮</b> menu in the top corner</li><li>Tap <b>Add to Home screen</b> or <b>Install app</b></li><li>Tap <b>Add</b> / <b>Install</b></li></ol>`}<div class="row2"><button class="btn" data-a2hsdone>Done!</button><button class="btn ghost" data-close>Later</button></div>`); });
+document.addEventListener('click', e => { if (e.target.closest('[data-a2hsdone]')){ ls.set('mme-a2hs', Date.now()); a2hsShow(); closeSheet(); toast('🎉 Enjoy the app!'); } });
+setTimeout(a2hsShow, 600);
 async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy = true; $('#sync').textContent = 'Syncing with your account…';
   try { const cloud = await acctPull(); const local = shelfBody(); const nl = shelfCount(local), nc = shelfCount(cloud); const dirty = ls.get('mme-dirty');
     if (!nc){ acctBusy = false; if (nl) await acctPush(); }
