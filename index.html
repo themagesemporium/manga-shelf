@@ -794,15 +794,15 @@ function renderReadTab(){
   const goal = shelf.goal && shelf.goal[yr] ? shelf.goal[yr] : 0; const gp = goal ? Math.min(100, Math.round(year/goal*100)) : 0;
   const fact = (b, t) => `<div class="fact"><b>${b}</b><small>${t}</small></div>`;
   const y = calM.getFullYear(), m = calM.getMonth(); const first = new Date(y, m, 1).getDay(); const days = new Date(y, m+1, 0).getDate();
-  const mine = myPreorders(); if (!preorders) loadPreorders(); const arr = arrivals();
+  const mine = myPreorders(); if (!preorders) loadPreorders(); const arr = arrivals(); if (!evAt) loadEvents(); const evs = (shopEvents || []).filter(e => e.e >= dayKey()); const cx = arr.concat(evDays(evs));
   let cells = ['S','M','T','W','T','F','S'].map(d => `<span class="dow">${d}</span>`).join('');
   for (let i=0;i<first;i++) cells += '<span></span>';
   for (let d=1; d<=days; d++){ const k = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0'); const n = L[k] || 0; const today = k === dayKey();
-    const rel = mine.filter(p => p.rd === k); const first = (R[k]||[])[0]; const cv = first ? coverOf(first.split('|')[0]) : ''; const ar = arr.filter(a => a.d === k);
+    const rel = mine.filter(p => p.rd === k); const first = (R[k]||[])[0]; const cv = first ? coverOf(first.split('|')[0]) : ''; const ar = cx.filter(a => a.d === k);
     cells += `<button class="cday${n>=5?' l3':n>=2?' l2':n>=1?' l1':''}${today?' today':''}${calDay===k?' sel':''}" data-day="${k}" aria-label="${k}: ${n} read${rel.length?`, ${rel.length} coming out`:''}${ar.length?`, ${ar.length} order arriving`:''}">${cv ? `<img src="${esc(cv)}" alt="" onerror="this.remove()">` : ''}<span>${d}</span>${n?`<small>📖${n}</small>`:''}${rel.length?`<em>📦${rel.length>1?rel.length:''}</em>`:''}${ar.length?`<em class="ar">${ar[ar.length-1].ic}</em>`:''}</button>`; }
   const mTot = Object.keys(L).filter(k => k.startsWith(y + '-' + String(m+1).padStart(2,'0'))).reduce((a,k)=>a+L[k],0);
   let dayHTML = '';
-  if (calDay){ const items = (R[calDay]||[]); const n = L[calDay]||0; const rel = mine.filter(p => p.rd === calDay); const past = calDay <= dayKey(); const ard = arr.filter(a => a.d === calDay);
+  if (calDay){ const items = (R[calDay]||[]); const n = L[calDay]||0; const rel = mine.filter(p => p.rd === calDay); const past = calDay <= dayKey(); const ard = cx.filter(a => a.d === calDay);
     dayHTML = `<div class="st-sec"><h3>${new Date(calDay+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</h3>
     ${ard.map(a => `<div class="srow" style="cursor:default"><span>${a.ic} ${esc(a.t)}<small>${esc(a.sub)}</small></span></div>`).join('')}
     ${rel.map(p => `<div class="srow" style="cursor:default"><span>📦 ${esc(p.title)}<small>Comes out this day · $${p.price.toFixed(2)}</small></span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Pre-order</a></div>`).join('')}
@@ -825,6 +825,7 @@ function renderReadTab(){
     <div class="cal">${cells}</div><p class="sub" style="margin:8px 0 0">${mTot} read this month. Tap a day to see what you read, or to log anything you read that day, even books you don't own.</p></div>
   ${dayHTML}
   ${arr.length ? `<div class="st-sec"><h3>🚚 Your orders on the way</h3>${arr.map(a => `<div class="srow" style="cursor:default"><span>${a.ic} ${esc(a.t)}<small>${new Date(a.d+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})} · ${esc(a.sub)}</small></span></div>`).join('')}<p class="sub" style="margin:6px 0 0">Arrival dates are estimates. Mystery box books join your shelf the day they arrive, so nothing gets spoiled.</p></div>` : ''}
+  ${evs.length ? `<div class="st-sec"><h3>🎪 Come see us at a convention</h3>${evs.map(e => `<div class="srow" style="cursor:default"><span>🎪 ${esc(e.n)}${e.pend ? ' <span class="chip">Pending</span>' : ''}<small>${esc(evRange(e))}${e.p ? ' · ' + esc(e.p) : ''}</small></span></div>`).join('')}<p class="sub" style="margin:6px 0 0">Stop by our booth! Conventions show on the calendar too.</p></div>` : ''}
   <div class="st-sec"><h3>📦 Coming out for your series</h3>${!mcp && !preorders ? `<p class="sub" style="margin:0">Loading upcoming releases…</p>` : !preorders ? `<p class="sub" style="margin:0"><span class="spin"></span>&nbsp; Checking pre-orders…</p>` : mine.filter(p => p.rd >= dayKey()).length ? mine.filter(p => p.rd >= dayKey()).slice(0,12).map(p => `<div class="srow" style="cursor:default"><span>${esc(p.title)}<small>${new Date(p.rd+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})} · $${p.price.toFixed(2)}</small></span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Pre-order</a></div>`).join('') : `<p class="sub" style="margin:0">No pre-orders up right now for series on your shelf. New volumes show up here (and on the calendar) as soon as the shop lists them.</p>`}</div>`;
 }
 $('#readBody') && null;
@@ -2134,6 +2135,20 @@ async function acctOrders(force){
   const paid = all.filter(x => +x.totalPrice.amount > 0);
   shelf.orders = { n: paid.length, spent: paid.reduce((a, x) => a + +x.totalPrice.amount, 0), first: all.length ? all.map(x => x.processedAt).sort()[0] : null, upto: all.length ? all.map(x => x.processedAt).sort().pop() : since, checked: Date.now() };
   save(); if (added) toast(`Added ${added} ${added === 1 ? 'book' : 'books'} you bought from the shop`, () => { shelf.series = prev; save(); }); }
+/* ---------- conventions: read from the shop's Upcoming Events page (one per line: "Name - Month D(-D), YYYY - City, ST (Pending)") ---------- */
+let shopEvents = ls.get('mme-events') || [], evAt = 0;
+const MONS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function parseEvents(html){ const out = [];
+  String(html || '').split(/<\/p>|<br\s*\/?>|\n/i).map(x => x.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()).forEach(line => {
+    const m = line.match(/^(.+?)\s+[-–—]\s+([A-Za-z]+)\.?\s+(\d{1,2})(?:\s*[-–]\s*(?:([A-Za-z]+)\.?\s+)?(\d{1,2}))?,?\s+(\d{4})(?:\s+[-–—]\s+(.+))?$/); if (!m) return;
+    const mi = MONS.indexOf(m[2].toLowerCase().slice(0, 3)); if (mi < 0) return; const m2 = m[4] ? MONS.indexOf(m[4].toLowerCase().slice(0, 3)) : mi; const y = +m[6];
+    const s = new Date(y, mi, +m[3]), e = new Date(y, m2 < 0 ? mi : m2, m[5] ? +m[5] : +m[3]); if (e < s) e.setTime(s.getTime());
+    const pend = /\(pending\)/i.test(line); out.push({ n: m[1].replace(/\(pending\)/i, '').trim(), s: dayKey(s), e: dayKey(e), p: (m[7] || '').replace(/\(pending\)/i, '').trim(), pend }); });
+  return out.sort((a, b) => a.s.localeCompare(b.s)); }
+async function loadEvents(){ evAt = Date.now(); try { const j = await sfq('{page(handle:"upcoming-events"){body}}'); if (j.data && j.data.page){ shopEvents = parseEvents(j.data.page.body); ls.set('mme-events', shopEvents); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); } } catch(e){} }
+function evRange(e){ const f = (k, o) => new Date(k + 'T12:00:00').toLocaleDateString(undefined, o); if (e.s === e.e) return f(e.s, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  return e.s.slice(0, 7) === e.e.slice(0, 7) ? `${f(e.s, { month: 'short', day: 'numeric' })}–${+e.e.slice(8)}, ${e.e.slice(0, 4)}` : `${f(e.s, { month: 'short', day: 'numeric' })} – ${f(e.e, { month: 'short', day: 'numeric', year: 'numeric' })}`; }
+function evDays(evs){ const out = []; evs.forEach(e => { for (let k = e.s, i = 0; k <= e.e && i < 10; k = addDays(k, 1), i++) out.push({ d: k, ic: '🎪', t: e.n + (e.pend ? ' (pending)' : ''), sub: 'Convention' + (e.p ? ' · ' + e.p : '') + ' · come see our booth!' }); }); return out; }
 /* ---------- orders on the way + mystery boxes ----------
    ships: the customer's recent orders with an estimated arrival day (from the shipment date, or the order date if not shipped yet).
    boxes: custom.app_boxes, written by the shop when a mystery box / advent calendar is packed:
