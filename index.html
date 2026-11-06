@@ -1560,7 +1560,7 @@ async function addToCart(handle, btn){ track('add-to-cart'); if (window.claude){
   if (btn){ btn.disabled = true; btn.textContent = 'Adding…'; }
   try { const vid = await vidFor(handle); if (!vid) throw new Error('not found'); let j;
     if (cart && cart.id){ j = await sfq(`mutation($c:ID!,$l:[CartLineInput!]!){cartLinesAdd(cartId:$c,lines:$l){cart{${CF}} userErrors{message}}}`, { c: cart.id, l: [{ merchandiseId: vid, quantity: 1 }] }); j = j.data && j.data.cartLinesAdd; }
-    if (!j || !j.cart){ j = await sfq(`mutation($l:[CartLineInput!]!){cartCreate(input:{lines:$l}){cart{${CF}} userErrors{message}}}`, { l: [{ merchandiseId: vid, quantity: 1 }] }); j = j.data && j.data.cartCreate; }
+    if (!j || !j.cart){ j = await sfq(`mutation($l:[CartLineInput!]!){cartCreate(input:{lines:$l,attributes:[{key:"_source",value:"mme-app"}]}){cart{${CF}} userErrors{message}}}`, { l: [{ merchandiseId: vid, quantity: 1 }] }); j = j.data && j.data.cartCreate; }
     if (!j || !j.cart) throw new Error((j && j.userErrors && j.userErrors[0] && j.userErrors[0].message) || 'cart error');
     cart = { id: j.cart.id, url: j.cart.checkoutUrl, n: j.cart.totalQuantity }; ls.set('mme-cart', cart); cartChip(); toast('Added to your cart 🛒');
     if (btn){ btn.textContent = 'In cart ✓'; } }
@@ -2532,6 +2532,8 @@ window.addEventListener('offline', netState); window.addEventListener('online', 
 if (!window.claude && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 // privacy-friendly visit counter (GoatCounter: no cookies, no personal data) on the hosted app only
 const GC = 'https://themagesemporium.goatcounter.com/count';
+// Tag every link into the shop so orders that start in the app show up as utm_source=mme-app in Shopify (order > Conversion summary, and Analytics > Sessions/Sales by referrer).
+document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[href^="' + STORE + '"]'); if (!a) return; try { const u = new URL(a.href); if (!u.searchParams.has('utm_source')){ u.searchParams.set('utm_source', 'mme-app'); u.searchParams.set('utm_medium', 'app'); a.href = u.toString(); } } catch(err){} }, true);
 function track(ev){ try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: ev, title: ev, event: true }); } catch(e){} }
 // visit stats skip the shop's own devices: any device where Megan's account has logged in (emails kept only as short hashes), or ?nocount / #nocount once to opt a device out (?count to undo)
 const STAFF_H = ['79c2017283f009b2', 'df50a7ae224b52d6'];
