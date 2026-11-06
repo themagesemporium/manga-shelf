@@ -19,7 +19,7 @@ window._ncCreate = async (jobs, rows) => {
     if (/fantasy|isekai|demon|witch|magic|dragon|villainess|reincarnat|another world|sword|knight|prince|princess/.test(s)) return 'Fantasy';
     if (/science fiction|sci-fi|mecha|space/.test(s)) return 'Sci-Fi'; if (/comedy|humor|funny/.test(s)) return 'Comedy';
     if (/mystery|detective|thriller|crime/.test(s)) return 'Mystery'; if (/action|martial|fight|battle/.test(s)) return 'Action';
-    if (/sports|basketball|soccer|baseball|volleyball/.test(s)) return 'Sports'; if (/slice of life|cooking|food/.test(s)) return 'Slice of Life'; return 'Drama'; };
+    if (/sports|basketball|soccer|baseball|volleyball/.test(s)) return 'Drama'; return 'Drama'; }; // genre must be one of the custom.genre choices (no Sports / Slice of Life)
   const ageOf = (age, genre, t) => { const m = String(age).match(/(\d+)/); const n = m ? +m[1] : 0;
     if (n >= 18 || /\b18\+|mature|adult|explicit/i.test(t)) return 'Mature'; if (n >= 16) return 'Older Teen'; if (n >= 12 && n < 16) return 'Teen';
     return genre === 'Yaoi/BL' ? 'Mature' : (genre === 'Romance' || genre === 'Yuri' || genre === 'Horror') ? 'Older Teen' : 'Teen'; };
