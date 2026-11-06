@@ -2210,6 +2210,7 @@ function siteMirror(){ const owned = {}; let tb = 0;
 async function acctPush(){ if (!acct || !acct.cid) return; const b = await gzB64(JSON.stringify(shelfBody()));
   if (b.length > PARTS * CHUNK) throw new Error('shelf too big to save to your account');
   const mfs = []; for (let i = 0; i < PARTS; i++) mfs.push({ ownerId: acct.cid, namespace: 'mme', key: 'shelf' + i, type: 'json', value: JSON.stringify(b.slice(i * CHUNK, (i + 1) * CHUNK)) });
+  try { mfs.push({ ownerId: acct.cid, namespace: 'mme', key: 'inbox', type: 'json', value: JSON.stringify(inboxData()) }); } catch(e){}
   try { mfs.push(...siteMirror()); } catch(e){}
   const d = await acctGql(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{field message}}}`, { m: mfs });
   const er = d.metafieldsSet.userErrors; if (er && er.length) throw new Error(er[0].message);
@@ -2346,6 +2347,13 @@ document.addEventListener('change', async e => { const b = e.target.closest('[da
   try { msgUI(); } catch(err){} toast(b.checked ? 'Badge on' : 'Badge off'); });
 document.addEventListener('change', async e => { const c = e.target.closest('[data-pushp]'); if (!c) return; const P = pushPrefs(); P[c.dataset.pushp] = c.checked; ls.set('mme-pushp', P);
   try { await fapi('/push/prefs', { prefs: P }); } catch(err){ toast('Couldn’t save that: ' + (err && err.message || err)); } });
+/* small copy of what the shop needs to see (messages, fix notes, names the app can't match), saved next to the shelf
+   so the shop can check every app user without opening whole shelves */
+function inboxData(){ const S = shelf.series || {};
+  const notes = Object.values(S).filter(s => s.fxNote && s.fxNote.t).map(s => [s.n, String(s.fxNote.t).slice(0, 300), s.fxNote.at || '']).slice(-30);
+  let un = null; if (SNAP){ un = Object.keys(S).filter(k => !langOf(k) && !snapEntry(k)).map(k => [S[k].n, (S[k].v || []).length, (S[k].want || []).length]).slice(0, 80);
+    Object.entries(shelf.other || {}).filter(([k, o]) => k.startsWith('x_') && o && o.n).forEach(([k, o]) => un.length < 100 && un.push([o.n, 0, 0, 'read'])); }
+  return { at: Date.now(), n: Object.keys(S).length, fb: (shelf.fb || []).slice(-20), seen: shelf.msgSeen || null, notes, un }; }
 async function acctSync(){ if (!acct || !acct.at || acctBusy) return; acctBusy = true; $('#sync').textContent = 'Syncing with your account…';
   try { const cloud = await acctPull(); const local = shelfBody(); const nl = shelfCount(local), nc = shelfCount(cloud); const dirty = ls.get('mme-dirty');
     if (!nc){ acctBusy = false; if (nl) await acctPush(); }
@@ -2381,7 +2389,7 @@ document.addEventListener('click', e => { const t = e.target.closest('[data-acht
 document.addEventListener('click', e => { const b = e.target.closest('[data-openacct]'); if (b) openAcct(b.dataset.openacct); });
 async function forgetAll(){ const y = $('#forgetYes'); if (y){ y.disabled = true; y.textContent = 'Deleting…'; }
   try { if (FRIENDS_API) await fapi('/forget', {}).catch(() => {});
-    if (acct && acct.cid){ const m = []; for (let i = 0; i < PARTS; i++) m.push({ ownerId: acct.cid, namespace: 'mme', key: 'shelf' + i, type: 'json', value: '""' });
+    if (acct && acct.cid){ const m = []; for (let i = 0; i < PARTS; i++) m.push({ ownerId: acct.cid, namespace: 'mme', key: 'shelf' + i, type: 'json', value: '""' }); m.push({ ownerId: acct.cid, namespace: 'mme', key: 'inbox', type: 'json', value: '{}' });
       m.push({ ownerId: acct.cid, namespace: 'custom', key: 'collection', type: 'json', value: '{"owned":{},"bought":{},"tb":0}' }, { ownerId: acct.cid, namespace: 'custom', key: 'collection_2', type: 'json', value: '{"owned":{}}' });
       const d = await acctGql(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m }); const er = d.metafieldsSet.userErrors; if (er && er.length) throw new Error(er[0].message); }
     ['mme-shelf','mme-dirty','mme-cart','mme-livecode','mme-achopen'].forEach(k => ls.set(k, null)); shelf = { series: {} }; liveF = null; track('delete-data');
