@@ -1434,7 +1434,12 @@ function linkOtherReads(){ const O = shelf.other || {}; let ch = 0;
     else { const T = O[to] || (O[to] = { n: SNAP.s[sk].n }); if (O[k].vr) T.vr = Object.assign({}, O[k].vr, T.vr || {}); if (O[k].st && !T.st) T.st = O[k].st; if (O[k].rv && !T.rv) T.rv = O[k].rv; }
     delete O[k]; ch = 1; });
   if (ch) save(); }
-function applySnap(){ if (!SNAP) return; try { linkOtherReads(); } catch(e){} let miss = []; Object.keys(shelf.series).forEach(k => { const s0 = shelf.series[k]; if (langOf(k)){ if (!s0.c){ const en = snapNorm.get(normName(s0.n.replace(/\([^)]*\)/g, ' '))); const e0 = en && SNAP.s[en]; const im = e0 && (e0.i || []).find(x => x[4]); if (im) s0.c = snapImg(im[4]); else if ((s0.ct||0) < 2) miss.push(k); } return; } const hit = snapEntry(k); if (!hit){ const cv = SNAP.cv && SNAP.cv[normName(s0.n)]; if (!s0.c && cv) s0.c = snapImg(cv); else if (!s0.c && (s0.ct||0) < 2) miss.push(k); return; } const e = hit[1]; const items = snapItems(e);
+function applySnap(){ if (!SNAP) return; try { linkOtherReads(); } catch(e){} let miss = []; Object.keys(shelf.series).forEach(k => { const s0 = shelf.series[k]; if (langOf(k)){ if (!s0.c){ const en = snapNorm.get(normName(s0.n.replace(/\([^)]*\)/g, ' '))); const e0 = en && SNAP.s[en]; const im = e0 && (e0.i || []).find(x => x[4]); if (im) s0.c = snapImg(im[4]); else if ((s0.ct||0) < 2) miss.push(k); } return; } const hit = snapEntry(k); if (!hit){ const cv = SNAP.cv && SNAP.cv[normName(s0.n)]; if (!s0.c && cv) s0.c = snapImg(cv); else if (!s0.c && (s0.ct||0) < 2) miss.push(k); return; } const e = hit[1];
+    { // a cover or genres copied from a different (wrongly matched) shop series get dropped and re-derived from the right one
+      const fn = u => String(u).split('?')[0].split('/').pop().replace(/_\d+x(\.\w+)$/, '$1').replace(/-\d{5,}(\.\w+)$/, '$1'); const imgs = (e.i || []).map(x => x[4]).filter(Boolean).map(snapImg);
+      const wrongC = s0.c && /cdn\.shopify\.com/.test(s0.c) && imgs.length && !imgs.some(u => fn(u).replace(/[^a-z0-9]/gi, '').slice(0, 6).toLowerCase() === fn(s0.c).replace(/[^a-z0-9]/gi, '').slice(0, 6).toLowerCase());
+      if ((s0.mk && s0.mk !== hit[0]) || wrongC){ if (wrongC) delete s0.c; delete s0.m; } s0.mk = hit[0]; }
+    const items = snapItems(e);
     live.set(k, { at: Date.now(), v2: 1, items, total: e.t || 0, snap: SNAP.at });
     const s = shelf.series[k]; if (e.m && !s.m) s.m = { a: e.m.aud || '', g: e.m.gen ? String(e.m.gen).split(/,\s*/).filter(Boolean) : [], au: e.m.au || '', p: e.m.pub || '' };
     if (!s.c){ const own = new Set(ints(s)); const it = items.find(p => p.img && own.has(p.vol)) || items.find(p => p.img); if (it) s.c = it.img; } });
