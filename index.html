@@ -192,6 +192,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .shelfv .sh img{position:absolute;inset:0;background:#fff}
 .shelfv .sh .ph{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .shelfv .sh .ph{display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;font-weight:700;line-height:1.15;padding:4px;box-sizing:border-box;color:#fff;overflow:hidden;word-break:break-word}
+.shelfv .sh .lg{position:absolute;left:0;right:0;bottom:0;font-style:normal;font-size:9.5px;font-weight:800;text-align:center;background:rgba(20,20,30,.78);color:#fff;border-radius:0 0 3px 3px;padding:1px 0;letter-spacing:.04em}
 .shelfv .sh b{position:absolute;right:-4px;top:-6px;background:var(--accent);color:#fff;font-size:10px;border-radius:999px;padding:1px 6px;box-shadow:0 1px 2px rgba(0,0,0,.3)}
 .io textarea{width:100%;min-height:80px;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:13px;background:var(--bg);color:inherit}
 .worth{color:var(--good);font-weight:700}
@@ -474,6 +475,7 @@ $('#theme').onclick = () => {
 function chooseSkin(k){ applySkin(k); ls.set('mme-skin', k); document.querySelectorAll('.skin').forEach(b => b.setAttribute('aria-pressed', b.dataset.skin === k)); if (shelf.skin !== k){ shelf.skin = k; save(); } }
 
 /* ---------- series helpers ---------- */
+const LFLAG = { japanese: ['🇯🇵', 'JP'], spanish: ['🇪🇸', 'ES'], french: ['🇫🇷', 'FR'], italian: ['🇮🇹', 'IT'], german: ['🇩🇪', 'DE'], chinese: ['🇨🇳', 'ZH'], korean: ['🇰🇷', 'KO'] };
 function langOf(key){ const m = key.match(/-(japanese|spanish|french|italian|german|chinese|korean)$/); return m ? m[1] : null; }
 function isLN(key, s){ return /-ln$|-light-novel$/.test(key) || /light novel/i.test(s.n); }
 function ints(s){ return s.v.filter(x => Number.isInteger(x) && x > 0); }
@@ -980,9 +982,9 @@ function renderList(){
   const vmode = $('#view').value; const compact = vmode === 'compact'; $('#list').classList.toggle('compact', compact); $('#list').classList.toggle('shelfv', vmode === 'shelf');
   if (vmode === 'shelf'){ const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
     $('#list').innerHTML = keys.map(k => { const i = I[k]; const u = coverOf(k); const n = i.s.n;
-      return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}, ${i.s.v.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.s.v.length}</b></button>`; }).join(''); return; }
+      return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}${langOf(k) ? ', ' + langOf(k) + ' edition' : ''}, ${i.s.v.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.s.v.length}</b>${langOf(k) ? `<i class="lg" title="${esc(langOf(k))} edition">${LFLAG[langOf(k)][0]} ${LFLAG[langOf(k)][1]}</i>` : ''}</button>`; }).join(''); return; }
   if (compact){ $('#list').innerHTML = keys.map(k => { const i = I[k]; const nTxt = i.total ? `${i.own.length}/${i.total}` : `${i.s.v.length}`;
-    return `<button class="crow" data-k="${esc(k)}"><span class="nm">${FX.has(k) ? '⚠️ ' : ''}${esc(i.s.n)}</span><span class="m">${nTxt}${i.gaps.length ? ` · ${i.gaps.length} gap${i.gaps.length>1?'s':''}` : ''}${i.complete ? ' · ✓' : ''}</span></button>`; }).join(''); return; }
+    return `<button class="crow" data-k="${esc(k)}"><span class="nm">${FX.has(k) ? '⚠️ ' : ''}${langOf(k) ? LFLAG[langOf(k)][0] + ' ' : ''}${esc(i.s.n)}</span><span class="m">${nTxt}${i.gaps.length ? ` · ${i.gaps.length} gap${i.gaps.length>1?'s':''}` : ''}${i.complete ? ' · ✓' : ''}</span></button>`; }).join(''); return; }
   $('#list').innerHTML = keys.map(k => {
     const i = I[k]; const lang = langOf(k);
     const chips = [];
@@ -991,7 +993,7 @@ function renderList(){
     if (i.gaps.length) chips.push(`<span class="chip">${i.gaps.length} ${i.gaps.length===1?'gap':'gaps'}</span>`);
     if (i.next && !i.complete && !lang) chips.push(`<span class="chip acc">Next: Vol ${i.next}</span>`);
     if (i.inStock.length) chips.push(`<span class="chip gold">${i.inStock.length} in stock</span>`);
-    if (lang) chips.push(`<span class="chip">${lang[0].toUpperCase()+lang.slice(1)}</span>`);
+    if (lang) chips.push(`<span class="chip warn">${LFLAG[lang][0]} ${lang[0].toUpperCase()+lang.slice(1)} edition</span>`);
     if (isLN(k,i.s)) chips.push(`<span class="chip">Light novel</span>`);
     if ((i.s.r||[]).length) chips.push(`<span class="chip good">Read ${i.s.r.length}/${i.s.v.length}</span>`);
     if (i.s.st) chips.push(`<span class="chip gold">${'★'.repeat(i.s.st)}</span>`);
