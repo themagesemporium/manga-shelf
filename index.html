@@ -476,7 +476,18 @@ function chooseSkin(k){ applySkin(k); ls.set('mme-skin', k); document.querySelec
 
 /* ---------- series helpers ---------- */
 const LFLAG = { japanese: ['🇯🇵', 'JP'], spanish: ['🇪🇸', 'ES'], french: ['🇫🇷', 'FR'], italian: ['🇮🇹', 'IT'], german: ['🇩🇪', 'DE'], chinese: ['🇨🇳', 'ZH'], korean: ['🇰🇷', 'KO'] };
-function langOf(key){ const m = key.match(/-(japanese|spanish|french|italian|german|chinese|korean)$/); return m ? m[1] : null; }
+function langOf(key){ const m = key.match(/-(japanese|spanish|french|italian|german|chinese|korean)$/); if (m) return m[1]; const s = shelf && shelf.series && shelf.series[key]; const l = s && langFromName(s.n); return l ? l.lang : null; }
+/* "Bleach (French edition)", "Demon Slayer (Spanish edition: Guardianes de la Noche)", "Clover (Japanese)" -> separate language series. Bilingual editions stay as typed. */
+function langFromName(n){ const m = String(n || '').match(/^(.*?)\s*\(\s*(japanese|spanish|french|italian|german|chinese|korean)(?:\s+(?:edition|ed\.?|version|language))?\b[^)]*\)\s*(.*)$/i); if (!m || /bilingual/i.test(n)) return null;
+  const base = (m[1] + (m[3] ? ' ' + m[3] : '')).trim(); if (!base) return null; const lang = m[2].toLowerCase(); return { base, lang, name: base + ' (' + lang[0].toUpperCase() + lang.slice(1) + ' edition)' }; }
+/* move language editions saved under an English-looking key (from imports before Nov 5) to their -<lang> key, merging volumes */
+function langMigrate(){ let n = 0; Object.keys(shelf.series).forEach(k => { if (/-(japanese|spanish|french|italian|german|chinese|korean)$/.test(k)) return; const s = shelf.series[k]; const l = langFromName(s.n); if (!l) return;
+    const to = handleize(l.base) + '-' + l.lang; if (to === k) return; const T = shelf.series[to];
+    if (T){ T.v = [...new Set([...(T.v || []), ...(s.v || [])])].sort((a, b) => a - b); ['r','want'].forEach(f => { if (s[f]) T[f] = [...new Set([...(T[f] || []), ...s[f]])].sort((a, b) => a - b); }); Object.keys(s).forEach(f => { if (T[f] == null) T[f] = s[f]; }); T.t = Date.now(); }
+    else shelf.series[to] = Object.assign({}, s, { n: l.name, t: Date.now() });
+    delete shelf.series[k]; shelf.gone = Object.assign({}, shelf.gone, { [k]: Date.now() });
+    Object.keys(shelf.rl || {}).forEach(d => { shelf.rl[d] = [...new Set(shelf.rl[d].map(t => t.startsWith(k + '|') ? to + t.slice(k.length) : t))]; }); n++; });
+  if (n) save(); return n; }
 function isLN(key, s){ return /-ln$|-light-novel$/.test(key) || /light novel/i.test(s.n); }
 function ints(s){ return s.v.filter(x => Number.isInteger(x) && x > 0); }
 function info(key){
@@ -1088,7 +1099,7 @@ function importCsvTable(text, put){ const rows = csvRows(text); const head = row
     put(name, vols.length ? vols : [1]); st.title++; });
 }
 function importData(text){
-  const add = {}; const put = (name, vols, extra) => { name = String(name || '').trim(); if (!name) return; const isln = /light novel|\(ln\)/i.test(name); let k = handleize(name.replace(/\(?\s*(light novel|ln)\s*\)?/ig, ' ')) + (isln ? '-ln' : '');
+  const add = {}; const put = (name, vols, extra) => { name = String(name || '').trim(); if (!name) return; const isln = /light novel|\(ln\)/i.test(name); let k = handleize(name.replace(/\(?\s*(light novel|ln)\s*\)?/ig, ' ')) + (isln ? '-ln' : ''); { const l = langFromName(name); if (l && !isln){ k = handleize(l.base) + '-' + l.lang; name = l.name; } }
     const a = add[k] = add[k] || { n: name, v: new Set(), x: {} }; vols.forEach(v => { if (v > 0 && v < 2000) a.v.add(+v); }); if (extra) Object.assign(a.x, extra); };
   let j = null; try { j = JSON.parse(text); } catch(e){}
   if (j && typeof j === 'object'){
@@ -1410,7 +1421,7 @@ async function loadSnap(){
   if (!url && SNAP_URL) url = SNAP_URL;
   if (url){ try { const r = await fetch(url); if (r.ok){ SNAP = await r.json(); } } catch(e){} }
   if (SNAP){ snapBar = new Map(); snapNorm = new Map(); snapPid = new Map(); Object.entries(SNAP.s).forEach(([k, e]) => { const nn = normName(e.n) + (e.ln ? '|ln' : ''); if (!snapNorm.has(nn)) snapNorm.set(nn, k); (e.i||[]).forEach(x => { if (x[5]) snapBar.set(String(x[5]), [k, x[0]]); if (x[6]) snapPid.set(String(x[6]), [k, x[0]]); }); Object.entries(e.x || {}).forEach(([t, L]) => L.forEach(x => { if (x[5]) snapBar.set(String(x[5]), [k, x[0], t]); if (x[6]) snapPid.set(String(x[6]), [k, x[0], t]); })); });
-    try { edMigrate(); } catch(e){}
+    try { edMigrate(); } catch(e){} try { langMigrate(); } catch(e){}
     if (!crownsData && SNAP.cr) crownsData = SNAP.cr; if (!preorders && SNAP.pre) preorders = SNAP.pre.map(x => ({ handle: x[0], title: x[1], ser: x[2], vol: x[3], rd: x[4], ln: !!x[5], price: x[6], img: snapImg(x[7]) }));
     if (!mcp) applySnap(); }
   snapLoading = false; return SNAP; }
@@ -2175,7 +2186,7 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; if (o.gone) shelf.gone = o.gone; if (o.fb) shelf.fb = o.fb; if (o.msgSeen) shelf.msgSeen = o.msgSeen; if (o.boxIn) shelf.boxIn = o.boxIn; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); if (SNAP) setTimeout(() => { try { edMigrate(); } catch(e){} }, 0); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; if (o.gone) shelf.gone = o.gone; if (o.fb) shelf.fb = o.fb; if (o.msgSeen) shelf.msgSeen = o.msgSeen; if (o.boxIn) shelf.boxIn = o.boxIn; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); setTimeout(() => { try { langMigrate(); } catch(e){} }, 0); if (SNAP) setTimeout(() => { try { edMigrate(); } catch(e){} }, 0); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
   const gone = Object.assign({}, b.gone || {}, a.gone || {}); out.gone = Object.keys(gone).length ? gone : null;
   { const fb = [...(a.fb || []), ...(b.fb || [])].filter((x, i, A) => A.findIndex(y => y.at === x.at && y.t === x.t) === i).sort((x, y) => x.at - y.at); out.fb = fb.length ? fb : null; out.msgSeen = Math.max(a.msgSeen || 0, b.msgSeen || 0) || null; const bi = Object.assign({}, b.boxIn || {}, a.boxIn || {}); out.boxIn = Object.keys(bi).length ? bi : null; }
