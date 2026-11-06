@@ -380,7 +380,12 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
         <option value="big">Sort: Most volumes</option>
         <option value="gaps">Sort: Most gaps</option>
         <option value="new">Sort: Recently added</option>
+        <option value="spice">Sort: Spiciest first</option>
+        <option value="stars">Sort: My rating</option>
+        <option value="unread">Sort: Most unread</option>
+        <option value="genre">Sort: By genre</option>
       </select>
+      <select id="sfilt" aria-label="Show only"><option value="">Show: Everything</option></select>
       <select id="view" aria-label="Change the view"><option value="shelf">View: Bookshelf</option><option value="full">View: Full cards</option><option value="compact">View: Compact list</option></select>
     </div>
     <div class="seg2" id="shelfSeg" role="group" aria-label="Show"><button data-sf="all" aria-pressed="true">All</button><button data-sf="done" aria-pressed="false">Complete</button><button data-sf="open" aria-pressed="false">Incomplete</button><button data-sf="recs" aria-pressed="false">✨ For you</button><button data-sf="hl" aria-pressed="false">📦 Holds &amp; loans</button></div>
@@ -971,6 +976,17 @@ function renderList(){
   if (shelfFilter === 'recs' && Object.keys(shelf.series).length){ renderRecs(q); return; }
   if (shelfFilter === 'hl'){ renderHL(q); return; }
   const I = Object.fromEntries(keys.map(k => [k, info(k)]));
+  { // "Show only" filter: genres on this shelf + one-shots, light novels, spice, gentle reads, anime, read/unread, other languages
+    const M = k => serMeta(k); const sel = $('#sfilt'); const cur = sel.value || ls.get('mme-sfilt') || '';
+    const gs = new Map(); Object.keys(shelf.series).forEach(k => M(k).g.forEach(g => gs.set(g, (gs.get(g) || 0) + 1)));
+    const opts = [['', 'Show: Everything'], ['one', 'One-shots'], ['ln', 'Light novels'], ['spicy', 'Spicy (🌶️ 3+)'], ['gentle', 'Gentle reads'], ['anime', 'Has an anime'], ['unread', 'Has unread volumes'], ['read', 'All read'], ['lang', 'Other languages'], ['done', 'Finished series (Japan)'], ...[...gs.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([g, n]) => ['g:' + g, `Genre: ${g} (${n})`])];
+    const html = opts.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join(''); if (sel.dataset.h !== html){ sel.innerHTML = html; sel.dataset.h = html; } sel.value = opts.some(o => o[0] === cur) ? cur : '';
+    const f = sel.value; if (f){ keys = keys.filter(k => { const m = M(k), s = shelf.series[k], e = (snapEntry(k) || [])[1];
+      if (f === 'one') return /one-?shot/i.test(m.ss) || (e && e.t === 1) || (!e && (s.v || []).length === 1 && s.fin === 1);
+      if (f === 'ln') return m.ln; if (f === 'spicy') return m.sp >= 3; if (f === 'gentle') return m.gr; if (f === 'anime') return m.an;
+      if (f === 'unread') return (s.v || []).some(v => !(s.r || []).includes(v)); if (f === 'read') return (s.v || []).length && (s.v || []).every(v => (s.r || []).includes(v));
+      if (f === 'lang') return !!langOf(k); if (f === 'done') return /complete|finished|ended/i.test(m.ss);
+      if (f.startsWith('g:')) return m.g.includes(f.slice(2)); return true; }); } }
   if (shelfFilter === 'done') keys = keys.filter(k => I[k].complete); else if (shelfFilter === 'open') keys = keys.filter(k => !I[k].complete);
   const name = k => shelf.series[k].n.replace(/^(the|a)\s+/i,'');
   const ratio = k => { const i = I[k]; const den = Math.max(i.total, i.max, 1); return i.own.length / den; };
@@ -979,6 +995,10 @@ function renderList(){
     if (sort==='big') return I[b].s.v.length - I[a].s.v.length || name(a).localeCompare(name(b));
     if (sort==='gaps') return I[b].gaps.length - I[a].gaps.length || name(a).localeCompare(name(b));
     if (sort==='new') return (shelf.series[b].t||0) - (shelf.series[a].t||0) || name(a).localeCompare(name(b));
+    if (sort==='spice') return (serMeta(b).sp || 0) - (serMeta(a).sp || 0) || name(a).localeCompare(name(b));
+    if (sort==='stars') return (shelf.series[b].st || 0) - (shelf.series[a].st || 0) || name(a).localeCompare(name(b));
+    if (sort==='unread'){ const u = k => { const s = shelf.series[k]; return (s.v || []).filter(v => !(s.r || []).includes(v)).length; }; return u(b) - u(a) || name(a).localeCompare(name(b)); }
+    if (sort==='genre'){ const g = k => serMeta(k).g[0] || '~'; return g(a).localeCompare(g(b)) || name(a).localeCompare(name(b)); }
     const tier = i => i.complete ? 0 : (i.total ? 1 : (i.own.length > 1 ? 2 : 3));
     return tier(I[a]) - tier(I[b]) || ratio(b) - ratio(a) || I[b].own.length - I[a].own.length || name(a).localeCompare(name(b));
   });
@@ -1203,6 +1223,7 @@ function openMsgs(){ current = null; FIXC = null; const L = [...fixMap().values(
     <div class="row2"><button class="btn sm" data-fbsend>Send to the shop</button><button class="btn ghost sm" data-close>Close</button></div></div>`);
   if (msgUnread()){ shelf.msgSeen = Date.now(); save(); } msgUI(); }
 document.addEventListener('click', e => { if (e.target.closest('#calBtn')){ const t = document.querySelector('[data-tab="reading"]'); if (t) t.click(); setTimeout(() => { const c = document.querySelector('#readBody .cal'); if (c) c.closest('.st-sec').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150); return; } if (e.target.closest('#msgBtn,[data-openmsg]')) return openMsgs();
+  { const fa = e.target.closest('[data-fbabout]'); if (fa){ const k = fa.dataset.fbabout; const nm = (shelf.series[k] || (shelf.other || {})[k] || {}).n || k; openMsgs(); setTimeout(() => { const t = $('#fbTxt'); if (t){ t.value = `About ${nm}: `; t.focus(); t.scrollIntoView({ block: 'center' }); } }, 50); return; } }
   if (e.target.closest('[data-fbsend]')){ const t = ($('#fbTxt') || {}).value; if (!t || !t.trim()) return toast('Type a message first'); shelf.fb = (shelf.fb || []).concat({ t: t.trim().slice(0, 1000), at: Date.now() }); save(); toast(acct && acct.at ? 'Sent. We’ll reply here.' : 'Saved. Log in so the shop can see it and reply.'); openMsgs(); } });
 function renderAll(){ FIXC = null; setTimeout(() => { try { msgUI(); } catch(e){} }, 0); renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
 $('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; if (t.dataset.b === 'secret'){ openSheet(`<h2>🔒 Secret achievements</h2><p>${BADGES.filter(b => b[4] && b[2] < b[3]).length} achievements are hidden until you earn them. Keep collecting, reading, reviewing and lending to discover them.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); return; } const [name, how, have, need] = BADGES[+t.dataset.b];
@@ -1242,7 +1263,7 @@ function openStat(kind){
   }
   openSheet(html + `<div class="row2"><button class="btn ghost" data-close>Close</button></div>`);
 }
-$('#q').oninput = renderList; $('#sort').onchange = () => { renderList(); ls.set('mme-sort', $('#sort').value); };
+$('#q').oninput = renderList; $('#sort').onchange = () => { renderList(); ls.set('mme-sort', $('#sort').value); }; $('#sfilt').onchange = () => { ls.set('mme-sfilt', $('#sfilt').value || null); renderList(); };
 /* ---------- shelf filter: all / complete / incomplete / recommended ---------- */
 var shelfFilter = ls.get('mme-sf') || 'all'; if (!['all','done','open','recs','hl'].includes(shelfFilter)) shelfFilter = 'all';
 function syncSeg(){ document.querySelectorAll('#shelfSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sf === shelfFilter))); }
@@ -1609,9 +1630,14 @@ function openSeries(key){ detV = null; tapMode = null; current = key; renderSeri
 let liveState = {};
 function collHandle(key){ const s = shelf.series[key]; if (s.h) return s.h; return 'series-' + key.replace(/-ln$/, '-light-novel'); }
 async function loadAbout(key){
-  if (about.has(key) || !mcp || langOf(key)) return;
+  if (about.has(key) || langOf(key)) return;
   about.set(key, { loading: true });
   const h = collHandle(key);
+  if (!mcp){ // the app: tokenless storefront API (series page description, else the Vol 1 listing's)
+    try { const j = await sfq(`{c:collection(handle:${JSON.stringify(h)}){handle description}}`); let desc = (j.data && j.data.c && j.data.c.description || '').replace(/(Browse )?every volume we (have|carry)[\s\S]*$/i, '').trim();
+      if (!desc){ const hit = snapEntry(key); const v1 = hit && (hit[1].i || []).find(x => x[3]); if (v1){ const p = await sfq(`{p:product(handle:${JSON.stringify(v1[3])}){description}}`); desc = (p.data && p.data.p && p.data.p.description || '').trim(); const parts = desc.split(/\n{2,}|(?<=\.)\s{2,}/); desc = (parts[parts.length - 1] || desc).slice(0, 600); } }
+      about.set(key, { desc, ra: [], handle: j.data && j.data.c ? j.data.c.handle : '' }); } catch(e){ about.set(key, { desc: '', ra: [], err: true }); }
+    if (current === key) renderSeries(key); return; }
   try {
     const d = await gql(`{c:collectionByIdentifier(identifier:{handle:${JSON.stringify(h)}}){title handle description ra:metafield(namespace:"custom",key:"read_alikes"){references(first:6){nodes{... on Collection{title handle}}}}}}`);
     let desc = '', ra = [];
@@ -1655,11 +1681,13 @@ function infoHTML(key){
   return `<dl class="igrid">${rows.join('')}</dl>${o.tk ? `<p style="margin-top:10px"><b>The Mage's take:</b> ${esc(o.tk)}</p>` : ''}`;
 }
 function aboutHTML(key){
-  const a = about.get(key); if (!a || a.loading) return mcp && !langOf(key) ? `<details class="about"><summary>About this series</summary><p class="sub">Loading…</p></details>` : '';
-  if (!a.desc && !a.ra.length && !infoHTML(key)) return '';
+  if (langOf(key)) return '';
+  const a = about.get(key) || { desc: '', ra: [] }; const loading = !about.get(key) || about.get(key).loading;
+  const fix = `<p style="margin:12px 0 0"><button class="btn ghost sm" data-fbabout="${esc(key)}">🛠️ See something wrong? Tell us</button></p>`;
+  if (!a.desc && !(a.ra || []).length && !infoHTML(key)) return loading ? '' : `<details class="about"><summary>About this series</summary><p class="sub" style="margin:0">We don’t have details for this series yet.</p>${fix}</details>`;
   const ownByHandle = {}; Object.keys(shelf.series).forEach(k => { ownByHandle[collHandle(k)] = k; });
-  const chips = a.ra.map(r => ownByHandle[r.handle] ? `<button class="own" data-open="${esc(ownByHandle[r.handle])}">📚 ${esc(r.title)}</button>` : `<a href="${STORE}/collections/${encodeURIComponent(r.handle)}" target="_blank" rel="noopener">${esc(r.title)} ↗</a>`).join('');
-  return `<details class="about"${sinfo.get(key) && !sinfo.get(key).loading ? '' : ''}><summary>About this series</summary>${infoHTML(key)}${a.desc ? `<p>${esc(a.desc)}</p>` : ''}${chips ? `<p class="sub" style="margin:12px 0 0">If you like this, try</p><div class="ra">${chips}</div><p class="sub" style="margin:6px 0 0">📚 = on your shelf</p>` : ''}${a.handle ? `<p style="margin-top:10px"><a href="${STORE}/collections/${encodeURIComponent(a.handle)}" target="_blank" rel="noopener">See the series at the shop ↗</a></p>` : ''}</details>`;
+  const chips = (a.ra || []).map(r => ownByHandle[r.handle] ? `<button class="own" data-open="${esc(ownByHandle[r.handle])}">📚 ${esc(r.title)}</button>` : `<a href="${STORE}/collections/${encodeURIComponent(r.handle)}" target="_blank" rel="noopener">${esc(r.title)} ↗</a>`).join('');
+  return `<details class="about" open><summary>About this series</summary>${infoHTML(key)}${a.desc ? `<p>${esc(a.desc)}</p>` : ''}${chips ? `<p class="sub" style="margin:12px 0 0">If you like this, try</p><div class="ra">${chips}</div><p class="sub" style="margin:6px 0 0">📚 = on your shelf</p>` : ''}${a.handle ? `<p style="margin-top:10px"><a href="${STORE}/collections/${encodeURIComponent(a.handle)}" target="_blank" rel="noopener">See the series at the shop ↗</a></p>` : ''}${fix}</details>`;
 }
 async function loadLive(key, force){
   liveState[key] = 'loading'; if (current===key) renderSeries(key);
