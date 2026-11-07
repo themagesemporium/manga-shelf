@@ -397,10 +397,16 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
   </section>
 
   <section id="tab-finds" class="hidden">
-    <p class="note" id="findsNote">Volumes you're missing that The Mage's Emporium has in stock right now. Your whole shelf is checked automatically when you open the app.</p>
+    <div class="seg2" id="findSeg" role="group" aria-label="Show"><button data-fs="miss" aria-pressed="true">📚 Missing volumes</button><button data-fs="recs" aria-pressed="false">✨ Recommended for you</button></div>
+    <div id="findsMiss">
+    <p class="note" id="findsNote">Volumes missing from your series that The Mage's Emporium has in stock right now. Your whole shelf is checked automatically when you open the app.</p>
     <div class="row2"><button class="btn" id="findBtn">Check again</button><span id="findProg" class="sub" style="align-self:center;margin:0"></span></div>
-    <div class="st-sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 0"><div><h3 style="margin:0">✨ Find your perfect manga</h3><p class="sub" style="margin:2px 0 0">A quick quiz. Great for picking a gift too!</p></div><button class="btn gold sm" data-quiz>Take the quiz</button></div>
     <div class="list" id="finds" style="margin-top:14px"></div>
+    </div>
+    <div id="findsRecs" class="hidden">
+      <div class="st-sec" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px"><div><h3 style="margin:0">✨ Find your perfect manga</h3><p class="sub" style="margin:2px 0 0">A quick quiz. Great for picking a gift too!</p></div><button class="btn gold sm" data-quiz>Take the quiz</button></div>
+      <div id="recsBox"></div>
+    </div>
 
   </section>
 
@@ -1359,7 +1365,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   $('#tab-reading').classList.toggle('hidden', b.dataset.tab!=='reading');
   $('#tab-lists').classList.toggle('hidden', b.dataset.tab!=='lists');
   if (b.dataset.tab==='lists') renderLists();
-  if (b.dataset.tab==='finds') liveAll();
+  if (b.dataset.tab==='finds'){ liveAll(); if (findSeg === 'recs') renderRecsFinds(); }
   if (b.dataset.tab==='stats') renderStatsTab();
   if (b.dataset.tab==='reading') renderReadTab();
 });
@@ -2041,6 +2047,48 @@ function renderFinds(){
   const WI = new Set(wantedInStock().map(x => x.p.handle)); findsList.sort((a, b) => (WI.has(b.p.handle) - WI.has(a.p.handle)));
   el.innerHTML = (WI.size ? `<div class="verdict next" style="text-align:left;margin:0 0 10px"><b>♥ ${WI.size} of these ${WI.size === 1 ? 'is' : 'are'} on your wishlist</b>, so they’re at the top.</div>` : '') + `<p class="count">${findsList.length} volumes waiting for you · $${total.toFixed(2)} total</p>` + findsList.map(f => `<div class="find"><img src="${esc(f.p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(f.n)} Vol ${f.p.vol}</a></b><small>${WI.has(f.p.handle) ? '♥ On your wishlist' : f.gap ? 'Fills a gap' : 'Next in the series'}</small></div><span class="price">$${(f.p.price||0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(f.p.handle)}">🛒 Add</button></div>`).join('');
 }
+
+/* ---------- Finds: Missing volumes | Recommended for you ---------- */
+var findSeg = ls.get('mme-fs') === 'recs' ? 'recs' : 'miss', RX = null, rxLoading = false;
+function syncFindSeg(){ document.querySelectorAll('#findSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fs === findSeg))); $('#findsMiss').classList.toggle('hidden', findSeg !== 'miss'); $('#findsRecs').classList.toggle('hidden', findSeg !== 'recs'); }
+syncFindSeg();
+$('#findSeg').onclick = e => { const b = e.target.closest('[data-fs]'); if (!b) return; findSeg = b.dataset.fs; ls.set('mme-fs', findSeg); syncFindSeg(); track('finds-' + findSeg); if (findSeg === 'recs') renderRecsFinds(); };
+async function loadRX(){ if (RX || rxLoading) return RX; rxLoading = true; try { const r = await fetch('recs-extra.json'); if (r.ok) RX = await r.json(); } catch(e){} rxLoading = false; return RX; }
+function snapByName(n){ if (!SNAP) return null; const q = normName(n); const k = snapNorm.get(q) || (SNAP.al && SNAP.al[q]) || AL0[q]; return k && SNAP.s[k] ? [k, SNAP.s[k]] : null; }
+function extraRecs(){
+  const ownN = new Set(), ownK = new Set(), G = {}; let W = 0; const pts = {};
+  Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; ownN.add(normName(s.n)); const h = snapEntry(k); if (h) ownK.add(h[0]);
+    const w = Math.min(Math.max(ints(s).length, 1), 10); const sm = h && h[1].m; const m = s.m || (sm ? { g: String(sm.gen || '').split(/,\s*/).filter(Boolean), a: sm.aud || '' } : null);
+    if (m){ W += w; (m.g || []).forEach(g => G[g] = (G[g] || 0) + w); if (m.a) G[m.a] = (G[m.a] || 0) + w; }
+    const sim = RX && RX.similar && (RX.similar[s.n] || RX.similar[Object.keys(RX.similar).find(x => normName(x) === normName(s.n))]);
+    (sim || []).forEach((t, i) => { const q = normName(t); const p = pts[q] = pts[q] || { t, sc: 0, from: {} }; const add = w * (1 - i * 0.1); p.sc += add; p.from[s.n] = (p.from[s.n] || 0) + add; }); });
+  Object.entries((RX && RX.genre) || {}).forEach(([g, L]) => { if (!G[g] || !W) return; L.forEach((t, i) => { const q = normName(t); const p = pts[q] = pts[q] || { t, sc: 0, from: {}, g: null }; p.sc += G[g] / W * (1 - i * 0.1) * 0.8; if (!Object.keys(p.from).length) p.g = g; }); });
+  const stocked = [], other = [];
+  Object.entries(pts).forEach(([q, p]) => { if (ownN.has(q)) return; const se = snapByName(p.t); if (se && ownK.has(se[0])) return;
+    const top = Object.entries(p.from).sort((a, b) => b[1] - a[1])[0]; const why = top ? `Because you like ${top[0]}` : p.g ? `Popular with ${p.g} fans` : '';
+    const inS = se ? (se[1].i || []).filter(x => x[2] > 0 && x[3]) : []; const v1 = inS.find(x => x[0] === 1) || (se && (se[1].t === 1) ? inS[0] : null);
+    if (se && v1) stocked.push({ k: se[0], e: se[1], v1, sc: p.sc + 1, why });
+    else other.push({ t: se ? se[1].n : p.t, sc: p.sc, why, has: !!se, some: inS.length }); });
+  return { stocked: stocked.sort((a, b) => b.sc - a.sc), other: other.sort((a, b) => b.sc - a.sc) };
+}
+async function renderRecsFinds(){
+  const box = $('#recsBox'); if (!box) return;
+  if (!Object.keys(shelf.series).length){ box.innerHTML = '<div class="empty">Add a few series to your shelf and we’ll suggest what to read next.</div>'; return; }
+  if (!SNAP || !RX){ box.innerHTML = '<div class="empty"><span class="spin"></span></div>'; await Promise.all([SNAP ? null : loadSnap(), loadRX()]); if (!SNAP){ box.innerHTML = '<div class="empty">We couldn’t load the shop right now. Try again in a minute.</div>'; return; } }
+  const X = extraRecs(); const seen = new Set(X.stocked.map(r => r.k));
+  const shop = X.stocked.concat(recList().filter(r => !seen.has(r.k))).slice(0, 16);
+  const asked = ls.get('mme-asked') || {};
+  const card = r => { const h = r.v1[3]; return `<div class="find"><img src="${esc(snapImg(r.v1[4]))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(h)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(r.e.n)}${r.e.ln ? ' (Light Novel)' : ''}${r.e.t === 1 ? '' : ' Vol ' + r.v1[0]}</a></b><small>${esc(r.why)}${r.e.t > 1 ? ` · ${r.e.t} vols` : ''}</small></div><span class="price">$${(+r.v1[1] || 0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(h)}">🛒 Add</button></div>`; };
+  const oth = X.other.slice(0, 8);
+  box.innerHTML = `<h3 style="margin:4px 0 4px">🛍️ In stock at the shop</h3><p class="sub" style="margin:0 0 8px">New series to start, picked from what you collect. Vol 1 is in stock for each.</p>`
+    + (shop.length ? `<div style="display:grid;gap:8px">${shop.map(card).join('')}</div>` : '<div class="empty">Nothing in stock matches your shelf yet. Check back after our next restock!</div>')
+    + (oth.length ? `<h3 style="margin:18px 0 4px">💭 You might also like</h3><p class="sub" style="margin:0 0 8px">Series we don’t have in stock right now. Tap <b>Find it for me</b> and we’ll keep an eye out.</p><div style="display:grid;gap:8px">`
+      + oth.map(o => { const a = asked[normName(o.t)]; return `<div class="find"><div class="t"><b>${esc(o.t)}</b><small>${esc(o.why)}${o.some ? ' · later volumes in stock' : o.has ? ' · sold out right now' : ''}</small></div><button class="btn ${a ? 'ghost' : ''} sm" data-findit="${esc(o.t)}"${a ? ' disabled' : ''}>${a ? '✓ Asked' : '🔎 Find it for me'}</button></div>`; }).join('') + '</div>' : '');
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-findit]'); if (!b) return; const t = b.dataset.findit;
+  shelf.fb = (shelf.fb || []).concat({ t: 'Please find: ' + t + ' (from Recommended)', at: Date.now() }); save();
+  const a = ls.get('mme-asked') || {}; a[normName(t)] = Date.now(); ls.set('mme-asked', a); track('findit');
+  b.textContent = '✓ Asked'; b.disabled = true; b.classList.add('ghost'); toast(acct ? 'Got it! We’ll look for ' + t + '.' : 'Saved. Log in so the shop gets your request.'); });
 
 /* ---------- wishlist + sell list ---------- */
 const BUY = { good: 2.5, low: 1, hc: 4 }; const CREDIT = 1.2; const buyOf = c => c === 'hc' ? BUY.hc : c === 'low' ? BUY.low : BUY.good; let listView = 'want';
