@@ -1230,7 +1230,7 @@ function openMsgs(){ current = null; FIXC = null; const L = [...fixMap().values(
   if (msgUnread()){ shelf.msgSeen = Date.now(); save(); } msgUI(); }
 document.addEventListener('click', e => { if (e.target.closest('#calBtn')){ const t = document.querySelector('[data-tab="reading"]'); if (t) t.click(); setTimeout(() => { const c = document.querySelector('#readBody .cal'); if (c) c.closest('.st-sec').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150); return; } if (e.target.closest('#msgBtn,[data-openmsg]')) return openMsgs();
   { const fa = e.target.closest('[data-fbabout]'); if (fa){ const k = fa.dataset.fbabout; const nm = (shelf.series[k] || (shelf.other || {})[k] || {}).n || k; openMsgs(); setTimeout(() => { const t = $('#fbTxt'); if (t){ t.value = `About ${nm}: `; t.focus(); t.scrollIntoView({ block: 'center' }); } }, 50); return; } }
-  if (e.target.closest('[data-fbsend]')){ const t = ($('#fbTxt') || {}).value; if (!t || !t.trim()) return toast('Type a message first'); shelf.fb = (shelf.fb || []).concat({ t: t.trim().slice(0, 1000), at: Date.now() }); save(); toast(acct && acct.at ? 'Sent. We’ll reply here.' : 'Saved. Log in so the shop can see it and reply.'); openMsgs(); } });
+  if (e.target.closest('[data-fbsend]')){ const t = ($('#fbTxt') || {}).value; if (!t || !t.trim()) return toast('Type a message first'); shelf.fb = (shelf.fb || []).concat({ t: t.trim().slice(0, 1000), at: Date.now() }); save(); notifyShop(t.trim()); toast(acct && acct.at ? 'Sent. We’ll reply here.' : 'Saved. Log in so the shop can see it and reply.'); openMsgs(); } });
 function renderAll(){ FIXC = null; setTimeout(() => { try { msgUI(); } catch(e){} }, 0); renderStats(); renderList(); try { const db = $('#dupBox'); if (db) db.innerHTML = findDups().length ? dupHTML() : ''; } catch(e){} try { renderLists(); } catch(e){} if (!$('#tab-stats').classList.contains('hidden')) renderStatsTab(); if (!$('#tab-reading').classList.contains('hidden')) renderReadTab(); }
 $('#badges').onclick = e => { const t = e.target.closest('[data-b]'); if (!t) return; if (t.dataset.b === 'secret'){ openSheet(`<h2>🔒 Secret achievements</h2><p>${BADGES.filter(b => b[4] && b[2] < b[3]).length} achievements are hidden until you earn them. Keep collecting, reading, reviewing and lending to discover them.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>`); return; } const [name, how, have, need] = BADGES[+t.dataset.b];
   current = null;
@@ -2086,7 +2086,7 @@ async function renderRecsFinds(){
       + oth.map(o => { const a = asked[normName(o.t)]; return `<div class="find"><div class="t"><b>${esc(o.t)}</b><small>${esc(o.why)}${o.some ? ' · later volumes in stock' : o.has ? ' · sold out right now' : ''}</small></div><button class="btn ${a ? 'ghost' : ''} sm" data-findit="${esc(o.t)}"${a ? ' disabled' : ''}>${a ? '✓ Asked' : '🔎 Find it for me'}</button></div>`; }).join('') + '</div>' : '');
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-findit]'); if (!b) return; const t = b.dataset.findit;
-  shelf.fb = (shelf.fb || []).concat({ t: 'Please find: ' + t + ' (from Recommended)', at: Date.now() }); save();
+  shelf.fb = (shelf.fb || []).concat({ t: 'Please find: ' + t + ' (from Recommended)', at: Date.now() }); save(); notifyShop('Please find: ' + t);
   const a = ls.get('mme-asked') || {}; a[normName(t)] = Date.now(); ls.set('mme-asked', a); track('findit');
   b.textContent = '✓ Asked'; b.disabled = true; b.classList.add('ghost'); toast(acct ? 'Got it! We’ll look for ' + t + '.' : 'Saved. Log in so the shop gets your request.'); });
 
@@ -2592,6 +2592,8 @@ if (!window.claude && location.hostname === 'app.themagesemporium.com') staffDev
   if (skip) return; const gs = document.createElement('script'); gs.async = true; gs.src = 'https://gc.zgo.at/count.js'; gs.dataset.goatcounter = GC; document.head.appendChild(gs); });
 /* ---------- friends: swap shelves by link or file, then compare ---------- */
 let friendSel = null, FRIENDS_API = '', liveF = null, liveBusy = false, liveShelfAt = 0;
+/* ping the shop owner's phone (friends worker /notify/msg). Best effort, never blocks the customer. */
+function notifyShop(t){ if (!FRIENDS_API || !acct || !acct.at) return; fapi('/notify/msg', { t: String(t).slice(0, 300) }).catch(() => {}); }
 async function fapi(path, body){ const t = await acctAccess(); if (!t) throw new Error('Log in first');
   const r = await fetch(FRIENDS_API + path, { method: body ? 'POST' : 'GET', headers: { authorization: t, 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || ('error ' + r.status)); return j; }

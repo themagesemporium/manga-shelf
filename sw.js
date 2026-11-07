@@ -44,5 +44,6 @@ self.addEventListener('push', e => {
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close(); const u = new URL((e.notification.data && e.notification.data.u) || './', self.registration.scope).href;
+  if (!u.startsWith(self.registration.scope)){ e.waitUntil(clients.openWindow(u)); return; }
   e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ws => { const w = ws.find(x => x.url.startsWith(self.registration.scope)); if (w){ w.focus(); return w.navigate ? w.navigate(u).catch(() => {}) : null; } return clients.openWindow(u); }));
 });

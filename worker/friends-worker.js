@@ -24,6 +24,8 @@ const put = (env, k, v) => env.FRIENDS.put(k, JSON.stringify(v));
        [{id, h: <sha256('mme:'+cid)> or '*', k: 'stock'|'orders'|'msgs'|'deals', t: title, b: body, u: url, at, s: send-after ms (optional)}]
    A cron trigger (every 10 minutes) sends the new items. */
 const STOREFRONT = 'https://themagesemporium.com/api/2025-07/graphql.json';
+const SHOP_CID = env => env.SHOP_CID || '99230547976'; // Megan's own app account gets the shop alerts
+const DESK = 'https://claude.ai/artifact/Ey2qeRAtftubrtAhQkz5GC';
 const b64u = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const unb64u = s => Uint8Array.from(atob(String(s).replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((String(s).length + 3) % 4)), c => c.charCodeAt(0));
 const cat = (...a) => { const n = a.reduce((t, x) => t + x.length, 0), o = new Uint8Array(n); let i = 0; a.forEach(x => { o.set(x, i); i += x.length; }); return o; };
@@ -74,7 +76,20 @@ export default {
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
     const url = new URL(req.url); const p = url.pathname;
     if (p === '/push/key') return J({ key: (await vapid(env)).pub });
+    /* Shop alerts to Megan's phone (her customer account's push subscription).
+       /notify/order: from Shopify Flow (Order created -> Send HTTP request), header x-mme-key = env.NOTIFY_KEY. */
+    if (p === '/notify/order' && req.method === 'POST'){
+      if (!env.NOTIFY_KEY || req.headers.get('x-mme-key') !== env.NOTIFY_KEY) return J({ error: 'forbidden' }, 403);
+      let o = {}; try { o = await req.json(); } catch(e){}
+      const n = await sendTo(env, SHOP_CID(env), { t: ('🛒 New order ' + String(o.name || '')).slice(0, 80), b: [o.total ? '$' + o.total : '', o.items ? o.items + ' item' + (+o.items === 1 ? '' : 's') : '', o.channel || '', o.who || ''].filter(Boolean).join(' · ').slice(0, 200), u: DESK + '#pack', tag: 'shop-order' });
+      return J({ sent: n }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
+    /* /notify/msg: a customer sent a message or Find request in the app */
+    if (p === '/notify/msg' && req.method === 'POST'){ if (me.cid === SHOP_CID(env)) return J({ ok: 1 });
+      const rk = 'nmsg:' + me.cid; if (await env.FRIENDS.get(rk)) return J({ ok: 1, later: 1 }); await env.FRIENDS.put(rk, '1', { expirationTtl: 120 });
+      let b = {}; try { b = await req.clone().json(); } catch(e){}
+      const n = await sendTo(env, SHOP_CID(env), { t: ('💬 ' + (me.name || 'A customer') + ' sent an app message').slice(0, 80), b: String(b.t || '').slice(0, 200), u: DESK + '#msgs', tag: 'shop-msg' });
+      return J({ sent: n }); }
     let body = {}; if (req.method === 'POST' || req.method === 'PUT'){ try { body = await req.json(); } catch(e){} }
     const own = (await get(env, 'own:' + me.cid)) || { code: null, name: me.name, viewers: {} };
 
