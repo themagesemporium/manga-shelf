@@ -2,7 +2,7 @@
 // Loads the live snapshot from config.json into window._SN (keeps its aliases), runs tools/snap-builder.js,
 // uploads the new snapshot to Shopify Files and waits until it is READY. Progress/result in window._SP:
 // {st, series, url, fin, err}. Afterwards set config.json "snap" to _SP.url in the repo, commit and push.
-window._spRun = async (extraAl) => {
+window._spRun = async (extraAl, opts) => { // opts.same(newSnap, oldSnap) -> true skips the upload (nothing changed)
   const SP = window._SP = { st: 'load', series: 0, url: '', fin: false, err: [] };
   try {
     const cfg = await (await fetch('https://raw.githubusercontent.com/themagesemporium/manga-shelf/main/config.json?' + Date.now())).json();
@@ -14,6 +14,7 @@ window._spRun = async (extraAl) => {
     const N = window._NEWSNAP; if (extraAl) N.al = Object.assign({}, N.al || {}, extraAl);
     SP.series = Object.keys(N.s).length;
     if (SP.series < 0.9 * Object.keys(_SN.s).length){ SP.err.push('new snapshot is much smaller than the old one; not uploaded'); SP.fin = true; return; }
+    if (opts && opts.same && opts.same(N, _SN)){ SP.same = true; SP.st = 'same'; SP.fin = true; return; }
     SP.st = 'upload';
     const body = JSON.stringify(N), fn = 'mme-snap-' + Date.now() + '.json';
     const st = await _api(`mutation($i:[StagedUploadInput!]!){stagedUploadsCreate(input:$i){stagedTargets{url resourceUrl parameters{name value}} userErrors{message}}}`, { i: [{ filename: fn, mimeType: 'application/json', resource: 'FILE', httpMethod: 'POST', fileSize: String(new Blob([body]).size) }] });

@@ -29,9 +29,12 @@ window._api = async (query, variables) => {
 const load = f => (0, eval)(fs.readFileSync(ROOT + 'tools/' + f, 'utf8'));
 let failed = false;
 // 1) store snapshot
-load('snap-publish.js'); await window._spRun();
+// skip the upload when nothing but the build time changed (keeps Shopify Files tidy and spares customers a re-download)
+const canon = v => Array.isArray(v) ? '[' + v.map(canon).join(',') + ']' : v && typeof v === 'object' ? '{' + Object.keys(v).sort().filter(k => k !== 'at').map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}' : JSON.stringify(v);
+load('snap-publish.js'); await window._spRun(null, { same: (a, b) => canon(a) === canon(b) });
 const SP = window._SP;
-if (SP.url && !SP.err.length){
+if (SP.same){ out(`Store snapshot: no changes since the last run (${Object.keys(window._SN.s).length} series), so nothing was uploaded.`); }
+else if (SP.url && !SP.err.length){
   const cfgPath = ROOT + 'config.json', cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
   const oldAl = Object.keys(window._SN.al || {}).length, newAl = Object.keys(window._NEWSNAP.al || {}).length;
   cfg.snap = SP.url; fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + '\n');
