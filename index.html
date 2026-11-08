@@ -2810,7 +2810,7 @@ function drawChar(d){ const W = 1080, H = 1920, c = document.createElement('canv
   t('LV', W / 2 - 175, 285, 28, '900', '#3b1d6e'); t(String(d.lv), W / 2 - 175, 335, 56, '900', '#3b1d6e');
   /* name + class banner */
   const nm = d.name ? d.name : 'Mystery Reader'; t(nm, W / 2, 690, fit(nm, 900, 84, '900'), '900', RT >= 4 ? '#ffe27a' : '#fff', 'center', RT >= 2 ? T.glow : null);
-  const ttl = d.title ? d.title + ' · ' + d.cls : d.cls; rr(140, 724, 800, 84, 42); x.fillStyle = 'rgba(0,0,0,.35)'; x.fill(); x.lineWidth = 4; x.strokeStyle = T.glow; x.stroke(); t(ttl, W / 2, 782, fit(ttl, 740, 44, '900'), '900', '#fff');
+  const ttl = d.cls + ' · Lv ' + d.lv + (d.title ? ' · ' + d.title + ' Rank' : ''); rr(140, 724, 800, 84, 42); x.fillStyle = 'rgba(0,0,0,.35)'; x.fill(); x.lineWidth = 4; x.strokeStyle = T.glow; x.stroke(); t(ttl, W / 2, 782, fit(ttl, 740, 44, '900'), '900', '#fff');
   t('“' + T.tag + '”', W / 2, 852, fit('“' + T.tag + '”', 900, 34, '600'), '600', 'rgba(255,255,255,.9)');
   /* radar chart of the 8 stats */
   const cx = W / 2, cy = 1250, R = 225, n = 8, pt = (i, v) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + Math.cos(a) * R * v, cy + Math.sin(a) * R * v]; };
