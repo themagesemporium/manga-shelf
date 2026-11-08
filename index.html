@@ -739,7 +739,7 @@ function memberChip(){ return isPaid() ? `<span class="badge" style="background:
 function seeded(seed){ let x = seed >>> 0 || 1; return () => { x ^= x << 13; x >>>= 0; x ^= x >> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; }; }
 function serMeta(key){ const s = shelf.series[key] || (shelf.other || {})[key] || {}; const h = snapEntry(key); const e = h ? h[1] : null; const em = (e && e.m) || {};
   const g = (s.m && s.m.g && s.m.g.length) ? s.m.g : String(em.gen || '').split(/,\s*/).filter(Boolean);
-  return { g, a: (s.m && s.m.a) || em.aud || '', an: /yes|true/i.test(String(em.an || '')), sp: parseInt(em.sp) || 0, gr: /yes|true/i.test(String(em.gr || '')), t: (e && e.t) || s.fin || 0, ln: isLN(key, s), ss: em.ss || '', t0: s.t || 0 }; }
+  return { g, a: (s.m && s.m.a) || em.aud || '', an: /yes|true/i.test(String(em.an || '')), sp: s.ux && s.ux.sp != null ? s.ux.sp : (parseInt(em.sp) || 0), gr: s.ux && s.ux.gr != null ? !!s.ux.gr : /yes|true/i.test(String(em.gr || '')), t: (e && e.t) || s.fin || 0, ln: isLN(key, s), ss: em.ss || '', t0: s.t || 0 }; }
 const BINGO_POOL = [
   ['Shojo', m => m.a === 'Shojo'], ['Shonen', m => m.a === 'Shonen'], ['Seinen', m => m.a === 'Seinen'], ['Josei', m => m.a === 'Josei'],
   ['Romance', m => m.g.includes('Romance')], ['Comedy', m => m.g.includes('Comedy')], ['Fantasy', m => m.g.includes('Fantasy')], ['Horror', m => m.g.includes('Horror')],
@@ -829,7 +829,7 @@ function xpCalc(){ const P = []; const add = (k, label, n, each, cap) => { const
   const fr = Object.keys(shelf.friends || {}).length;
   add('own', 'Books on your shelf', own, 2); add('rd', 'Volumes read', rd, 5); add('st', 'Star ratings', stars, 3); add('rv', 'Reviews (20+ words)', revs, 15);
   add('done', 'Series completed', done, 50); add('want', 'Wishlist adds', want, 1, 200); add('day', 'Reading days', days.length, 5); add('wk', '7-day reading streaks', weeks, 25);
-  add('ach', 'Achievements', ach, 25); add('fix', 'Fixes and corrections', fixes, 10); add('msg', 'Days you messaged the shop', msgDays, 5); add('fr', 'Friends', fr, 10, 200); add('rb', 'Recommended books bought', Object.keys(shelf.recBuy || {}).length, 25);
+  add('ach', 'Achievements', ach, 25); add('fix', 'Fixes and corrections', fixes, 10); add('msg', 'Days you messaged the shop', msgDays, 5); add('fr', 'Friends', fr, 10, 200); add('ux', 'Spice & gentle ratings', Object.values(shelf.series).filter(s => s.ux && (s.ux.sp != null || s.ux.gr != null)).length, 3); add('rb', 'Recommended books bought', Object.keys(shelf.recBuy || {}).length, 25);
   const xp = P.reduce((a, x) => a + x[3], 0); return { xp, lv: lvOf(xp), parts: P }; }
 function xpMonth(xp){ const mk = dayKey(new Date()).slice(0, 7); const m = shelf.xpm; if (!m || m.mk !== mk){ shelf.xpm = { mk, base: xp }; try { save(); } catch(e){} return 0; } return Math.max(0, xp - m.base); }
 /* ---------- Character sheet: 8 RPG stats scored 1-20, class from the top stat ---------- */
@@ -1927,14 +1927,27 @@ async function loadInfo(key){
   if (current === key) renderSeries(key);
 }
 function spiceTxt(v){ const n = parseInt(v, 10); if (!isNaN(n)) return n <= 0 ? 'None' : '🌶️'.repeat(Math.min(n, 5)) + ` (${n}/5)`; return v; }
+/* Customers rate spice and gentle reads themselves: s.ux = {sp: 0-5, gr: true/false}. Their own value drives their filters and challenges;
+   the shop's value stays as the suggestion. Ratings are collected nightly for Megan. */
+function uxHTML(key){ const s = shelf.series[key]; if (!s || langOf(key)) return ''; const ux = s.ux || {}; const o = sinfo.get(key) || {}; const shopSp = o.sp !== '' && o.sp != null && !isNaN(parseInt(o.sp)) ? parseInt(o.sp) : null, shopGr = /true/i.test(o.gr || '');
+  const sp = ux.sp != null ? ux.sp : null;
+  return `<details class="about"${ux.sp != null || ux.gr != null ? '' : ''}><summary>🌶️ Rate spice & gentle read${ux.sp != null || ux.gr != null ? ' · rated ✓' : ''}</summary>
+    <p class="sub" style="margin:0 0 6px">Your rating is used for your own filters and challenges, and helps us rate it for everyone.${shopSp != null || shopGr ? ` Shop suggests: ${shopSp != null ? spiceTxt(shopSp) : 'no spice rating'}${shopGr ? ' · Gentle read' : ''}.` : ''}</p>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center"><span style="font-weight:700;margin-right:4px">Spice</span>${[0,1,2,3,4,5].map(n => `<button class="btn ${sp === n ? '' : 'ghost'} sm" data-uxsp="${n}" aria-pressed="${sp === n}" style="width:auto;margin:0;padding:4px 8px">${n ? n + '🌶️' : 'None'}</button>`).join('')}</div>
+    <div style="display:flex;gap:4px;align-items:center;margin-top:8px"><span style="font-weight:700;margin-right:4px">Gentle read</span><button class="btn ${ux.gr === true ? '' : 'ghost'} sm" data-uxgr="1" style="width:auto;margin:0">Yes</button><button class="btn ${ux.gr === false ? '' : 'ghost'} sm" data-uxgr="0" style="width:auto;margin:0">No</button></div>
+    ${ux.sp != null || ux.gr != null ? '<p style="margin:8px 0 0"><button class="btn ghost sm" data-uxclear style="width:auto;margin:0">Use the shop’s rating</button></p>' : ''}</details>`; }
+document.addEventListener('click', e => { if (!current) return; const s = shelf.series[current]; if (!s) return; const a = e.target.closest('[data-uxsp]'), g = e.target.closest('[data-uxgr]'), c = e.target.closest('[data-uxclear]'); if (!a && !g && !c) return;
+  if (c) delete s.ux; else { s.ux = Object.assign({}, s.ux); if (a) s.ux.sp = +a.dataset.uxsp; if (g) s.ux.gr = g.dataset.uxgr === '1'; s.ux.at = Date.now(); }
+  save(); const k = current; renderSeries(k); setTimeout(() => { const d = [...document.querySelectorAll('#sheetBody details.about')].find(x => /Rate spice/.test(x.textContent)); if (d) d.open = true; }, 0); toast(c ? 'Back to the shop’s rating' : 'Rating saved. Thanks!'); });
 function infoHTML(key){
   const o = sinfo.get(key); if (!o || o.loading) return '';
   const rows = [];
   const add = (t, v) => { if (v) rows.push(`<dt>${t}</dt><dd>${esc(v)}</dd>`); };
   add('Author', o.au); add('Publisher', o.pub); add('Genres', o.gen); add('Themes', o.th); add('Audience', o.aud); add('Age rating', o.age);
-  if (o.sp !== '') add('Spice', spiceTxt(o.sp));
+  const ux = (shelf.series[key] || {}).ux || {};
+  if (o.sp !== '' || ux.sp != null) add('Spice', ux.sp != null ? spiceTxt(ux.sp) + ' (yours)' + (o.sp !== '' && +o.sp !== ux.sp ? ' · shop says ' + spiceTxt(o.sp) : '') : spiceTxt(o.sp));
   add('Content notes', o.cn);
-  if (/true/i.test(o.gr)) add('Gentle read', 'Yes');
+  if (ux.gr != null) add('Gentle read', (ux.gr ? 'Yes' : 'No') + ' (yours)' + ((/true/i.test(o.gr)) !== !!ux.gr ? ' · shop says ' + (/true/i.test(o.gr) ? 'Yes' : 'No') : '')); else if (/true/i.test(o.gr)) add('Gentle read', 'Yes');
   if (/true/i.test(o.an)) add('Anime', o.at || 'Yes');
   const st = [o.ss, o.ov ? `${o.ov} volumes in Japan` + (o.os ? ` (${o.os})` : '') : ''].filter(Boolean).join(' · '); add('Series status', st);
   if (!rows.length && !o.tk) return '';
@@ -2053,6 +2066,7 @@ function renderSeries(key){
     ${odd.length ? `<p class="sub">Also: Vol ${odd.join(', ')}</p>` : ''}
     ${edHTML(key)}
     ${aboutHTML(key)}
+    ${uxHTML(key)}
     ${cvHTML(key)}
     <div class="legend"><span><i style="background:var(--accent)"></i>Owned</span><span><i style="background:var(--bg);border:1px solid var(--line)"></i>Missing</span>${edCount(s) ? '<span><i class="vol o oe" style="display:inline-block;padding:0;min-width:0"></i>In an omnibus you own</span>' : ''}<span><i style="background:var(--gold)"></i>In stock at the store</span><span><b style="color:var(--good)">✓</b> Read</span><span><b style="color:var(--accent)">↗</b> Lent out</span><span><b style="color:#1d5aae">↙</b> Borrowed</span><span><b style="color:#d9417a">♥</b> Want</span><span><b style="color:#2f9e5f">$</b> Selling</span><span><b style="color:#8a6d3b">✎</b> Note</span></div>
     ${(() => { const H = holds ? holds.items.filter(h => normName(h.s) === normName(s.n)) : []; return H.length ? `<div class="sec"><h4>📦 On hold for you</h4><p class="sub" style="margin:0">${H.map(h => h.v != null ? 'Vol ' + h.v : esc(h.t || '')).join(', ')}: set aside for you at The Mage’s Emporium (yours once paid).</p></div>` : ''; })()}
@@ -2576,7 +2590,7 @@ function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (
   Object.keys(out.series).forEach(k => { if (gone[k] && !((b.series || {})[k] && (b.series[k].t || 0) > gone[k]) && (out.series[k].t || 0) <= gone[k]) delete out.series[k]; });
   Object.entries(b.series || {}).forEach(([k, S]) => { if (gone[k] && (S.t || 0) <= gone[k]) return; const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
-    if (S.ed && !T.ed) T.ed = S.ed; if (S.ib) T.ib = Object.assign({}, S.ib, T.ib || {}); if (S.cvm && !T.cvm){ T.c = S.c; T.cvm = S.cvm; }
+    if (S.ed && !T.ed) T.ed = S.ed; if (S.ux && (!T.ux || (S.ux.at || 0) > (T.ux.at || 0))) T.ux = S.ux; if (S.ib) T.ib = Object.assign({}, S.ib, T.ib || {}); if (S.cvm && !T.cvm){ T.c = S.c; T.cvm = S.cvm; }
     if (S.ed && T.ed) Object.entries(S.ed).forEach(([t, E]) => { const D = T.ed[t]; if (!D){ T.ed[t] = E; return; } D.v = uni(D.v, E.v); if (E.want) D.want = uni(D.want, E.want).filter(v => !D.v.includes(v)); if (E.r) D.r = uni(D.r, E.r); if (E.c) D.c = Object.assign({}, E.c, D.c || {}); });
     ['ln','cn','vr'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); Object.keys(S).forEach(f => { if (T[f] == null) T[f] = S[f]; }); });
   ['log'].forEach(f => { out[f] = Object.assign({}, b[f] || {}); Object.entries(a[f] || {}).forEach(([d, n]) => { out[f][d] = Math.max(n, out[f][d] || 0); }); });
