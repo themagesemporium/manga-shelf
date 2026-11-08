@@ -297,6 +297,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
 .btn:disabled{opacity:.5}
 .av.fr-arc{box-shadow:0 0 0 3px #7b5cff,0 0 10px 2px #c06bff;animation:arcglow 2.4s ease-in-out infinite}@keyframes arcglow{50%{box-shadow:0 0 0 3px #ff6bd5,0 0 14px 4px #7b5cff}}@media (prefers-reduced-motion:reduce){.av.fr-arc{animation:none}}
 .mnu{border:1px solid var(--line, rgba(0,0,0,.12));border-radius:14px;margin:0 0 8px;padding:0 12px;background:var(--surface, transparent)}.mnu>summary{cursor:pointer;font-weight:700;padding:12px 0;list-style:none;display:flex;justify-content:space-between;gap:8px}.mnu>summary::after{content:'▾';opacity:.6}.mnu[open]>summary::after{content:'▴'}.mnu>summary::-webkit-details-marker{display:none}.mnu>.st-sec{box-shadow:none;border:0;margin:0 0 10px;padding:0;background:transparent}.mnu>#ioBox>h3:first-child,.mnu>#photoBox>h3:first-child,.mnu>#acctBox>h3:first-child{display:none}
+.xppop{position:fixed;left:50%;top:calc(70px + env(safe-area-inset-top,0px));transform:translate(-50%,-10px);opacity:0;z-index:9999;background:#ffc93c;color:#3b1d6e;font-weight:800;padding:8px 16px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25);transition:opacity .25s,transform .25s;pointer-events:none}.xppop.go{opacity:1;transform:translate(-50%,0)}.xppop.up{background:linear-gradient(90deg,#ff9be4,#ffe28a,#9bffd6,#9bd2ff);font-size:17px;padding:12px 20px}@media (prefers-reduced-motion:reduce){.xppop{transition:none}}
 .av{width:28px;height:28px;border-radius:50%;object-fit:cover;display:inline-grid;place-items:center;background:var(--surface-2);font-size:17px;line-height:1;vertical-align:middle;overflow:hidden;flex:none}.av.lg{width:56px;height:56px;font-size:32px}.av.av-sm{width:22px;height:22px;font-size:14px;margin:-3px 2px -3px -4px;background:#fff}.avl{font-weight:800;font-size:14px;color:var(--accent)}.av.lg.avl{font-size:24px}.avgrid{display:flex;flex-wrap:wrap;gap:8px}.avopt{background:none;border:2px solid transparent;border-radius:50%;padding:2px;cursor:pointer}.avopt:hover,.avopt:focus-visible{border-color:var(--accent)}
 .note{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:12px;padding:10px 12px}
 .row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -850,7 +851,7 @@ function sheetHTML(sc, cls, light){ return `<div style="font-size:13.5px">${STAT
    tapping either bar opens the character panel (stats, frame, share, XP breakdown). */
 let lvOpen = false;
 function renderLevel(){ const el = $('#lvlBox'); if (!el) return; if (!xpOn()){ el.innerHTML = ''; return; }
-  const X = xpCalc(), S = statCalc(), cls = myClass(S), a = xpNeed(X.lv), b = xpNeed(X.lv + 1), fr = frameOf(X.lv), nf = XP_FRAMES.find(x => x[0] > X.lv), mo = xpMonth(X.xp);
+  const X = xpCalc(); if (xpLast == null) xpLast = { xp: X.xp, lv: X.lv }; const S = statCalc(), cls = myClass(S), a = xpNeed(X.lv), b = xpNeed(X.lv + 1), fr = frameOf(X.lv), nf = XP_FRAMES.find(x => x[0] > X.lv), mo = xpMonth(X.xp);
   let books = 0; try { books = collectorNumbers().books; } catch(e){} let r0 = 0; while (r0 + 1 < RANKS.length && books >= RANKS[r0 + 1][0]) r0++; const nx = RANKS[r0 + 1];
   const rank = rankName(r0, cls), sec = $('#rank');
   if (sec){ const lbl = sec.querySelector('.lbl'); if (lbl) lbl.textContent = 'Your character';
@@ -976,6 +977,23 @@ async function histImport(file){ const msg = $('#histMsg'); msg.textContent = 'R
 document.addEventListener('change', e => { if (e.target && e.target.id === 'histFile' && e.target.files && e.target.files[0]) histImport(e.target.files[0]); });
 document.addEventListener('toggle', e => { const d = e.target; if (!d || !d.matches) return; if (d.matches('[data-dnfwrap]')) dnfOpen = d.open; else if (d.matches('[data-readall]')) readAllOpen = d.open; else if (d.matches('[data-histimp]')) histOpen = d.open; }, true);
 /* ---------- Everything you've read, with your ratings and reviews (collapsible) ---------- */
+/* ---------- Your reviews: every series and volume review in one fold-out list; tap one to edit it ---------- */
+function myReviewsHTML(){ const rows = []; Object.entries(shelf.series).forEach(([k, s]) => {
+    if (s.st || (typeof s.rv === 'string' && s.rv.trim())) rows.push({ k, n: s.n, v: null, st: s.st, t: typeof s.rv === 'string' ? s.rv : '' });
+    Object.entries(s.vr || {}).forEach(([v, r]) => { if (r && (r.st || r.t)) rows.push({ k, n: s.n, v, st: r.st, t: r.t || '', d: r.d }); }); });
+  if (!rows.length) return '';
+  rows.sort((a, b) => a.n.localeCompare(b.n) || (a.v == null ? -1 : b.v == null ? 1 : a.v - b.v)); const wr = rows.filter(r => r.t).length;
+  return `<div class="st-sec fold-closed"><h3>⭐ Your reviews (${rows.length})</h3><p class="sub" style="margin:0 0 6px">${wr} written · tap one to read or edit it</p>${rows.map(r => `<div class="srow" ${r.v != null ? `data-calrev="${esc(r.k + '|' + r.v)}"` : `data-rvopen="${esc(r.k)}"`} role="button" tabindex="0" style="flex-wrap:wrap"><span>${esc(r.n)}${r.v != null ? ' Vol ' + esc(r.v) : ' (whole series)'}${r.st ? ' <span style="color:#e2a400">' + '★'.repeat(r.st) + '</span>' : ''}<small>${r.t ? esc(String(r.t).slice(0, 140)) + (String(r.t).length > 140 ? '…' : '') : 'Stars only'}</small></span><span class="sub" style="margin:0">Edit ✎</span></div>`).join('')}</div>`; }
+document.addEventListener('click', e => { const o = e.target.closest('[data-rvopen]'); if (!o) return; openSeries(o.dataset.rvopen); setTimeout(() => { const t = $('#rv'); if (t){ t.scrollIntoView({ block: 'center' }); t.focus(); } }, 80); });
+/* ---------- Fold any page section: each top-level card with a heading becomes a <details>; open/closed is remembered per section ---------- */
+function foldSections(root, ns){ if (!root) return; const st = ls.get('mme-fold') || {};
+  [...root.children].forEach(sec => { if (sec.tagName !== 'DIV' || !sec.classList.contains('st-sec')) return; const h3 = sec.querySelector('h3'); if (!h3) return;
+    const cal = !!sec.querySelector('.calhead'); const title = cal ? '📅 Reading calendar' : h3.textContent.trim(); const key = ns + ':' + (cal ? 'calendar' : title.replace(/[\d,]+/g, '#').replace(/\(.*?\)/g, '').trim());
+    const d = document.createElement('details'); d.className = sec.className; d.setAttribute('style', sec.getAttribute('style') || ''); d.style.display = 'block'; d.dataset.fold = key; d.open = key in st ? st[key] : !sec.classList.contains('fold-closed');
+    const sm = document.createElement('summary'); sm.style.cssText = 'cursor:pointer;font-weight:800;font-size:16px;list-style:none;display:flex;justify-content:space-between;gap:8px'; sm.innerHTML = `<span>${esc(title)}</span><span aria-hidden="true" style="opacity:.6">▾</span>`;
+    if (!cal) h3.remove();
+    d.appendChild(sm); while (sec.firstChild) d.appendChild(sec.firstChild); sec.replaceWith(d); }); }
+document.addEventListener('toggle', e => { const d = e.target; if (!d.dataset || !d.dataset.fold) return; const st = ls.get('mme-fold') || {}; st[d.dataset.fold] = d.open; ls.set('mme-fold', st); }, true);
 function readAllHTML(){ const S = shelf.series; const L = Object.keys(S).filter(k => (S[k].r || []).length).sort((a, b) => String(S[a].n).localeCompare(String(S[b].n)));
   const n = L.reduce((t, k) => t + S[k].r.length, 0); const stars = x => x ? '★'.repeat(Math.round(x)) : '';
   const rows = L.map(k => { const s = S[k]; const vr = s.vr || {}; const rv = s.r.filter(v => vr[v] && (vr[v].st || vr[v].t));
@@ -1033,11 +1051,13 @@ function renderReadTab(){
     <div class="cal">${cells}</div><p class="sub" style="margin:8px 0 0">${mTot} read this month. Tap a day to see what you read, or to log anything you read that day, even books you don't own.</p></div>
   ${dayHTML}
   ${readAllHTML()}
+  ${myReviewsHTML()}
   ${dnfHTML()}
   ${histHTML()}
   ${arr.length ? `<div class="st-sec"><h3>🚚 Your orders on the way</h3>${arr.map(a => `<div class="srow" style="cursor:default"><span>${a.ic} ${esc(a.t)}<small>${new Date(a.d+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})} · ${esc(a.sub)}</small></span></div>`).join('')}<p class="sub" style="margin:6px 0 0">Arrival dates are estimates. Mystery box books join your shelf the day they arrive, so nothing gets spoiled.</p></div>` : ''}
   ${evs.length ? `<div class="st-sec"><h3>🎪 Come see us at a convention</h3>${evs.map(e => `<div class="srow" style="cursor:default"><span>🎪 ${esc(e.n)}${e.pend ? ' <span class="chip">Pending</span>' : ''}<small>${esc(evRange(e))}${e.p ? ' · ' + esc(e.p) : ''}</small></span></div>`).join('')}<p class="sub" style="margin:6px 0 0">Stop by our booth! Conventions show on the calendar too.</p></div>` : ''}
   <div class="st-sec"><h3>📦 Coming out for your series</h3>${!mcp && !preorders ? `<p class="sub" style="margin:0">Loading upcoming releases…</p>` : !preorders ? `<p class="sub" style="margin:0"><span class="spin"></span>&nbsp; Checking pre-orders…</p>` : mine.filter(p => p.rd >= dayKey()).length ? mine.filter(p => p.rd >= dayKey()).slice(0,12).map(p => `<div class="srow" style="cursor:default"><span>${esc(p.title)}<small>${new Date(p.rd+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})} · $${p.price.toFixed(2)}</small></span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Pre-order</a></div>`).join('') : `<p class="sub" style="margin:0">No pre-orders up right now for series on your shelf. New volumes show up here (and on the calendar) as soon as the shop lists them.</p>`}</div>`;
+  foldSections(el, 'rd');
 }
 $('#readBody') && null;
 document.addEventListener('click', e => {
@@ -1149,6 +1169,7 @@ function renderStatsTab(){
     return `<div class="st-sec"><h3>Your volume reviews <span class="sub" style="font-weight:400">(${A.length})</span></h3><p class="sub" style="margin:0 0 4px">Top rated</p>${top.map(vrRow).join('')}${recent.length ? `<p class="sub" style="margin:10px 0 4px">Most recent</p>${recent.map(vrRow).join('')}` : ''}</div>`; })()}
 `;
   el.querySelectorAll('[data-merge]').forEach(b => b.onclick = () => mergeSeries(b.dataset.merge.split('|')));
+  try { foldSections(el, 'st'); } catch(e){}
   if (!crownsData && mcp) loadCrowns().then(d => { if (d && !$('#tab-stats').classList.contains('hidden')) renderStatsTab(); });
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-by]'); if (b){ statsBy = b.dataset.by; renderStatsTab(); } });
@@ -1583,7 +1604,13 @@ function toast(msg, undo){
 
 /* ---------- saving ---------- */
 let saving = Promise.resolve(), saveT, dirty = 0;
-function save(){
+/* "+10 XP" pop-ups: after each save, compare XP with the last known total (debounced, so one action = one pop-up). Level-ups get a bigger one. */
+let xpLast = null, xpT = null;
+function xpPing(){ clearTimeout(xpT); xpT = setTimeout(() => { try { const X = xpCalc(); if (xpLast != null && X.xp > xpLast.xp && (X.xp - xpLast.xp <= 300 || X.lv > xpLast.lv)){ const d = X.xp - xpLast.xp, up = X.lv > xpLast.lv;
+      const el = document.createElement('div'); el.className = 'xppop' + (up ? ' up' : ''); el.setAttribute('role', 'status'); el.textContent = up ? `⭐ Level up! You're Level ${X.lv}` + (frameOf(X.lv) && frameOf(X.lv)[0] === X.lv ? ` · ${frameOf(X.lv)[1]} frame unlocked!` : '') : `+${d} XP`;
+      document.body.appendChild(el); setTimeout(() => el.classList.add('go'), 20); setTimeout(() => el.remove(), up ? 4200 : 1900); try { renderLevel(); } catch(e){} }
+    xpLast = { xp: X.xp, lv: X.lv }; } catch(e){} }, 400); }
+function save(){ xpPing();
   try { renderAll(); if (current) renderSeries(current); } catch(e){ console.error(e); }
   if (mode === 'local'){ ls.set('mme-shelf', shelf); acctQueue(); return; }
   if (!docRef) return;
@@ -2004,7 +2031,8 @@ function renderSeries(key){
     <div class="sec"><h4>Your review of the whole series</h4><p class="sub" style="margin:0 0 6px">For one volume, tap it (with no mode selected) and review it there.</p><div class="stars" role="radiogroup" aria-label="Rating">${[1,2,3,4,5].map(n => `<button data-star="${n}" class="${(s.st||0)>=n?'on':''}" aria-label="${n} star${n>1?'s':''}">★</button>`).join('')}</div>
     <textarea class="rv" id="rv" placeholder="${shelf.share ? 'What did you think? (shared with the shop)' : 'What did you think? (only you see this)'}">${esc(s.rv||'')}</textarea>
     <label class="toggle"><input type="checkbox" id="shareRv" ${shelf.share ? 'checked' : ''}><span>Share my reviews with The Mage's Emporium so they can post them on the website (applies to all your reviews; turn off anytime)</span></label>
-    <div class="row2"><button class="btn sm" data-saverv>Save review</button></div></div>
+    <div class="row2"><button class="btn sm" data-saverv>Save review</button></div>
+    ${(() => { const R = Object.entries(s.vr || {}).filter(([v, r]) => r && (r.st || r.t)).sort((a, b) => a[0] - b[0]); return R.length ? `<h4 style="margin:14px 0 4px">Your volume reviews</h4>${R.map(([v, r]) => `<button class="srow" data-vrev="${esc(v)}" style="width:100%;text-align:left" aria-label="Edit your review of Vol ${esc(v)}"><span>Vol ${esc(v)}${r.st ? ' ' + '★'.repeat(r.st) : ''}<small>${r.t ? esc(String(r.t).slice(0, 90)) + (String(r.t).length > 90 ? '…' : '') : 'Stars only'}</small></span><span class="sub" style="margin:0">Edit ✎</span></button>`).join('')}` : ''; })()}</div>
     <div class="sec"><h4>Grab your missing volumes</h4>${store}</div>
     <div class="row2" style="margin-top:22px">${i.complete ? (s.fin && !(live.get(key)||{}).total ? `<button class="btn ghost" data-unfin>Not finished after all</button>` : '') : `<button class="btn ghost" data-more>Add volumes past ${n}</button>${!i.total && i.own.length && !i.gaps.length ? `<button class="btn ghost" data-fin>Series is finished at Vol ${i.max}</button>` : ''}`}<button class="btn ghost" data-remove>Remove series</button><button class="btn ghost" data-close>Close</button></div>`;
 }
@@ -2012,6 +2040,7 @@ $('#sheetBody').onclick = e => { try { sheetClick(e); } catch(err){ toast('Somet
 function sheetClick(e){
   if (e.target.classList && e.target.classList.contains('vpop')){ detV = null; if (current) renderSeries(current); return; }
   const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.vrev){ tapMode = null; detV = +t.dataset.vrev; renderSeries(current); setTimeout(() => { const x = $('#pvRv'); if (x){ x.scrollIntoView({ block: 'center' }); x.focus(); } }, 60); return; }
   if (t.classList.contains('srow')) return openSeries(t.dataset.k);
   if (t.classList.contains('skin')) return chooseSkin(t.dataset.skin);
   if (t.dataset.open) return openSeries(t.dataset.open);
