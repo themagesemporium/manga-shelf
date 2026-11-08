@@ -371,6 +371,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
   </nav>
 
   <section id="tab-shelf">
+    <div id="newsBar"></div>
     <button class="btn" data-scanmode style="width:100%;margin:0 0 10px;font-size:16px">📷 Scan a book: do I own it?</button>
     <div class="tools">
       <input id="q" type="search" placeholder="Search series, shelves or names" autocomplete="off">
@@ -815,12 +816,79 @@ function myPreorders(){
 }
 /* ---------- Didn't finish: books you stopped reading, with your own notes (shelf.dnf = [{k, n, v, at, note}]) ---------- */
 function dnfHTML(){ const D = shelf.dnf || []; const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-  return `<div class="st-sec"><h3>🚫 Didn't finish</h3><p class="sub" style="margin:0 0 8px">Books you stopped reading, with a note on why. They don't count as read, and only you can see them.</p>
+  return `<details class="st-sec"${dnfOpen ? ' open' : ''} data-dnfwrap><summary style="cursor:pointer;font-weight:800;font-size:16px">🚫 Didn't finish${D.length ? ` <span class="chip">${D.length}</span>` : ''}</summary><p class="sub" style="margin:8px 0 8px">Books you stopped reading, with a note on why. They don't count as read, and only you can see them.</p>
     ${D.map((x, i) => `<div class="srow" style="cursor:default;flex-wrap:wrap"><span>📕 ${esc(x.n)}<small>${x.v ? 'Vol ' + esc(x.v) + ' · ' : ''}stopped ${esc(fmt(x.at))}</small></span><button class="btn ghost sm" data-dnfdel="${i}">Remove</button>
       <textarea class="rv" data-dnfnote="${i}" rows="2" aria-label="Notes on ${esc(x.n)}" placeholder="Why did you stop? Notes are just for you." style="width:100%;min-height:44px;margin-top:6px">${esc(x.note || '')}</textarea></div>`).join('')}
     <div class="locrow" style="margin-top:10px"><input id="dnfT" placeholder="Title" aria-label="Title you didn't finish" style="flex:2"><input id="dnfV" placeholder="Vol" aria-label="Volume" inputmode="numeric" style="flex:1"></div>
     <textarea id="dnfN" class="rv" rows="2" aria-label="Notes" placeholder="Notes (optional)" style="width:100%;margin-top:6px"></textarea>
-    <button class="btn sm" data-dnfadd style="margin-top:6px">＋ Add to Didn't finish</button></div>`; }
+    <button class="btn sm" data-dnfadd style="margin-top:6px">＋ Add to Didn't finish</button></details>`; }
+let dnfOpen = false, readAllOpen = false, histOpen = false;
+/* ---------- What's new: news.json in the repo, newest first. A banner on the Shelf tab shows the newest unseen item; "See all" opens the full list. ---------- */
+let NEWS = [];
+async function loadNews(){ try { const r = await fetch('news.json?v=' + Math.floor(Date.now() / 36e5)); if (r.ok) NEWS = (await r.json()).sort((a, b) => Date.parse(b.at) - Date.parse(a.at)); } catch(e){} renderNewsBar(); }
+const newsWhen = n => new Date(n.at).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+function renderNewsBar(){ const el = $('#newsBar'); if (!el || !NEWS.length) return; const seen = +(ls.get('mme-news-seen') || 0); const top = NEWS[0];
+  const fresh = NEWS.filter(n => Date.parse(n.at) > seen).length;
+  el.innerHTML = fresh ? `<div class="st-sec" style="margin:0 0 10px;padding:10px 12px"><div style="display:flex;gap:8px;align-items:flex-start"><span aria-hidden="true">📰</span><div style="flex:1;min-width:0"><b>New: ${esc(top.t)}</b><p class="sub" style="margin:2px 0 6px">${esc(top.b)}</p><button class="btn ghost sm" data-newsall>See all updates${fresh > 1 ? ` (${fresh} new)` : ''}</button></div><button class="iconbtn" data-newsx aria-label="Dismiss">✕</button></div></div>`
+    : `<p style="text-align:right;margin:0 0 6px"><button class="btn ghost sm" data-newsall>📰 What's new</button></p>`; }
+function openNews(){ ls.set('mme-news-seen', Date.parse(NEWS[0].at)); const d = document.createElement('div'); d.className = 'vpop'; d.setAttribute('data-newsclose', '');
+  d.innerHTML = `<div class="st-sec vpopc" role="dialog" aria-label="What's new"><button class="iconbtn vpx" data-newsclose aria-label="Close">✕</button><h3 style="margin:0 0 8px;padding-right:40px">📰 What's new</h3>${NEWS.map(n => `<div style="margin:0 0 12px"><b>${esc(n.t)}</b><p class="sub" style="margin:0">${esc(newsWhen(n))}</p><p style="margin:2px 0 0">${esc(n.b)}</p></div>`).join('')}</div>`;
+  document.body.appendChild(d); renderNewsBar(); track('news-open'); }
+document.addEventListener('click', e => { if (e.target.closest('[data-newsall]')){ openNews(); return; } if (e.target.closest('[data-newsx]')){ ls.set('mme-news-seen', Date.parse(NEWS[0].at)); renderNewsBar(); return; }
+  const c = e.target.closest('[data-newsclose]'); if (c && (e.target === c || e.target.closest('.vpx'))){ const p = e.target.closest('.vpop'); if (p) p.remove(); } });
+setTimeout(loadNews, 800);
+/* ---------- Import your reading history (Goodreads / StoryGraph CSV, Bookmory backup): marks books READ (not owned), with dates, stars, reviews; "did not finish" goes to Didn't finish.
+   Only manga / light novels come in: books matched to the shop's catalog, or titles with a volume number. Everything else is counted as skipped. */
+function histHTML(){ return `<details class="st-sec"${histOpen ? ' open' : ''} data-histimp><summary style="cursor:pointer;font-weight:800;font-size:16px">📥 Import your reading history</summary>
+  <p class="sub" style="margin:8px 0 8px">Bring in what you've read from <b>Goodreads</b> or <b>StoryGraph</b> (export your library as a CSV) or a <b>Bookmory</b> backup. Books come in as read, not owned, with the date you finished them, your stars and reviews. Books you gave up on go to Didn't finish. Regular (non-manga) books are skipped.</p>
+  <input type="file" id="histFile" accept=".csv,.bookmory,.zip,text/csv" aria-label="Reading history file"><p class="sub" id="histMsg" style="margin:8px 0 0"></p></details>`; }
+const loadLib = (src, test) => new Promise((ok, no) => { if (test()) return ok(); const s = document.createElement('script'); s.src = src; s.onload = () => ok(); s.onerror = () => no(new Error('could not load a helper')); document.head.appendChild(s); });
+async function bookmoryRows(buf){ await loadLib('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', () => window.JSZip);
+  await loadLib('https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js', () => window.initSqlJs);
+  const zip = await JSZip.loadAsync(buf); const f = Object.values(zip.files).find(x => /\.db$/i.test(x.name)); if (!f) throw new Error('no database in that backup');
+  const SQL = await initSqlJs({ locateFile: n => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/' + n }); const db = new SQL.Database(new Uint8Array(await f.async('arraybuffer')));
+  const res = db.exec("select value from entry where store='books' and (deleted is null or deleted=0)"); const out = [];
+  ((res[0] || {}).values || []).forEach(([v]) => { let b; try { b = JSON.parse(v); } catch(e){ return; } const stl = b.status_list || []; const done = stl.includes('DONE'), gave = stl.includes('GIVE_UP'); if (!done && !gave) return;
+    const reads = b.reads || []; const last = reads[reads.length - 1] || {}; const ts = done ? (b.last_read_done_date || last.end) : (b.last_give_up_date || last.end);
+    out.push({ t: b.title || '', isbn: b.isbn || '', date: ts ? new Date(ts).toLocaleDateString('en-CA') : '', st: Math.round(+b.last_read_done_star || +last.star || 0), rv: (last.comment || '').trim(), dnf: !done && gave }); });
+  return out; }
+function csvHistRows(text){ const rows = csvRows(text); const head = rows.shift().map(x => x.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim());
+  const col = (...n) => { for (const x of n){ const i = head.indexOf(x); if (i >= 0) return i; } return -1; };
+  const cT = col('title', 'book title'), cI = col('isbn13', 'isbn 13', 'isbn uid', 'isbn'), cR = col('my rating', 'star rating', 'rating'), cD = col('date read', 'last date read', 'read date', 'date finished'),
+    cS = col('exclusive shelf', 'read status', 'status', 'bookshelves'), cV = col('my review', 'review');
+  return rows.map(r => { const shelfv = cS >= 0 ? String(r[cS] || '').toLowerCase() : 'read'; const dnf = /did.?not.?finish|dnf|abandon|gave.?up/.test(shelfv); const read = dnf || /^read$|^read\b/.test(shelfv) || !!(cD >= 0 && r[cD]);
+    if (!read) return null; const d = cD >= 0 ? String(r[cD] || '').replace(/\//g, '-') : ''; const m = d.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    return { t: cT >= 0 ? r[cT] : r[0], isbn: cI >= 0 ? String(r[cI] || '').replace(/[^0-9Xx]/g, '') : '', date: m ? m[1] + '-' + m[2].padStart(2, '0') + '-' + m[3].padStart(2, '0') : '', st: Math.round(+(cR >= 0 ? r[cR] : 0) || 0), rv: cV >= 0 ? String(r[cV] || '').replace(/<br\s*\/?>/gi, '\n').trim() : '', dnf }; }).filter(Boolean); }
+function histMap(b){ const isbn = isbnTo13(b.isbn); const hit = isbn && snapBar.get(isbn); if (hit && !hit[2] && SNAP.s[hit[0]]) return { key: hit[0], name: SNAP.s[hit[0]].n, vol: hit[1], shop: true };
+  let s = String(b.t || '').replace(/\.{3}$/, '').replace(/\s*\([^)]*\)?\s*$/, '').trim(); let vol = null, name = s;
+  const m = s.match(/^(.*?)[,\s]*(?:vol\.?|volume)\s*(\d+)/i) || s.match(/^(.*?)[,\s]+0*(\d{1,3})\s*$/); if (m){ name = m[1].replace(/[,:\s]+$/, ''); vol = +m[2]; }
+  const q = normName(name); const k = snapNorm.get(q) || (SNAP.al && SNAP.al[q]) || snapNorm.get(q + '|ln') || (SNAP.al && SNAP.al[q + '|ln']);
+  if (k && SNAP.s[k]) return { key: k, name: SNAP.s[k].n, vol: vol || 1, shop: true };
+  if (vol) return { key: handleize(name), name, vol, shop: false }; return null; }
+async function histImport(file){ const msg = $('#histMsg'); msg.textContent = 'Reading your file…'; try { await loadSnap(); } catch(e){} if (!SNAP){ msg.textContent = 'Couldn’t load the shop catalog right now. Try again in a minute.'; return; }
+  let rows; try { rows = /\.csv$/i.test(file.name) ? csvHistRows(await file.text()) : await bookmoryRows(await file.arrayBuffer()); } catch(e){ msg.textContent = 'Couldn’t read that file: ' + (e.message || e) + '. Email it to us and we’ll bring it in for you.'; track('hist-fail'); return; }
+  const prev = JSON.parse(JSON.stringify({ series: shelf.series, rl: shelf.rl || {}, log: shelf.log || {}, dnf: shelf.dnf || null }));
+  let read = 0, already = 0, rated = 0, dnfN = 0, skip = 0; const R = shelf.rl = shelf.rl || {}, L = shelf.log = shelf.log || {};
+  rows.forEach(b => { const m = histMap(b); if (!m){ skip++; return; }
+    if (b.dnf){ const D = shelf.dnf = shelf.dnf || []; if (!D.some(x => normName(x.n) === normName(m.name) && x.v === m.vol)){ D.push({ k: shelfKeyFor(m.key) || '', n: m.name, v: m.vol, at: b.date || dayKey(), note: b.rv || '' }); dnfN++; } return; }
+    const key = shelfKeyFor(m.key) || m.key; const s = shelf.series[key] = shelf.series[key] || Object.assign({ n: m.name, v: [], t: Date.now() }, m.shop ? { mk: m.key } : {});
+    s.r = s.r || []; if (s.r.includes(m.vol)) already++; else { s.r.push(m.vol); s.r.sort((a, c) => a - c); read++; }
+    if (b.st > 0 || b.rv){ s.vr = s.vr || {}; if (!s.vr[m.vol]){ s.vr[m.vol] = Object.assign({}, b.st > 0 ? { st: Math.min(5, b.st) } : {}, b.rv ? { t: b.rv.slice(0, 2000) } : {}, b.date ? { d: b.date } : {}); rated++; } }
+    if (b.date){ const t = key + '|' + m.vol, a = R[b.date] || []; if (!a.includes(t)){ a.push(t); R[b.date] = a; L[b.date] = (L[b.date] || 0) + 1; } } });
+  if (!read && !dnfN && !already){ msg.textContent = `We couldn’t match any manga in that file${skip ? ` (${skip} other books skipped)` : ''}. Email it to us and we’ll take a look.`; track('hist-empty'); return; }
+  save(); track('hist-ok'); renderReadTab(); setTimeout(() => { const el = $('#histMsg'); if (el) el.textContent = `Marked ${read} books read${already ? ` (${already} already were)` : ''}, ${rated} with your stars or reviews${dnfN ? `, ${dnfN} added to Didn't finish` : ''}${skip ? `. Skipped ${skip} books that aren't manga or light novels` : ''}.`; }, 0);
+  toast(`Imported ${read} read books`, () => { shelf.series = prev.series; shelf.rl = prev.rl; shelf.log = prev.log; if (prev.dnf) shelf.dnf = prev.dnf; else delete shelf.dnf; save(); renderReadTab(); }); }
+document.addEventListener('change', e => { if (e.target && e.target.id === 'histFile' && e.target.files && e.target.files[0]) histImport(e.target.files[0]); });
+document.addEventListener('toggle', e => { const d = e.target; if (!d || !d.matches) return; if (d.matches('[data-dnfwrap]')) dnfOpen = d.open; else if (d.matches('[data-readall]')) readAllOpen = d.open; else if (d.matches('[data-histimp]')) histOpen = d.open; }, true);
+/* ---------- Everything you've read, with your ratings and reviews (collapsible) ---------- */
+function readAllHTML(){ const S = shelf.series; const L = Object.keys(S).filter(k => (S[k].r || []).length).sort((a, b) => String(S[a].n).localeCompare(String(S[b].n)));
+  const n = L.reduce((t, k) => t + S[k].r.length, 0); const stars = x => x ? '★'.repeat(Math.round(x)) : '';
+  const rows = L.map(k => { const s = S[k]; const vr = s.vr || {}; const rv = s.r.filter(v => vr[v] && (vr[v].st || vr[v].t));
+    return `<div class="srow" data-open="${esc(k)}" role="button" tabindex="0" style="flex-wrap:wrap"><span>📖 ${esc(s.n)}<small>Read: ${esc(compactVols(s.r))}${s.st ? ' · series ' + stars(s.st) : ''}${typeof s.rv === 'string' && s.rv.trim() ? ' · reviewed' : ''}</small></span>
+      ${rv.length ? `<div style="width:100%;margin-top:4px">${rv.map(v => `<p class="sub" style="margin:2px 0 0">Vol ${esc(v)} ${stars(vr[v].st)}${vr[v].t ? ' · “' + esc(String(vr[v].t).slice(0, 140)) + (String(vr[v].t).length > 140 ? '…' : '') + '”' : ''}</p>`).join('')}</div>` : ''}</div>`; }).join('');
+  return `<details class="st-sec"${readAllOpen ? ' open' : ''} data-readall><summary style="cursor:pointer;font-weight:800;font-size:16px">📚 Everything you've read <span class="chip">${n}</span></summary><p class="sub" style="margin:8px 0 8px">Every volume you've marked read, with your ratings and reviews. Tap a series to open it.</p>${rows || '<p class="sub" style="margin:0">Nothing marked read yet.</p>'}</details>`; }
+function compactVols(a){ const v = [...new Set(a.map(Number).filter(x => !isNaN(x)))].sort((x, y) => x - y); const out = []; for (let i = 0; i < v.length; i++){ let j = i; while (j + 1 < v.length && v[j + 1] === v[j] + 1) j++; out.push(j > i ? v[i] + '–' + v[j] : String(v[i])); i = j; } return out.join(', ') || '–'; }
+document.addEventListener('click', e => { const o = e.target.closest('[data-readall] [data-open]'); if (o){ openSeries(o.dataset.open); } });
 document.addEventListener('click', e => {
   if (e.target.closest('[data-dnfadd]')){ const t = ($('#dnfT').value || '').trim(); if (!t){ toast('Type the title first'); return; }
     const q = normName(t); const k = Object.keys(shelf.series).find(x => normName(shelf.series[x].n) === q) || ''; const v = parseInt($('#dnfV').value, 10);
@@ -869,7 +937,9 @@ function renderReadTab(){
   <div class="st-sec"><div class="calhead"><button class="btn ghost sm" data-cal="-1" aria-label="Previous month">‹</button><h3 style="margin:0">${calM.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</h3><button class="btn ghost sm" data-cal="1" aria-label="Next month">›</button></div>
     <div class="cal">${cells}</div><p class="sub" style="margin:8px 0 0">${mTot} read this month. Tap a day to see what you read, or to log anything you read that day, even books you don't own.</p></div>
   ${dayHTML}
+  ${readAllHTML()}
   ${dnfHTML()}
+  ${histHTML()}
   ${arr.length ? `<div class="st-sec"><h3>🚚 Your orders on the way</h3>${arr.map(a => `<div class="srow" style="cursor:default"><span>${a.ic} ${esc(a.t)}<small>${new Date(a.d+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})} · ${esc(a.sub)}</small></span></div>`).join('')}<p class="sub" style="margin:6px 0 0">Arrival dates are estimates. Mystery box books join your shelf the day they arrive, so nothing gets spoiled.</p></div>` : ''}
   ${evs.length ? `<div class="st-sec"><h3>🎪 Come see us at a convention</h3>${evs.map(e => `<div class="srow" style="cursor:default"><span>🎪 ${esc(e.n)}${e.pend ? ' <span class="chip">Pending</span>' : ''}<small>${esc(evRange(e))}${e.p ? ' · ' + esc(e.p) : ''}</small></span></div>`).join('')}<p class="sub" style="margin:6px 0 0">Stop by our booth! Conventions show on the calendar too.</p></div>` : ''}
   <div class="st-sec"><h3>📦 Coming out for your series</h3>${!mcp && !preorders ? `<p class="sub" style="margin:0">Loading upcoming releases…</p>` : !preorders ? `<p class="sub" style="margin:0"><span class="spin"></span>&nbsp; Checking pre-orders…</p>` : mine.filter(p => p.rd >= dayKey()).length ? mine.filter(p => p.rd >= dayKey()).slice(0,12).map(p => `<div class="srow" style="cursor:default"><span>${esc(p.title)}<small>${new Date(p.rd+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})} · $${p.price.toFixed(2)}</small></span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Pre-order</a></div>`).join('') : `<p class="sub" style="margin:0">No pre-orders up right now for series on your shelf. New volumes show up here (and on the calendar) as soon as the shop lists them.</p>`}</div>`;
