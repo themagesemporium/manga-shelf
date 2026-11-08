@@ -295,6 +295,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
 .btn.gold{background:var(--gold);color:#fff}
 .btn.sm{padding:7px 11px;font-size:13px}
 .btn:disabled{opacity:.5}
+.av.fr-arc{box-shadow:0 0 0 3px #7b5cff,0 0 10px 2px #c06bff;animation:arcglow 2.4s ease-in-out infinite}@keyframes arcglow{50%{box-shadow:0 0 0 3px #ff6bd5,0 0 14px 4px #7b5cff}}@media (prefers-reduced-motion:reduce){.av.fr-arc{animation:none}}
 .av{width:28px;height:28px;border-radius:50%;object-fit:cover;display:inline-grid;place-items:center;background:var(--surface-2);font-size:17px;line-height:1;vertical-align:middle;overflow:hidden;flex:none}.av.lg{width:56px;height:56px;font-size:32px}.av.av-sm{width:22px;height:22px;font-size:14px;margin:-3px 2px -3px -4px;background:#fff}.avl{font-weight:800;font-size:14px;color:var(--accent)}.av.lg.avl{font-size:24px}.avgrid{display:flex;flex-wrap:wrap;gap:8px}.avopt{background:none;border:2px solid transparent;border-radius:50%;padding:2px;cursor:pointer}.avopt:hover,.avopt:focus-visible{border-color:var(--accent)}
 .note{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:12px;padding:10px 12px}
 .row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -352,6 +353,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
     <h2 id="rankName">—</h2>
     <div class="bar"><i id="rankBar" style="width:0"></i></div>
     <div class="next" id="rankNext"></div>
+    <div id="lvlBox"></div>
     <div class="stats">
       <button class="stat" data-stat="books"><b id="sBooks">0</b><span>books</span></button>
       <button class="stat" data-stat="series"><b id="sSeries">0</b><span>series</span></button>
@@ -612,6 +614,7 @@ function renderStats(){
   $('#rankName').textContent = RANKS[r][1];
   const nx = RANKS[r+1];
   $('#rankBar').style.width = nx ? Math.round((books - RANKS[r][0]) / (nx[0] - RANKS[r][0]) * 100) + '%' : '100%';
+  setTimeout(() => { try { renderLevel(); } catch(e){} }, 0);
   $('#rankNext').textContent = nx ? `${nx[0]-books} more ${nx[0]-books===1?'book':'books'} to ${nx[1]}` : 'The highest rank there is.';
   $('#sBooks').textContent = books; $('#sSeries').textContent = keys.length; $('#sRuns').textContent = runs; $('#sGaps').textContent = gaps;
   const C = collectorNumbers(); const o = shelf.orders || {}; const yrs = o.first ? (Date.now() - new Date(o.first)) / (365.25*864e5) : 0;
@@ -779,6 +782,37 @@ function openChal(){ const c = monthChal();
   ${c.readsN ? '' : '<p class="sub">No volumes marked as read this month yet.</p>'}<p class="sub" style="margin:8px 0 0">Finish all 3 challenges for 🗓️ Challenger, and get a line for 🎱 Bingo! (see Achievements).</p>`); }
 document.addEventListener('click', e => { if (e.target.closest('[data-gochal]')){ e.preventDefault(); track('challenges'); openChal(); } });
 function estPages(prefix){ const L = shelf.log || {}, R = shelf.rl || {}; let pg = 0; Object.keys(L).forEach(d => { if (prefix && !d.startsWith(prefix)) return; const items = R[d] || []; items.forEach(t => { const k = t.slice(0, t.lastIndexOf('|')); const s = shelf.series[k]; pg += s && isLN(k, s) ? 250 : 190; }); pg += Math.max(0, (L[d] || 0) - items.length) * 190; }); return pg; }
+/* ---------- Levels & XP (preview: Megan's account, or localStorage mme-xp = true, until she says go).
+   XP is worked out from the shelf itself, so taking something back takes its XP back too. Daily caps keep spammy actions in check. ---------- */
+const XP_FRAMES = [[5,'Bronze','#b8733a'],[10,'Silver','#a9b4c2'],[15,'Gold','#e2b43c'],[20,'Emerald','#2fa36b'],[25,'Sapphire','#2f6fd6'],[30,'Amethyst','#9a5bd6'],[40,'Ruby','#d6334f'],[50,'Arcane','arc']];
+const xpOn = () => myCid() === '99230547976' || !!ls.get('mme-xp');
+const xpNeed = L => L <= 1 ? 0 : Math.round(100 * Math.pow(L - 1, 1.45) / 10) * 10;
+const lvOf = xp => { let L = 1; while (xpNeed(L + 1) <= xp) L++; return L; };
+const frameOf = lv => { let f = null; XP_FRAMES.forEach(x => { if (lv >= x[0]) f = x; }); return f; };
+const wordsN = t => String(t || '').trim().split(/\s+/).filter(Boolean).length;
+function xpCalc(){ const P = []; const add = (k, label, n, each, cap) => { const v = Math.min(cap || Infinity, n * each); if (v > 0) P.push([k, label, n, v]); };
+  let own = 0, rd = 0, stars = 0, revs = 0, done = 0, want = 0;
+  Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; own += ints(s).length + (typeof edCount === 'function' ? edCount(s) : 0); rd += (s.r || []).length;
+    Object.values(s.ed || {}).forEach(E => { rd += (E.r || []).length; }); want += (s.want || []).length;
+    if (s.st) stars++; if (wordsN(s.rv) >= 20) revs++; Object.values(s.vr || {}).forEach(r => { if (r && r.st) stars++; if (r && wordsN(r.t) >= 20) revs++; });
+    try { if (info(k).complete) done++; } catch(e){} });
+  const L = shelf.log || {}; const days = Object.keys(L).filter(d => L[d] > 0).sort(); let weeks = 0, run = 0, prev = null;
+  days.forEach(d => { const t = new Date(d + 'T12:00:00'); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; if (run % 7 === 0) weeks++; prev = t; });
+  const byDay = {}; (shelf.fb || []).forEach(f => { const d = dayKey(new Date(f.at)); const fix = /^(About |Added from the app:)/.test(f.t || ''); const o = byDay[d] = byDay[d] || { fix: 0, msg: 0 }; if (fix) o.fix = Math.min(5, o.fix + 1); else o.msg = 1; });
+  const fixes = Object.values(byDay).reduce((a, o) => a + o.fix, 0), msgDays = Object.values(byDay).reduce((a, o) => a + o.msg, 0);
+  let ach = 0; try { ach = (BADGES || []).filter(b => b[2] >= b[3]).length; } catch(e){}
+  const fr = Object.keys(shelf.friends || {}).length;
+  add('own', 'Books on your shelf', own, 2); add('rd', 'Volumes read', rd, 5); add('st', 'Star ratings', stars, 3); add('rv', 'Reviews (20+ words)', revs, 15);
+  add('done', 'Series completed', done, 50); add('want', 'Wishlist adds', want, 1, 200); add('day', 'Reading days', days.length, 5); add('wk', '7-day reading streaks', weeks, 25);
+  add('ach', 'Achievements', ach, 25); add('fix', 'Fixes and corrections', fixes, 10); add('msg', 'Days you messaged the shop', msgDays, 5); add('fr', 'Friends', fr, 10, 200);
+  const xp = P.reduce((a, x) => a + x[3], 0); return { xp, lv: lvOf(xp), parts: P }; }
+function xpMonth(xp){ const mk = dayKey(new Date()).slice(0, 7); const m = shelf.xpm; if (!m || m.mk !== mk){ shelf.xpm = { mk, base: xp }; try { save(); } catch(e){} return 0; } return Math.max(0, xp - m.base); }
+function renderLevel(){ const el = $('#lvlBox'); if (!el) return; if (!xpOn()){ el.innerHTML = ''; return; }
+  const X = xpCalc(), a = xpNeed(X.lv), b = xpNeed(X.lv + 1), fr = frameOf(X.lv), nf = XP_FRAMES.find(x => x[0] > X.lv), mo = xpMonth(X.xp);
+  el.innerHTML = `<details class="lvl" style="margin-top:10px"><summary style="cursor:pointer;list-style:none"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:17px">⭐ Level ${X.lv}</b><span style="opacity:.85">${X.xp.toLocaleString()} XP${mo ? ` · +${mo.toLocaleString()} this month` : ''}</span></div>
+    <div class="bar"><i style="width:${Math.round((X.xp - a) / (b - a) * 100)}%"></i></div><div class="next">${(b - X.xp).toLocaleString()} XP to Level ${X.lv + 1}${nf ? ` · ${esc(nf[1])} avatar frame at Level ${nf[0]}` : ''} <span aria-hidden="true">▾</span></div></summary>
+    <div style="margin-top:8px">${fr ? `<p style="margin:0 0 6px">Your avatar frame: <b>${esc(fr[1])}</b></p>` : ''}<table style="width:100%;font-size:14px;border-collapse:collapse">${X.parts.map(p => `<tr><td>${esc(p[1])}</td><td style="text-align:right">${p[2].toLocaleString()}</td><td style="text-align:right;font-weight:700">+${p[3].toLocaleString()}</td></tr>`).join('')}</table>
+    <p style="margin:8px 0 0;opacity:.85;font-size:13px">Earn XP for books, reading, stars, reviews, finished series, streaks, achievements, friends, and helping fix the catalog. Avatar frames unlock at Levels ${XP_FRAMES.map(x => x[0]).join(', ')}.</p></div></details>`; }
 function streaks(){
   const L = shelf.log || {}; const has = d => (L[dayKey(d)]||0) > 0;
   const d = new Date(); let cur = 0; if (!has(d)) d.setDate(d.getDate()-1);
@@ -2754,15 +2788,15 @@ async function liveFromHash(){ const m = location.hash.match(/#live=([a-z0-9]+)/
   $('#invNo').onclick = () => { ls.set('mme-livecode', null); closeSheet(); toast('Invitation declined'); }; }
 function goFriends(){ listView = 'friends'; const tb = document.querySelector('[data-tab="lists"]'); if (tb) tb.click(); renderLists(); liveLoad(); }
 function friendBoardHTML(F){ let me; try { me = monthChal(); } catch(e){ return ''; } const st = streaks();
-  const rows = [{ n: 'You', you: 1, rd: me.readsN, cd: me.doneN, ct: me.list.length, bl: me.bingoLines, sq: me.marked, cur: st.cur, pg: estPages(me.mk) }];
-  Object.values(F).forEach(f => { const a = f.act; if (!a || a.mk !== me.mk) return; rows.push({ n: f.name, rd: a.rd || 0, cd: a.cd || 0, ct: a.ct || 3, bl: a.bl || 0, sq: Math.max(0, String(a.bm || '').split('').filter(x => x === '1').length - 1), cur: a.cur || 0, pg: a.pg || 0 }); });
+  const rows = [{ n: 'You', you: 1, rd: me.readsN, cd: me.doneN, ct: me.list.length, bl: me.bingoLines, sq: me.marked, cur: st.cur, pg: estPages(me.mk), xm: xpOn() ? xpMonth(xpCalc().xp) : 0 }];
+  Object.values(F).forEach(f => { const a = f.act; if (!a || a.mk !== me.mk) return; rows.push({ n: f.name, rd: a.rd || 0, cd: a.cd || 0, ct: a.ct || 3, bl: a.bl || 0, sq: Math.max(0, String(a.bm || '').split('').filter(x => x === '1').length - 1), cur: a.cur || 0, pg: a.pg || 0, xm: a.xm || 0 }); });
   if (rows.length < 2) return '';
-  rows.sort((a, b) => b.rd - a.rd || b.sq - a.sq || b.cur - a.cur);
+  const XPB = xpOn(); rows.sort((a, b) => (XPB ? b.xm - a.xm : 0) || b.rd - a.rd || b.sq - a.sq || b.cur - a.cur);
   const medal = i => ['🥇', '🥈', '🥉'][i] || (i + 1) + '.';
   const top = (k) => rows.reduce((m, r) => r[k] > m[k] ? r : m, rows[0]);
   const ts = top('cur'), tb = top('sq');
-  return `<div class="st-sec"><h3>🏆 ${esc(me.label)} with friends</h3><p class="sub" style="margin:0 0 8px">Everyone gets the same challenges and Bingo card each month. Most volumes read wins the month.</p>
-    ${rows.map((r, i) => `<div class="srow" style="cursor:default${r.you ? ';font-weight:700' : ''}"><span>${medal(i)} ${esc(r.n)}<small>📖 ${r.rd} read${r.pg ? ` (≈${r.pg.toLocaleString()} pages)` : ''} · 🎯 ${r.cd}/${r.ct} challenges · 🎱 ${r.sq}/24${r.bl ? ` · ${r.bl} Bingo${r.bl > 1 ? 's' : ''}!` : ''} · 🔥 ${r.cur}-day streak</small></span></div>`).join('')}
+  return `<div class="st-sec"><h3>🏆 ${esc(me.label)} with friends</h3><p class="sub" style="margin:0 0 8px">Everyone gets the same challenges and Bingo card each month. ${XPB ? 'Most XP earned this month wins.' : 'Most volumes read wins the month.'}</p>
+    ${rows.map((r, i) => `<div class="srow" style="cursor:default${r.you ? ';font-weight:700' : ''}"><span>${medal(i)} ${esc(r.n)}<small>${XPB ? `⭐ ${r.xm.toLocaleString()} XP · ` : ''}📖 ${r.rd} read${r.pg ? ` (≈${r.pg.toLocaleString()} pages)` : ''} · 🎯 ${r.cd}/${r.ct} challenges · 🎱 ${r.sq}/24${r.bl ? ` · ${r.bl} Bingo${r.bl > 1 ? 's' : ''}!` : ''} · 🔥 ${r.cur}-day streak</small></span></div>`).join('')}
     <p class="sub" style="margin:8px 0 0">${ts.cur ? `🔥 Longest streak right now: <b>${esc(ts.n)}</b> (${ts.cur} days). ` : ''}${tb.sq ? `🎱 Closest to Blackout: <b>${esc(tb.n)}</b>.` : ''}</p></div>`; }
 function friendBingoHTML(f){ const a = f && f.act; let me; try { me = monthChal(); } catch(e){ return ''; } if (!a || a.mk !== me.mk || !a.bm) return '';
   const bm = String(a.bm).split('').map(x => x === '1'); const lines = []; for (let i = 0; i < 5; i++){ lines.push([0,1,2,3,4].map(j => i*5 + j)); lines.push([0,1,2,3,4].map(j => j*5 + i)); } lines.push([0,6,12,18,24], [4,8,12,16,20]);
@@ -2776,12 +2810,12 @@ function myCid(){ return String(acct && acct.cid || '').split('/').pop(); }
 function avOk(a){ if (!a || typeof a !== 'object') return null; if (a.e && AV_EMOJI.includes(a.e)) return { e: a.e }; if (a.u && /^(avatars\/[a-z0-9-]+\.(jpg|png)|https:\/\/cdn\.shopify\.com\/[^"'<>\s]+)$/.test(a.u)) return { u: a.u }; return null; }
 function avFor(a, cid){ if (a && a.none) return null; return avOk(a) || (AV_PRESET[String(cid || '').split('/').pop()] ? { u: AV_PRESET[String(cid).split('/').pop()] } : null); }
 function myAv(){ const raw = shelf.card && shelf.card.av; if (raw && raw.none) return null; const c = avOk(raw); if (c) return c; const p = AV_PRESET[myCid()]; return p ? { u: p } : null; }
-function avHTML(a, name, lg){ a = avOk(a); const cls = 'av' + (lg ? ' lg' : '');
-  if (a && a.u) return `<img class="${cls}" src="${esc(a.u)}" alt="" loading="lazy">`;
-  if (a && a.e) return `<span class="${cls}">${a.e}</span>`;
+function avHTML(a, name, lg, lv){ a = avOk(a); const fr = xpOn() && lv ? frameOf(lv) : null; const cls = 'av' + (lg ? ' lg' : '') + (fr ? (fr[2] === 'arc' ? ' fr-arc' : ' fr') : ''); const sty = fr && fr[2] !== 'arc' ? ` style="box-shadow:0 0 0 ${lg ? 3 : 2}px ${fr[2]}"` : '';
+  if (a && a.u) return `<img class="${cls}"${sty} src="${esc(a.u)}" alt="" loading="lazy">`;
+  if (a && a.e) return `<span class="${cls}"${sty}>${a.e}</span>`;
   return `<span class="${cls} avl">${esc((String(name || '?').trim().charAt(0) || '?').toUpperCase())}</span>`; }
 function avRowHTML(){ const nm = (shelf.card && shelf.card.name) || (acct && acct.name) || 'You';
-  return `<div class="st-sec" style="display:flex;align-items:center;gap:12px;padding:10px 14px">${avHTML(myAv(), nm, true)}<div style="flex:1;min-width:0"><b>${esc(nm)}</b><div class="sub" style="margin:0">Your avatar, shown to friends</div></div><button class="btn ghost" data-avpick style="width:auto;margin:0">Change</button></div><label class="sub" style="display:flex;gap:8px;align-items:center;margin:-4px 0 12px 14px"><input type="checkbox" data-feedtog${feedOn() ? ' checked' : ''}> Share my activity feed (books I add and read) with friends</label>`; }
+  return `<div class="st-sec" style="display:flex;align-items:center;gap:12px;padding:10px 14px">${avHTML(myAv(), nm, true, xpOn() ? xpCalc().lv : 0)}<div style="flex:1;min-width:0"><b>${esc(nm)}</b><div class="sub" style="margin:0">Your avatar, shown to friends</div></div><button class="btn ghost" data-avpick style="width:auto;margin:0">Change</button></div><label class="sub" style="display:flex;gap:8px;align-items:center;margin:-4px 0 12px 14px"><input type="checkbox" data-feedtog${feedOn() ? ' checked' : ''}> Share my activity feed (books I add and read) with friends</label>`; }
 function avCovers(q){ q = String(q || '').toLowerCase(); const out = [];
   Object.entries(shelf.series || {}).forEach(([k, s]) => { if (q && !String(s.n).toLowerCase().includes(q)) return; const se = snapEntry(k); if (!se) return; const r = (se[1].i || []).find(x => x[4]); if (r) out.push([s.n, snapImg(r[4])]); });
   return out.sort((a, b) => a[0].localeCompare(b[0])).slice(0, 30); }
@@ -2816,7 +2850,7 @@ function feedText(e){ const vv = e.v && e.v.length ? (e.v.length > 1 ? 'Vol ' + 
 function feedAgo(t){ const d = Math.floor((Date.now() - t) / 864e5); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'; }
 function feedAllHTML(F){ const rows = []; Object.values(F).forEach(f => (Array.isArray(f.feed) ? f.feed : []).forEach(e => { if (e && e.n && e.t) rows.push([f, e]); }));
   if (!rows.length) return ''; rows.sort((a, b) => b[1].t - a[1].t);
-  return `<div class="st-sec"><h3 style="margin:0 0 6px">✨ Friends’ activity</h3>${rows.slice(0, 8).map(([f, e]) => `<div class="srow" style="cursor:default;align-items:center;gap:10px">${avHTML(f.av, f.name)}<span style="flex:1;min-width:0"><b>${esc(f.name)}</b> ${feedText(e)}</span><small class="sub" style="white-space:nowrap">${feedAgo(e.t)}</small></div>`).join('')}</div>`; }
+  return `<div class="st-sec"><h3 style="margin:0 0 6px">✨ Friends’ activity</h3>${rows.slice(0, 8).map(([f, e]) => `<div class="srow" style="cursor:default;align-items:center;gap:10px">${avHTML(f.av, f.name, false, f.act && f.act.lv)}<span style="flex:1;min-width:0"><b>${esc(f.name)}</b> ${feedText(e)}</span><small class="sub" style="white-space:nowrap">${feedAgo(e.t)}</small></div>`).join('')}</div>`; }
 function shareGate(go){ if (shelf.card && shelf.card.feedAck){ go(); return; }
   openSheet(`<h2>👯 What friends will see</h2><p>Friends you share with can see your shelf, your wishlist and your monthly bingo.</p>
     <p>They also see a short <b>activity feed</b> that updates on its own: books you add and volumes you mark as read in the last two weeks, like “📖 read Given Vol 3”.</p>
@@ -2824,7 +2858,7 @@ function shareGate(go){ if (shelf.card && shelf.card.feedAck){ go(); return; }
     <p class="sub">You can change this anytime at the top of the Friends page.</p><div class="row2"><button class="btn" id="feedGo">Continue</button><button class="btn ghost" data-close>Cancel</button></div>`);
   $('#feedGo').onclick = () => { shelf.card = Object.assign({}, shelf.card, { feedAck: Date.now(), noFeed: !$('#feedChk').checked }); save(); closeSheet(); go(); }; }
 function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
-  let act = null; try { const c = monthChal(), st = streaks(); act = { mk: c.mk, rd: c.readsN, cd: c.doneN, ct: c.list.length, bm: c.marks.map(x => x ? 1 : 0).join(''), bl: c.bingoLines, cur: st.cur, best: st.best, pg: estPages(c.mk) }; } catch(e){}
+  let act = null; try { const c = monthChal(), st = streaks(); act = { mk: c.mk, rd: c.readsN, cd: c.doneN, ct: c.list.length, bm: c.marks.map(x => x ? 1 : 0).join(''), bl: c.bingoLines, cur: st.cur, best: st.best, pg: estPages(c.mk) }; try { const X = xpCalc(); act.lv = X.lv; act.xm = xpMonth(X.xp); } catch(e){} } catch(e){}
   return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out, act, feed: feedPack(), av: myAv() || (shelf.card && shelf.card.av && shelf.card.av.none ? { none: 1 } : null) }; }
 async function friendShare(){ if (!(shelf.card && shelf.card.feedAck)){ shareGate(friendShare); return; } track('friend-share'); const pk = friendPack(); let nm = pk.name;
   if (!nm){ nm = prompt('Your first name (so your friend knows whose shelf this is):', '') || ''; nm = nm.trim(); if (nm){ shelf.card = Object.assign({}, shelf.card, { name: nm }); save(); pk.name = nm; } }
@@ -2876,7 +2910,7 @@ function friendsHTML0(){ const F = Object.assign({}, shelf.friends || {}); const
   const ids2 = Object.keys(F); if (!ids2.length) return h + addBox(true); if (!friendSel || !F[friendSel]) friendSel = ids2[0];
   h += feedAllHTML(F);
   h += friendBoardHTML(F);
-  h += `<div class="seg2" style="margin:0 0 10px;flex-wrap:wrap">${ids2.map(id => `<button data-fsel="${esc(id)}" aria-pressed="${id === friendSel}">${avHTML(F[id].av, F[id].name)} ${F[id].live ? '🔴 ' : ''}${esc(F[id].name)}</button>`).join('')}</div>`;
+  h += `<div class="seg2" style="margin:0 0 10px;flex-wrap:wrap">${ids2.map(id => `<button data-fsel="${esc(id)}" aria-pressed="${id === friendSel}">${avHTML(F[id].av, F[id].name, false, F[id].act && F[id].act.lv)} ${F[id].live ? '🔴 ' : ''}${esc(F[id].name)}</button>`).join('')}</div>`;
   const f = F[friendSel]; const both = [], borrow = [], lend = [], gifts = [], theirsOnly = [];
   h += friendBingoHTML(f);
   if (Array.isArray(f.feed) && f.feed.length) h += `<div class="st-sec"><h3 style="margin:0 0 6px">✨ ${esc(f.name)}’s recent activity</h3>${f.feed.slice(0, 8).map(e => `<div class="srow" style="cursor:default"><span style="flex:1">${feedText(e)}</span><small class="sub">${feedAgo(e.t)}</small></div>`).join('')}</div>`;
@@ -2888,7 +2922,7 @@ function friendsHTML0(){ const F = Object.assign({}, shelf.friends || {}); const
     const g = (o.w || []).filter(v => !fv.has(v)); if (g.length) gifts.push([o.n, g]); });
   const row = (n, t) => `<div class="frow" data-fn="${esc(normName(n))}" style="padding:6px 0;border-bottom:1px solid var(--line);font-size:14px"><b>${esc(n)}</b> <span class="sub" style="font-size:13px">${t}</span></div>`;
   const sec = (title, sub, arr, fmt, empty) => `<details class="st-sec fsec"${arr.length && arr.length <= 8 ? ' open' : ''}><summary style="cursor:pointer;list-style-position:inside"><h3 style="display:inline">${title} <span class="sub" style="font-weight:400">(${arr.length})</span></h3></summary>${sub ? `<p class="sub" style="margin:6px 0 6px">${sub}</p>` : ''}${arr.length ? arr.map(fmt).join('') : `<p class="sub" style="margin:0">${empty}</p>`}</details>`;
-  h += `<div class="st-sec"><p style="margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">${avHTML(f.av, f.name, true)}<span><b>${esc(f.name)}</b>: ${Object.keys(f.s).length} series · ${Object.values(f.s).reduce((a, o) => a + (o.v || []).length, 0)} books <span class="sub">${f.live ? '(live)' : `(shared ${new Date(f.at).toLocaleDateString()})`}</span></span></p>${f.live ? `<button class="btn ghost sm" data-liveunf="${esc(f.cid)}" style="margin-top:6px">Stop following ${esc(f.name)}</button>` : `<button class="btn ghost sm" data-fdel="${esc(friendSel)}" style="margin-top:6px">Remove ${esc(f.name)}</button>`}</div>`;
+  h += `<div class="st-sec"><p style="margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">${avHTML(f.av, f.name, true, f.act && f.act.lv)}<span><b>${esc(f.name)}</b>: ${Object.keys(f.s).length} series · ${Object.values(f.s).reduce((a, o) => a + (o.v || []).length, 0)} books <span class="sub">${f.live ? '(live)' : `(shared ${new Date(f.at).toLocaleDateString()})`}</span></span></p>${f.live ? `<button class="btn ghost sm" data-liveunf="${esc(f.cid)}" style="margin-top:6px">Stop following ${esc(f.name)}</button>` : `<button class="btn ghost sm" data-fdel="${esc(friendSel)}" style="margin-top:6px">Remove ${esc(f.name)}</button>`}</div>`;
   const whole = Object.values(f.s).filter(o => (o.v || []).length).sort((a, b) => a.n.localeCompare(b.n)).map(o => [o.n, o.v]);
   h += `<div class="st-sec" style="padding:10px 14px"><input id="fq" type="search" placeholder="Search ${esc(f.name)}’s shelf…" autocomplete="off" style="width:100%"></div>`;
   h += sec('📖 You could borrow', `Volumes you’re missing that ${esc(f.name)} owns.`, borrow, x => row(x[0], 'Vol ' + compactVols(x[1])), 'Nothing to borrow yet.');
