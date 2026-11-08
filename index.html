@@ -836,7 +836,8 @@ function renderReadTab(){
     dayHTML = `<div class="st-sec"><h3>${new Date(calDay+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</h3>
     ${ard.map(a => `<div class="srow" style="cursor:default"><span>${a.ic} ${esc(a.t)}<small>${esc(a.sub)}</small></span></div>`).join('')}
     ${rel.map(p => `<div class="srow" style="cursor:default"><span>📦 ${esc(p.title)}<small>Comes out this day · $${p.price.toFixed(2)}</small></span><a class="btn gold sm" href="${STORE}/products/${encodeURIComponent(p.handle)}" target="_blank" rel="noopener">Pre-order</a></div>`).join('')}
-    ${items.map(t => { const [k,v] = t.split('|'); const s = shelf.series[k] || (shelf.other||{})[k]; return `<div class="srow" style="cursor:default"><span>📖 ${esc(s ? s.n : k)}<small>Vol ${esc(v)}${!shelf.series[k] ? ' · not on your shelf' : ''}</small></span><button class="btn ghost sm" data-unlog="${esc(t)}">Remove</button></div>`; }).join('')}
+    ${items.map(t => { const [k,v] = t.split('|'); const s = shelf.series[k] || (shelf.other||{})[k]; const on = !!shelf.series[k] && !isNaN(+v); const r = on && (s.vr||{})[+v]; const st = r && r.st ? '★'.repeat(r.st) : '';
+      return `<div class="srow"${on ? ` data-calrev="${esc(t)}" role="button" tabindex="0" aria-label="${esc(s.n)} Vol ${esc(v)}: ${r && (r.st || r.t) ? 'see your review' : 'leave a review'}"` : ' style="cursor:default"'}><span>📖 ${esc(s ? s.n : k)}<small>Vol ${esc(v)}${!shelf.series[k] ? ' · not on your shelf' : on ? (st ? ' · ' + st : r && r.t ? ' · reviewed' : ' · ✍️ Tap to review') : ''}</small></span><button class="btn ghost sm" data-unlog="${esc(t)}">Remove</button></div>`; }).join('')}
     ${!items.length && !rel.length && !ard.length ?`<p class="sub" style="margin:0">${n ? `${n} read (details weren't saved for this day)` : 'Nothing read this day yet.'}</p>` : ''}
     ${past ? `<div class="locrow" style="margin-top:12px"> <input id="logSer" list="logSl" placeholder="Title (yours or not)" autocomplete="off" style="flex:2"><input id="logVol" placeholder="Vol, e.g. 3 or 3-5" inputmode="numeric" style="flex:1"></div><datalist id="logSl">${Object.values(shelf.series).map(s => `<option value="${esc(s.n)}">`).join('')}</datalist><div class="row2"><button class="btn sm" data-logday="${calDay}">Log as read this day</button></div>` : ''}</div>`; }
   el.innerHTML = `
@@ -862,6 +863,7 @@ $('#readBody') && null;
 document.addEventListener('click', e => {
   const c = e.target.closest('[data-cal]'); if (c){ calM = new Date(calM.getFullYear(), calM.getMonth() + (+c.dataset.cal), 1); calDay = null; renderReadTab(); return; }
   const d = e.target.closest('[data-day]'); if (d){ calDay = calDay === d.dataset.day ? null : d.dataset.day; renderReadTab(); return; }
+  const cr = e.target.closest('[data-calrev]'); if (cr && !e.target.closest('[data-unlog]')){ const [k, v] = cr.dataset.calrev.split('|'); if (shelf.series[k]){ openSeries(k); detV = +v; renderSeries(k); setTimeout(() => { const t = $('#pvRv'); if (t) t.scrollIntoView({ block: 'center' }); }, 60); track('cal-review'); } return; }
   const ul = e.target.closest('[data-unlog]'); if (ul){ const [k, v] = ul.dataset.unlog.split('|'); const day = calDay; logRead(-1, k, [isNaN(+v) ? v : +v], day); const s = shelf.series[k]; if (s && s.r){ const r = s.r.filter(x => String(x) !== v); if (r.length) s.r = r; else delete s.r; } save(); toast(`Removed Vol ${v} from ${day}`); return; }
   const lg = e.target.closest('[data-logday]'); if (lg){ const day = lg.dataset.logday; const nm = $('#logSer').value.trim().toLowerCase(); let k = Object.keys(shelf.series).find(x => shelf.series[x].n.toLowerCase() === nm) || Object.keys(shelf.series).find(x => shelf.series[x].n.toLowerCase().includes(nm));
     const vols = parseVols($('#logVol').value).filter(v => Number.isInteger(v) && v > 0);
@@ -2792,5 +2794,6 @@ friendFromHash();
 if (!window.claude) setTimeout(() => liveAll(), 4000);
 })();
 </script>
+<script>document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[data-calrev]')){e.preventDefault();e.target.click();}});</script>
 </body>
 </html>
