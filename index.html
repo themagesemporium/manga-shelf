@@ -572,10 +572,10 @@ function edHTML(key){ const s = shelf.series[key]; if (!s || langOf(key)) return
   const form = edForm === key ? `<div class="edform"><select id="edT" aria-label="Edition">${ED_TYPES.map(t => `<option${types[0] === t ? ' selected' : ''}>${t}</option>`).join('')}</select><input id="edN" placeholder="Numbers, e.g. 1-3" aria-label="Edition numbers"><button class="btn sm" data-edsave>Add</button></div><p class="sub" style="margin:4px 0 0">Use the number on the omnibus itself: a 3-in-1 Vol 2 holds Vol 4–6.</p>`
     : `<button class="btn ghost sm" data-edform style="margin-top:6px">＋ Add an omnibus or special edition</button>`;
   if (!types.length) return `<div class="row2" style="margin-top:6px">${form}</div>`;
-  const blocks = types.map(t => { const L = X[t] || []; const E = mine[t] || {}; const own = new Set(E.v || []), want = new Set(E.want || []);
+  const blocks = types.map(t => { const L = X[t] || []; const E = mine[t] || {}; const own = new Set(E.v || []), want = new Set(E.want || []), rd = new Set(E.r || []);
     const n = Math.max(0, ...L.map(x => x[0]), ...own, ...want); let tiles = '';
     for (let v = 1; v <= n; v++){ const r = L.find(x => x[0] === v); const rg = edRange(key, t, v); const stk = r && r[2] > 0 && !own.has(v);
-      tiles += `<button class="vol${own.has(v) ? ' o' : ''}${stk ? ' s' : ''}${want.has(v) ? ' wt' : ''}" data-ed="${esc(t)}|${v}" aria-pressed="${own.has(v)}" aria-label="${esc(t)} ${v}${rg ? `, holds volumes ${rg[0]} to ${rg[1]}` : ''}${own.has(v) ? ', owned' : ''}${stk ? ', in stock at the store' : ''}${want.has(v) ? ', on your wishlist' : ''}">${v}${rg ? `<small class="edr">${rg[0]}–${rg[1]}</small>` : ''}</button>`; }
+      tiles += `<button class="vol${own.has(v) ? ' o' : ''}${stk ? ' s' : ''}${want.has(v) ? ' wt' : ''}${rd.has(v) ? ' rd' : ''}" data-ed="${esc(t)}|${v}" aria-pressed="${own.has(v)}" aria-label="${esc(t)} ${v}${rg ? `, holds volumes ${rg[0]} to ${rg[1]}` : ''}${own.has(v) ? ', owned' : ''}${rd.has(v) ? ', read' : ''}${stk ? ', in stock at the store' : ''}${want.has(v) ? ', on your wishlist' : ''}">${v}${rg ? `<small class="edr">${rg[0]}–${rg[1]}</small>` : ''}</button>`; }
     const buy = L.filter(x => x[2] > 0 && !own.has(x[0])).map(x => `<div class="prod">${x[4] ? `<img src="${esc(snapImg(x[4]))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : ''}<div class="t">${esc(t)} ${x[0]}${x[7] ? `<small>Holds Vol ${esc(x[7])}</small>` : ''}</div><span class="price">$${(+x[1] || 0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(x[3])}">🛒 Add</button></div>`).join('');
     return `<div class="edblk"><h5>${esc(t)}<small>${own.size} owned${L.length ? ` · ${L.length} at the shop` : ''}</small></h5><div class="vols">${tiles}</div>${buy}</div>`; }).join('');
   return `<div class="sec"><h4>📚 Editions</h4><p class="sub" style="margin:0 0 6px">Tap to mark the ones you own (or ♥ them in Want mode). They count toward the volumes they hold, shown striped above.</p>${blocks}${form}</div>`; }
@@ -1876,6 +1876,11 @@ function sheetClick(e){
   if ($('#cnCond')) cnCond = $('#cnCond').value; if ($('#cnNote')) cnNote = $('#cnNote').value.trim();
   if (t.dataset.mode){ tapMode = tapMode === t.dataset.mode ? null : t.dataset.mode; detV = null; return renderSeries(key); }
   if (t.dataset.ed){ const [et, en] = t.dataset.ed.split('|'); const n = +en; const E = (s.ed && s.ed[et]) || {}; const prev = JSON.parse(JSON.stringify(s)); const back = () => { shelf.series[key] = prev; save(); };
+    if (tapMode === 'read'){ /* reading an omnibus/deluxe book: mark the edition read, plus the single volumes it holds when we know the span */
+      s.ed = s.ed || {}; const T = s.ed[et] = s.ed[et] || { v: [] }; const has = (T.r || []).includes(n); const rg = edRange(key, et, n);
+      T.r = has ? (T.r || []).filter(x => x !== n) : [...new Set((T.r || []).concat(n))].sort((a,b)=>a-b); if (!T.r.length) delete T.r;
+      if (rg){ const span = []; for (let x = rg[0]; x <= rg[1]; x++) span.push(x); const R = new Set(s.r || []); span.forEach(x => has ? R.delete(x) : R.add(x)); s.r = R.size ? [...R].sort((a,b)=>a-b) : undefined; if (!s.r) delete s.r; }
+      logRead(has ? -1 : 1, key, rg ? [rg[0]] : []); save(); toast(`${has ? 'Unmarked' : 'Read'} ${et} ${n}${rg ? ` (Vol ${rg[0]}–${rg[1]})` : ''}${!has && readDate ? ' on ' + readDate : ''}`, back); return renderSeries(key); }
     if (tapMode === 'want'){ const has = (E.want || []).includes(n); s.ed = s.ed || {}; const T = s.ed[et] = s.ed[et] || { v: [] }; T.want = has ? (T.want || []).filter(x => x !== n) : [...new Set((T.want || []).concat(n))].sort((a,b)=>a-b); if (!T.want.length) delete T.want; save(); toast(has ? `${et} Vol ${n} off your wishlist` : `♥ ${et} Vol ${n} on your wishlist`, back); }
     else if ((E.v || []).includes(n)){ s.ed[et].v = E.v.filter(x => x !== n); if (!s.ed[et].v.length && !s.ed[et].want) delete s.ed[et]; if (!Object.keys(s.ed).length) delete s.ed; save(); toast(`Removed ${et} Vol ${n}`, back); }
     else { const undo = edAdd(key, s.n, et, [n]); toast(`Added ${et} Vol ${n}`, undo); }
@@ -2365,7 +2370,7 @@ function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (
   Object.keys(out.series).forEach(k => { if (gone[k] && !((b.series || {})[k] && (b.series[k].t || 0) > gone[k]) && (out.series[k].t || 0) <= gone[k]) delete out.series[k]; });
   Object.entries(b.series || {}).forEach(([k, S]) => { if (gone[k] && (S.t || 0) <= gone[k]) return; const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
-    if (S.ed && T.ed) Object.entries(S.ed).forEach(([t, E]) => { const D = T.ed[t]; if (!D){ T.ed[t] = E; return; } D.v = uni(D.v, E.v); if (E.want) D.want = uni(D.want, E.want).filter(v => !D.v.includes(v)); if (E.c) D.c = Object.assign({}, E.c, D.c || {}); });
+    if (S.ed && T.ed) Object.entries(S.ed).forEach(([t, E]) => { const D = T.ed[t]; if (!D){ T.ed[t] = E; return; } D.v = uni(D.v, E.v); if (E.want) D.want = uni(D.want, E.want).filter(v => !D.v.includes(v)); if (E.r) D.r = uni(D.r, E.r); if (E.c) D.c = Object.assign({}, E.c, D.c || {}); });
     ['ln','cn','vr'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); Object.keys(S).forEach(f => { if (T[f] == null) T[f] = S[f]; }); });
   ['log'].forEach(f => { out[f] = Object.assign({}, b[f] || {}); Object.entries(a[f] || {}).forEach(([d, n]) => { out[f][d] = Math.max(n, out[f][d] || 0); }); });
   out.rl = Object.assign({}, b.rl || {}); Object.entries(a.rl || {}).forEach(([d, l]) => { out.rl[d] = [...new Set((out.rl[d] || []).concat(l))]; });
