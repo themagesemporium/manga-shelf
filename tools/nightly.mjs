@@ -43,4 +43,7 @@ else if (SP.url && !SP.err.length){
 // 2) Want List counts
 try { load('wantlist-build.js'); await window._wlRun(); const W = window._WL; out(`Want List: ${W.wishers} wishers, ${W.rows} rows in ${W.parts} parts.${W.err.length ? ' Errors: ' + JSON.stringify(W.err).slice(0, 300) : ''}`); if (W.err.length && !W.rows) failed = true; }
 catch (e){ failed = true; out('Want List failed:', String(e).slice(0, 300)); }
+// 3) customer spice & gentle-read ratings: fill listings with no rating when 3+ customers agree; conflicts go to the Desk
+try { load('crowd-ratings.js'); const C = await window._crRun(); out(`Customer ratings: ${C.voters} customers rated, ${C.series} series with 3+ agreeing, ${C.set} listings filled in, ${C.conflicts.length} for Megan to review.${C.err.length ? ' Errors: ' + JSON.stringify(C.err).slice(0, 300) : ''}`); }
+catch (e){ out('Customer ratings failed:', String(e).slice(0, 300)); }
 process.exit(failed ? 1 : 0);

@@ -1929,16 +1929,18 @@ async function loadInfo(key){
 function spiceTxt(v){ const n = parseInt(v, 10); if (!isNaN(n)) return n <= 0 ? 'None' : '🌶️'.repeat(Math.min(n, 5)) + ` (${n}/5)`; return v; }
 /* Customers rate spice and gentle reads themselves: s.ux = {sp: 0-5, gr: true/false}. Their own value drives their filters and challenges;
    the shop's value stays as the suggestion. Ratings are collected nightly for Megan. */
-function uxHTML(key){ const s = shelf.series[key]; if (!s || langOf(key)) return ''; const ux = s.ux || {}; const o = sinfo.get(key) || {}; const shopSp = o.sp !== '' && o.sp != null && !isNaN(parseInt(o.sp)) ? parseInt(o.sp) : null, shopGr = /true/i.test(o.gr || '');
-  const sp = ux.sp != null ? ux.sp : null;
-  return `<details class="about"${ux.sp != null || ux.gr != null ? '' : ''}><summary>🌶️ Rate spice & gentle read${ux.sp != null || ux.gr != null ? ' · rated ✓' : ''}</summary>
+function uxHTML(key){ const s = shelf.series[key]; if (!s || langOf(key)) return ''; const ux = s.ux || {}; const o = sinfo.get(key) || {}; const hit = SNAP && snapEntry(key); const em = (hit && hit[1].m) || {};
+  const rawSp = o.sp != null && o.sp !== '' ? o.sp : em.sp, rawGr = o.gr != null && o.gr !== '' ? o.gr : em.gr;
+  const shopSp = rawSp != null && rawSp !== '' && !isNaN(parseInt(rawSp)) ? parseInt(rawSp) : null, shopGr = /true|yes/i.test(String(rawGr || '')), shopGrSet = /true|yes|false|no/i.test(String(rawGr || ''));
+  const sp = ux.sp != null ? ux.sp : shopSp, gr = ux.gr != null ? ux.gr : (shopGrSet ? shopGr : null), mine = ux.sp != null || ux.gr != null;
+  return `<details class="about"${ux.sp != null || ux.gr != null ? '' : ''}><summary>🌶️ Spice & gentle read: ${sp != null ? (sp ? sp + '🌶️' : 'no spice') : 'not rated'}${gr != null ? (gr ? ' · gentle' : ' · not gentle') : ''}${mine ? ' (yours)' : sp != null || gr != null ? ' · tap to adjust' : ' · tap to rate'}</summary>
     <p class="sub" style="margin:0 0 6px">Your rating is used for your own filters and challenges, and helps us rate it for everyone.${shopSp != null || shopGr ? ` Shop suggests: ${shopSp != null ? spiceTxt(shopSp) : 'no spice rating'}${shopGr ? ' · Gentle read' : ''}.` : ''}</p>
     <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center"><span style="font-weight:700;margin-right:4px">Spice</span>${[0,1,2,3,4,5].map(n => `<button class="btn ${sp === n ? '' : 'ghost'} sm" data-uxsp="${n}" aria-pressed="${sp === n}" style="width:auto;margin:0;padding:4px 8px">${n ? n + '🌶️' : 'None'}</button>`).join('')}</div>
-    <div style="display:flex;gap:4px;align-items:center;margin-top:8px"><span style="font-weight:700;margin-right:4px">Gentle read</span><button class="btn ${ux.gr === true ? '' : 'ghost'} sm" data-uxgr="1" style="width:auto;margin:0">Yes</button><button class="btn ${ux.gr === false ? '' : 'ghost'} sm" data-uxgr="0" style="width:auto;margin:0">No</button></div>
-    ${ux.sp != null || ux.gr != null ? '<p style="margin:8px 0 0"><button class="btn ghost sm" data-uxclear style="width:auto;margin:0">Use the shop’s rating</button></p>' : ''}</details>`; }
+    <div style="display:flex;gap:4px;align-items:center;margin-top:8px"><span style="font-weight:700;margin-right:4px">Gentle read</span><button class="btn ${gr === true ? '' : 'ghost'} sm" data-uxgr="1" style="width:auto;margin:0">Yes</button><button class="btn ${gr === false ? '' : 'ghost'} sm" data-uxgr="0" style="width:auto;margin:0">No</button></div>
+    ${mine ? '<p style="margin:8px 0 0"><button class="btn ghost sm" data-uxclear style="width:auto;margin:0">Use the shop’s rating</button></p>' : ''}</details>`; }
 document.addEventListener('click', e => { if (!current) return; const s = shelf.series[current]; if (!s) return; const a = e.target.closest('[data-uxsp]'), g = e.target.closest('[data-uxgr]'), c = e.target.closest('[data-uxclear]'); if (!a && !g && !c) return;
   if (c) delete s.ux; else { s.ux = Object.assign({}, s.ux); if (a) s.ux.sp = +a.dataset.uxsp; if (g) s.ux.gr = g.dataset.uxgr === '1'; s.ux.at = Date.now(); }
-  save(); const k = current; renderSeries(k); setTimeout(() => { const d = [...document.querySelectorAll('#sheetBody details.about')].find(x => /Rate spice/.test(x.textContent)); if (d) d.open = true; }, 0); toast(c ? 'Back to the shop’s rating' : 'Rating saved. Thanks!'); });
+  save(); const k = current; renderSeries(k); setTimeout(() => { const d = [...document.querySelectorAll('#sheetBody details.about')].find(x => /Spice & gentle read/.test(x.textContent)); if (d) d.open = true; }, 0); toast(c ? 'Back to the shop’s rating' : 'Rating saved. Thanks!'); });
 function infoHTML(key){
   const o = sinfo.get(key); if (!o || o.loading) return '';
   const rows = [];
