@@ -806,7 +806,7 @@ function xpCalc(){ const P = []; const add = (k, label, n, each, cap) => { const
   const fr = Object.keys(shelf.friends || {}).length;
   add('own', 'Books on your shelf', own, 2); add('rd', 'Volumes read', rd, 5); add('st', 'Star ratings', stars, 3); add('rv', 'Reviews (20+ words)', revs, 15);
   add('done', 'Series completed', done, 50); add('want', 'Wishlist adds', want, 1, 200); add('day', 'Reading days', days.length, 5); add('wk', '7-day reading streaks', weeks, 25);
-  add('ach', 'Achievements', ach, 25); add('fix', 'Fixes and corrections', fixes, 10); add('msg', 'Days you messaged the shop', msgDays, 5); add('fr', 'Friends', fr, 10, 200);
+  add('ach', 'Achievements', ach, 25); add('fix', 'Fixes and corrections', fixes, 10); add('msg', 'Days you messaged the shop', msgDays, 5); add('fr', 'Friends', fr, 10, 200); add('rb', 'Recommended books bought', Object.keys(shelf.recBuy || {}).length, 25);
   const xp = P.reduce((a, x) => a + x[3], 0); return { xp, lv: lvOf(xp), parts: P }; }
 function xpMonth(xp){ const mk = dayKey(new Date()).slice(0, 7); const m = shelf.xpm; if (!m || m.mk !== mk){ shelf.xpm = { mk, base: xp }; try { save(); } catch(e){} return 0; } return Math.max(0, xp - m.base); }
 /* ---------- Character sheet: 8 RPG stats scored 1-20, class from the top stat ---------- */
@@ -1768,7 +1768,12 @@ async function openCart(){ if (!cart || !cart.id) return; openSheet(`<h2>🛒 Yo
       + `<p style="margin:10px 0 6px"><b>Total: $${(+c.cost.totalAmount.amount).toFixed(2)}</b> <span class="sub">(shipping and tax at checkout)</span></p><div class="row2">${c.lines.nodes.length ? `<a class="btn" href="${esc(c.checkoutUrl)}" target="_top">Check out on the shop</a>` : ''}<button class="btn ghost" data-close>Keep browsing</button></div>`;
     el.querySelectorAll('[data-rmline]').forEach(b => b.onclick = async () => { b.disabled = true; await sfq(`mutation($c:ID!,$l:[ID!]!){cartLinesRemove(cartId:$c,lineIds:$l){cart{id}}}`, { c: cart.id, l: [b.dataset.rmline] }); draw(); }); };
   draw().catch(() => { const el = $('#cartBody'); if (el) el.innerHTML = '<p class="note">Couldn’t load your cart. Check your connection.</p>'; }); }
-document.addEventListener('click', e => { const b = e.target.closest('[data-cart]'); if (b){ e.preventDefault(); addToCart(b.dataset.cart, b); } });
+document.addEventListener('click', e => { const b = e.target.closest('[data-cart]'); if (b){ e.preventDefault(); try { recMark(b); } catch(e2){} addToCart(b.dataset.cart, b); } });
+/* XP for buying what the app recommended (Megan, Nov 8: 25 XP a book). An add-to-cart from Finds, the quiz or a recommendation is remembered
+   by product id in shelf.rec; when that product shows up in one of their orders afterwards, it moves to shelf.recBuy (counted once). */
+function recMark(b){ if (!b.closest('#tab-finds, .find, [data-recsrc]')) return; const hd = b.dataset.cart; let pid = '';
+  if (SNAP) Object.values(SNAP.s).some(e => [...(e.i || []), ...Object.values(e.x || {}).flat()].some(x => { if (x[3] === hd && x[6]){ pid = String(x[6]); return true; } return false; }));
+  if (!pid) return; shelf.rec = Object.assign({}, shelf.rec || {}); if (!shelf.rec[pid]){ shelf.rec[pid] = Date.now(); save(); } }
 /* ---------- wishlist alerts: wanted volumes that are in stock ---------- */
 function wantedInStock(){ const out = []; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s.want || !s.want.length) return; const L = live.get(k); if (!L) return; L.items.forEach(p => { if (p.inv > 0 && s.want.includes(p.vol) && !s.v.includes(p.vol)) out.push({ k, n: s.n, p }); }); }); return out; }
 // only books that were sold out the last time the app looked and are in stock now (the first look just remembers them)
@@ -2479,7 +2484,7 @@ function applyStoreWish(){ if (!storeWish || !Array.isArray(storeWish.items)) re
     const k = shelf.series[k0] ? k0 : Object.keys(shelf.series).find(x => normName(shelf.series[x].n) === normName(it.s) && /-ln$/.test(x) === ln); seen.delete(id); if (!k) return; const s = shelf.series[k];
     if ((s.want || []).includes(v)){ s.want = s.want.filter(x => x !== v); if (!s.want.length){ delete s.want; if (!(s.v || []).length && !(s.sell || []).length && !s.ed) delete shelf.series[k]; } r++; } });
   ls.set('mme-swseen', [...seen]); if (n || r){ save(); toast([n ? `Added ${n} ${n === 1 ? 'book' : 'books'} from your website wishlist` : '', r ? `removed ${r} you took off it there` : ''].filter(Boolean).join(', ') + ' (♥ Wishlist)'); } }
-function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, xpm: shelf.xpm || null, friends: shelf.friends || null, wst: shelf.wst || null, feed: shelf.feed || null, gone: shelf.gone || null, fb: shelf.fb || null, msgSeen: shelf.msgSeen || null, boxIn: shelf.boxIn || null, dnf: shelf.dnf && shelf.dnf.length ? shelf.dnf : null }; }
+function shelfBody(){ return { app: 'my-manga-emporium', v: 1, at: Date.now(), series: shelf.series, log: shelf.log || {}, rl: shelf.rl || {}, other: shelf.other || {}, goal: shelf.goal || {}, ach: shelf.ach || {}, share: !!shelf.share, orders: shelf.orders || null, card: shelf.card || null, xpm: shelf.xpm || null, rec: shelf.rec || null, recBuy: shelf.recBuy || null, friends: shelf.friends || null, wst: shelf.wst || null, feed: shelf.feed || null, gone: shelf.gone || null, fb: shelf.fb || null, msgSeen: shelf.msgSeen || null, boxIn: shelf.boxIn || null, dnf: shelf.dnf && shelf.dnf.length ? shelf.dnf : null }; }
 // copy of the shelf in the website's format (custom.collection / collection_2) so the store's collection bar and "In your collection" badges match the app
 function siteMirror(){ const owned = {}; let tb = 0;
   Object.entries(shelf.series).forEach(([k, s]) => { const hit = SNAP ? snapEntry(k) : null; const key = hit ? hit[0] : k; const vs = ints(s);
@@ -2501,7 +2506,7 @@ async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
 function shelfCount(o){ return o && o.series ? Object.keys(o.series).length : 0; }
-function applyBody(o){ shelf = { series: o.series || {} }; if (o.xpm) shelf.xpm = o.xpm; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; if (o.gone) shelf.gone = o.gone; if (o.fb) shelf.fb = o.fb; if (o.msgSeen) shelf.msgSeen = o.msgSeen; if (o.boxIn) shelf.boxIn = o.boxIn; if (o.dnf && o.dnf.length) shelf.dnf = o.dnf; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); setTimeout(() => { try { langMigrate(); } catch(e){} }, 0); if (SNAP) setTimeout(() => { try { edMigrate(); } catch(e){} }, 0); }
+function applyBody(o){ shelf = { series: o.series || {} }; if (o.xpm) shelf.xpm = o.xpm; if (o.rec) shelf.rec = o.rec; if (o.recBuy) shelf.recBuy = o.recBuy; if (o.orders) shelf.orders = o.orders; if (o.card) shelf.card = o.card; if (o.friends) shelf.friends = o.friends; if (o.wst) shelf.wst = o.wst; if (o.feed) shelf.feed = o.feed; if (o.gone) shelf.gone = o.gone; if (o.fb) shelf.fb = o.fb; if (o.msgSeen) shelf.msgSeen = o.msgSeen; if (o.boxIn) shelf.boxIn = o.boxIn; if (o.dnf && o.dnf.length) shelf.dnf = o.dnf; ['log','rl','other','goal','ach'].forEach(f => { if (o[f] && Object.keys(o[f]).length) shelf[f] = o[f]; }); if (o.share) shelf.share = true; ls.set('mme-shelf', shelf); setTimeout(() => { try { langMigrate(); } catch(e){} }, 0); if (SNAP) setTimeout(() => { try { edMigrate(); } catch(e){} }, 0); }
 function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (x, y) => [...new Set((x||[]).concat(y||[]))].sort((p,q)=>p-q);
   const gone = Object.assign({}, b.gone || {}, a.gone || {}); out.gone = Object.keys(gone).length ? gone : null;
   { const fb = [...(a.fb || []), ...(b.fb || [])].filter((x, i, A) => A.findIndex(y => y.at === x.at && y.t === x.t) === i).sort((x, y) => x.at - y.at); out.fb = fb.length ? fb : null; out.msgSeen = Math.max(a.msgSeen || 0, b.msgSeen || 0) || null; const bi = Object.assign({}, b.boxIn || {}, a.boxIn || {}); out.boxIn = Object.keys(bi).length ? bi : null;
@@ -2514,7 +2519,7 @@ function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (
     ['ln','cn','vr'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); Object.keys(S).forEach(f => { if (T[f] == null) T[f] = S[f]; }); });
   ['log'].forEach(f => { out[f] = Object.assign({}, b[f] || {}); Object.entries(a[f] || {}).forEach(([d, n]) => { out[f][d] = Math.max(n, out[f][d] || 0); }); });
   out.rl = Object.assign({}, b.rl || {}); Object.entries(a.rl || {}).forEach(([d, l]) => { out.rl[d] = [...new Set((out.rl[d] || []).concat(l))]; });
-  out.other = Object.assign({}, b.other || {}, a.other || {}); out.goal = Object.assign({}, b.goal || {}, a.goal || {}); out.friends = Object.assign({}, b.friends || {}, a.friends || {}); out.wst = Object.assign({}, b.wst || {}, a.wst || {}); return out; }
+  out.other = Object.assign({}, b.other || {}, a.other || {}); out.goal = Object.assign({}, b.goal || {}, a.goal || {}); out.friends = Object.assign({}, b.friends || {}, a.friends || {}); out.wst = Object.assign({}, b.wst || {}, a.wst || {}); out.rec = Object.assign({}, b.rec || {}, a.rec || {}); out.recBuy = Object.assign({}, b.recBuy || {}, a.recBuy || {}); return out; }
 async function acctOrders(force){
   if (!acct || !acct.at) return; const o = shelf.orders || {}; if (!force && o.checked && Date.now() - o.checked < 6*3600e3) return;
   if (!SNAP) await loadSnap(); if (!SNAP) return;
@@ -2529,6 +2534,9 @@ async function acctOrders(force){
     if (et){ S.ed = S.ed || {}; const E = S.ed[et] = S.ed[et] || { v: [] }; if (!E.v.includes(vol)){ E.v.push(vol); E.v.sort((a,b)=>a-b); added++; if (E.want) E.want = E.want.filter(x => x !== vol); } return; } if (!S.v.includes(vol)){ S.v.push(vol); S.v.sort((a,b)=>a-b); added++; if (S.want) S.want = S.want.filter(x => x !== vol); } }); });
   const paid = all.filter(x => +x.totalPrice.amount > 0);
   shelf.orders = { n: paid.length, spent: paid.reduce((a, x) => a + +x.totalPrice.amount, 0), first: all.length ? all.map(x => x.processedAt).sort()[0] : null, upto: all.length ? all.map(x => x.processedAt).sort().pop() : since, checked: Date.now() };
+  try { const R = shelf.rec || {}, B = Object.assign({}, shelf.recBuy || {}); let nb = 0;
+    all.forEach(od => (od.lineItems.nodes || []).forEach(li => { const pid = li.productId ? li.productId.split('/').pop() : ''; if (pid && R[pid] && !B[pid] && Date.parse(od.processedAt) >= R[pid] - 864e5){ B[pid] = Date.parse(od.processedAt); nb++; } }));
+    if (nb){ shelf.recBuy = B; if (xpOn()) setTimeout(() => toast(`+${nb * 25} XP for buying ${nb === 1 ? 'a book' : nb + ' books'} we recommended`), 2500); } } catch(e){}
   save(); if (added) toast(`Added ${added} ${added === 1 ? 'book' : 'books'} you bought from the shop`, () => { shelf.series = prev; save(); }); }
 /* ---------- conventions: read from the shop's Upcoming Events page (one per line: "Name - Month D(-D), YYYY - City, ST (Pending)") ---------- */
 let shopEvents = ls.get('mme-events') || [], evAt = 0;
