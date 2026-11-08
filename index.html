@@ -455,7 +455,7 @@ html:has(#sheet.on),html:has(#sheet.on) body,html:has(.vpop) body{overflow:hidde
 (() => {
 'use strict';
 const STORE = 'https://themagesemporium.com';
-const LANGS = ['japanese','spanish','french','italian','german','chinese','korean'];
+const LANGS = ['japanese', 'spanish', 'french', 'italian', 'german', 'chinese', 'korean', 'indonesian', 'portuguese', 'thai', 'vietnamese', 'polish', 'russian', 'dutch', 'turkish', 'arabic', 'swedish', 'tagalog', 'filipino', 'malay', 'hindi', 'czech', 'hungarian', 'greek', 'danish', 'norwegian', 'finnish', 'ukrainian', 'hebrew', 'catalan', 'romanian'];
 const RANKS = [[0,'Apprentice'],[25,'Initiate'],[100,'Adept'],[250,'Conjurer'],[500,'Archmage'],[1000,'Mythic Archmage'],[2000,'Grand Sage']];
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -491,13 +491,14 @@ $('#theme').onclick = () => {
 function chooseSkin(k){ applySkin(k); ls.set('mme-skin', k); document.querySelectorAll('.skin').forEach(b => b.setAttribute('aria-pressed', b.dataset.skin === k)); if (shelf.skin !== k){ shelf.skin = k; save(); } }
 
 /* ---------- series helpers ---------- */
-const LFLAG = { japanese: ['🇯🇵', 'JP'], spanish: ['🇪🇸', 'ES'], french: ['🇫🇷', 'FR'], italian: ['🇮🇹', 'IT'], german: ['🇩🇪', 'DE'], chinese: ['🇨🇳', 'ZH'], korean: ['🇰🇷', 'KO'] };
-function langOf(key){ const m = key.match(/-(japanese|spanish|french|italian|german|chinese|korean)$/); if (m) return m[1]; const s = shelf && shelf.series && shelf.series[key]; const l = s && langFromName(s.n); return l ? l.lang : null; }
+const LFLAG = { japanese: ['🇯🇵', 'JP'], spanish: ['🇪🇸', 'ES'], french: ['🇫🇷', 'FR'], italian: ['🇮🇹', 'IT'], german: ['🇩🇪', 'DE'], chinese: ['🇨🇳', 'ZH'], korean: ['🇰🇷', 'KO'], indonesian: ['🇮🇩', 'ID'], portuguese: ['🇧🇷', 'PT'], thai: ['🇹🇭', 'TH'], vietnamese: ['🇻🇳', 'VI'], polish: ['🇵🇱', 'PL'], russian: ['🇷🇺', 'RU'], dutch: ['🇳🇱', 'NL'], turkish: ['🇹🇷', 'TR'], arabic: ['🇸🇦', 'AR'], swedish: ['🇸🇪', 'SV'], tagalog: ['🇵🇭', 'TL'], filipino: ['🇵🇭', 'FIL'], malay: ['🇲🇾', 'MS'], hindi: ['🇮🇳', 'HI'], czech: ['🇨🇿', 'CS'], hungarian: ['🇭🇺', 'HU'], greek: ['🇬🇷', 'EL'], danish: ['🇩🇰', 'DA'], norwegian: ['🇳🇴', 'NO'], finnish: ['🇫🇮', 'FI'], ukrainian: ['🇺🇦', 'UK'], hebrew: ['🇮🇱', 'HE'], catalan: ['🏴', 'CA'], romanian: ['🇷🇴', 'RO'] };
+const lflag = l => LFLAG[l] || ['🌐', String(l || '').slice(0, 2).toUpperCase()];
+function langOf(key){ const m = key.match(/-(japanese|spanish|french|italian|german|chinese|korean|indonesian|portuguese|thai|vietnamese|polish|russian|dutch|turkish|arabic|swedish|tagalog|filipino|malay|hindi|czech|hungarian|greek|danish|norwegian|finnish|ukrainian|hebrew|catalan|romanian)$/); if (m) return m[1]; const s = shelf && shelf.series && shelf.series[key]; const l = s && langFromName(s.n); return l ? l.lang : null; }
 /* "Bleach (French edition)", "Demon Slayer (Spanish edition: Guardianes de la Noche)", "Clover (Japanese)" -> separate language series. Bilingual editions stay as typed. */
-function langFromName(n){ const m = String(n || '').match(/^(.*?)\s*\(\s*(japanese|spanish|french|italian|german|chinese|korean)(?:\s+(?:edition|ed\.?|version|language))?\b[^)]*\)\s*(.*)$/i); if (!m || /bilingual/i.test(n)) return null;
+function langFromName(n){ const m = String(n || '').match(/^(.*?)\s*\(\s*(japanese|spanish|french|italian|german|chinese|korean|indonesian|portuguese|thai|vietnamese|polish|russian|dutch|turkish|arabic|swedish|tagalog|filipino|malay|hindi|czech|hungarian|greek|danish|norwegian|finnish|ukrainian|hebrew|catalan|romanian)(?:\s+(?:edition|ed\.?|version|language))?\b[^)]*\)\s*(.*)$/i); if (!m || /bilingual/i.test(n)) return null;
   const base = (m[1] + (m[3] ? ' ' + m[3] : '')).trim(); if (!base) return null; const lang = m[2].toLowerCase(); return { base, lang, name: base + ' (' + lang[0].toUpperCase() + lang.slice(1) + ' edition)' }; }
 /* move language editions saved under an English-looking key (from imports before Nov 5) to their -<lang> key, merging volumes */
-function langMigrate(){ let n = 0; Object.keys(shelf.series).forEach(k => { if (/-(japanese|spanish|french|italian|german|chinese|korean)$/.test(k)) return; const s = shelf.series[k]; const l = langFromName(s.n); if (!l) return;
+function langMigrate(){ let n = 0; Object.keys(shelf.series).forEach(k => { if (/-(japanese|spanish|french|italian|german|chinese|korean|indonesian|portuguese|thai|vietnamese|polish|russian|dutch|turkish|arabic|swedish|tagalog|filipino|malay|hindi|czech|hungarian|greek|danish|norwegian|finnish|ukrainian|hebrew|catalan|romanian)$/.test(k)) return; const s = shelf.series[k]; const l = langFromName(s.n); if (!l) return;
     const to = handleize(l.base) + '-' + l.lang; if (to === k) return; const T = shelf.series[to];
     if (T){ T.v = [...new Set([...(T.v || []), ...(s.v || [])])].sort((a, b) => a - b); ['r','want'].forEach(f => { if (s[f]) T[f] = [...new Set([...(T[f] || []), ...s[f]])].sort((a, b) => a - b); }); Object.keys(s).forEach(f => { if (T[f] == null) T[f] = s[f]; }); T.t = Date.now(); }
     else shelf.series[to] = Object.assign({}, s, { n: l.name, t: Date.now() });
@@ -1257,9 +1258,9 @@ function renderList(){
   const vmode = $('#view').value; const compact = vmode === 'compact'; $('#list').classList.toggle('compact', compact); $('#list').classList.toggle('shelfv', vmode === 'shelf');
   if (vmode === 'shelf'){ const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
     $('#list').innerHTML = keys.map(k => { const i = I[k]; const u = coverOf(k); const n = i.s.n;
-      return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}${langOf(k) ? ', ' + langOf(k) + ' edition' : ''}, ${i.s.v.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.s.v.length}</b>${langOf(k) ? `<i class="lg" title="${esc(langOf(k))} edition">${LFLAG[langOf(k)][0]} ${LFLAG[langOf(k)][1]}</i>` : ''}</button>`; }).join(''); return; }
+      return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}${langOf(k) ? ', ' + langOf(k) + ' edition' : ''}, ${i.s.v.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.s.v.length}</b>${langOf(k) ? `<i class="lg" title="${esc(langOf(k))} edition">${lflag(langOf(k))[0]} ${lflag(langOf(k))[1]}</i>` : ''}</button>`; }).join(''); return; }
   if (compact){ $('#list').innerHTML = keys.map(k => { const i = I[k]; const nTxt = i.total ? `${i.own.length}/${i.total}` : `${i.s.v.length}`;
-    return `<button class="crow" data-k="${esc(k)}"><span class="nm">${FX.has(k) ? '⚠️ ' : ''}${langOf(k) ? LFLAG[langOf(k)][0] + ' ' : ''}${esc(i.s.n)}</span><span class="m">${nTxt}${i.gaps.length ? ` · ${i.gaps.length} gap${i.gaps.length>1?'s':''}` : ''}${i.complete ? ' · ✓' : ''}</span></button>`; }).join(''); return; }
+    return `<button class="crow" data-k="${esc(k)}"><span class="nm">${FX.has(k) ? '⚠️ ' : ''}${langOf(k) ? lflag(langOf(k))[0] + ' ' : ''}${esc(i.s.n)}</span><span class="m">${nTxt}${i.gaps.length ? ` · ${i.gaps.length} gap${i.gaps.length>1?'s':''}` : ''}${i.complete ? ' · ✓' : ''}</span></button>`; }).join(''); return; }
   $('#list').innerHTML = keys.map(k => {
     const i = I[k]; const lang = langOf(k);
     const chips = [];
@@ -1268,7 +1269,7 @@ function renderList(){
     if (i.gaps.length) chips.push(`<span class="chip">${i.gaps.length} ${i.gaps.length===1?'gap':'gaps'}</span>`);
     if (i.next && !i.complete && !lang) chips.push(`<span class="chip acc">Next: Vol ${i.next}</span>`);
     if (i.inStock.length) chips.push(`<span class="chip gold">${i.inStock.length} in stock</span>`);
-    if (lang) chips.push(`<span class="chip warn">${LFLAG[lang][0]} ${lang[0].toUpperCase()+lang.slice(1)} edition</span>`);
+    if (lang) chips.push(`<span class="chip warn">${lflag(lang)[0]} ${lang[0].toUpperCase()+lang.slice(1)} edition</span>`);
     if (isLN(k,i.s)) chips.push(`<span class="chip">Light novel</span>`);
     if ((i.s.r||[]).length) chips.push(`<span class="chip good">Read ${i.s.r.length}/${i.s.v.length}</span>`);
     if (i.s.st) chips.push(`<span class="chip gold">${'★'.repeat(i.s.st)}</span>`);
@@ -2337,7 +2338,7 @@ async function syncStore(force){
 $('#findBtn').onclick = () => syncStore(true);
 function renderFinds(){
   findsList = [];
-  Object.keys(shelf.series).forEach(k => { const i = info(k); i.inStock.forEach(p => findsList.push({ k, n: i.s.n, gap: p.vol < i.max, p })); });
+  Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; /* other-language editions: English copies don't fill their gaps */ const i = info(k); i.inStock.forEach(p => findsList.push({ k, n: i.s.n, gap: p.vol < i.max, p })); });
   findsList.sort((a,b) => (b.gap - a.gap) || a.n.localeCompare(b.n) || a.p.vol - b.p.vol);
   renderLists();
   const tb = document.querySelector('[data-tab="finds"]'); tb.textContent = findsList.length ? `Finds (${findsList.length})` : 'Finds';

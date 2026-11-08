@@ -11,7 +11,7 @@ window._fsRun = async () => {
     const cfg = await (await fetch('https://raw.githubusercontent.com/themagesemporium/manga-shelf/main/config.json?' + Date.now())).json();
     const SN = await (await fetch(cfg.snap)).json(); const NM = new Map(); Object.entries(SN.s).forEach(([k, e]) => { const q = nn(e.n) + (e.ln ? '|ln' : ''); if (!NM.has(q)) NM.set(q, k); });
     const NV = new Set(SN.nv || []);
-    const isLN = (k, s) => /-ln$|-light-novel$/.test(k) || /light novel/i.test(s.n); const lang = k => /-(japanese|spanish|french|italian|german|chinese|korean)$/.test(k);
+    const isLN = (k, s) => /-ln$|-light-novel$/.test(k) || /light novel/i.test(s.n); const lang = k => /-(japanese|spanish|french|italian|german|chinese|korean|indonesian|portuguese|thai|vietnamese|polish|russian|dutch|turkish|arabic|swedish|tagalog|filipino|malay|hindi|czech|hungarian|greek|danish|norwegian|finnish|ukrainian|hebrew|catalan|romanian)$/.test(k);
     const ent = (k, s) => { const ln = isLN(k, s); for (const x of [k, k.replace(/-light-novel$/, '-ln'), sk(s.n, ln)]) if (SN.s[x]) return x; const q = nn(s.n) + (ln ? '|ln' : ''); const z = NM.get(q) || (SN.al && SN.al[q]); return z && SN.s[z] ? z : null; };
     const find = (n, ln) => { const q = nn(n); for (const x of (ln ? [q + '|ln', q] : [q, q + '|ln'])){ const k = NM.get(x) || (SN.al && SN.al[x]); if (k && SN.s[k]) return k; } return null; };
     const unGz = async b => { const bin = Uint8Array.from(atob(b), c => c.charCodeAt(0)); return await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); };
