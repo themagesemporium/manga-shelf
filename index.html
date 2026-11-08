@@ -518,7 +518,7 @@ let edForm = null;
 function edTypeOf(t){ t = String(t || '').replace(/\((japanese|spanish|french|german|italian|korean|chinese)[^)]*\)/ig, ' ');
   return /3[- ]?in[- ]?1/i.test(t) ? '3-in-1' : /2[- ]?in[- ]?1/i.test(t) ? '2-in-1' : /box ?set/i.test(t) ? 'Box Set'
     : /deluxe|vizbig|perfect edition|ultimate edition|eternal edition|oversized|big edition|full ?metal edition|fully compiled/i.test(t) ? 'Deluxe'
-    : /collector'?s?\s+edition|collector'?s?\)|special collector/i.test(t) ? 'Collector' : /omnibus|\bomni\b/i.test(t) ? 'Omnibus'
+    : /collector'?s?\s+edition|collector'?s?\)|special collector|\bcollector'?s?\s*$/i.test(t) ? 'Collector' : /omnibus|\bomni\b/i.test(t) ? 'Omnibus'
     : /limited edition|special edition|anniversary edition|exclusive|\bbam\b|\bbn special\b|\bb&n\b|barnes|books a million|bebeautiful edition/i.test(t) ? 'Variant'
     : /\S\s*&\s*\d+$/.test(t) ? 'Omnibus' : ''; }
 function edParseName(n){ n = String(n || '').trim(); const type = edTypeOf(n); if (!type) return null; const ln = /light novel/i.test(n);
