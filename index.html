@@ -1775,6 +1775,44 @@ function infoHTML(key){
   if (!rows.length && !o.tk) return '';
   return `<dl class="igrid">${rows.join('')}</dl>${o.tk ? `<p style="margin-top:10px"><b>The Mage's take:</b> ${esc(o.tk)}</p>` : ''}`;
 }
+/* ---------- Customer-added cover and ISBN (for books the shop doesn't list yet, or a wrong/missing cover).
+   s.c = cover URL, s.cvm = 1 when the customer chose it (so automatic cover fills leave it alone), s.ib = {vol: isbn13}.
+   An ISBN the shop doesn't carry also goes to the shop as a message so Megan can add the listing. ---------- */
+let cvPrev = null, cvOpen = false;
+function cvHTML(key){ const s = shelf.series[key]; if (!s || langOf(key)) return ''; const ib = s.ib || {};
+  const have = Object.entries(ib).sort((a, b) => a[0] - b[0]).map(([v, i]) => `<li>${v > 0 ? 'Vol ' + esc(v) : 'Book'}: ${esc(i)} <button class="iconbtn" data-cvdel="${esc(v)}" aria-label="Remove ISBN for ${v > 0 ? 'Vol ' + esc(v) : 'this book'}" style="width:28px;height:28px">✕</button></li>`).join('');
+  const pv = cvPrev && cvPrev.key === key ? `<div style="display:flex;gap:10px;align-items:center;margin:8px 0">${cvPrev.url ? `<img src="${esc(cvPrev.url)}" alt="Cover found" style="width:64px;border-radius:4px">` : ''}<div style="flex:1"><p class="sub" style="margin:0 0 6px">${esc(cvPrev.msg)}</p>${cvPrev.url ? `<button class="btn sm" data-cvuse>Use this cover</button>` : ''}${cvPrev.isbn ? ` <button class="btn ghost sm" data-cvsave>Save ISBN${cvPrev.url ? ' only' : ''}</button>` : ''}</div></div>` : '';
+  return `<details class="about" data-cvwrap${cvOpen ? ' open' : ''}><summary>🖼️ Add a cover or ISBN</summary>
+  <p class="sub" style="margin:0 0 6px">For a book we don't list yet, or a missing or wrong cover. Type the ISBN from the back of the book and we'll look up its cover.</p>
+  <div class="row2" style="gap:6px;flex-wrap:wrap"><input id="cvVol" inputmode="numeric" placeholder="Vol #" aria-label="Volume number (optional)" style="width:70px"><input id="cvIsbn" inputmode="numeric" placeholder="ISBN" aria-label="ISBN" style="flex:1;min-width:140px"><button class="btn sm" data-cvfind>Find cover</button></div>
+  <div class="row2" style="gap:6px;margin-top:6px"><input id="cvUrl" placeholder="Or paste a picture link (https://…)" aria-label="Cover picture link" style="flex:1"><button class="btn ghost sm" data-cvurl>Preview</button></div>
+  ${pv}${have ? `<ul style="margin:8px 0 0;padding-left:18px">${have}</ul>` : ''}${s.cvm ? `<p style="margin:6px 0 0"><button class="btn ghost sm" data-cvreset>Go back to the shop's cover</button></p>` : ''}</details>`; }
+const cvImgOk = u => new Promise(res => { const i = new Image(); const t = setTimeout(() => res(false), 8000); i.onload = () => { clearTimeout(t); res(i.naturalWidth > 20); }; i.onerror = () => { clearTimeout(t); res(false); }; i.src = u; });
+async function cvFind(key){ const s = shelf.series[key]; const raw = ($('#cvIsbn') || {}).value || ''; const vol = parseInt(($('#cvVol') || {}).value, 10) || 0; const isbn = isbnTo13(raw);
+  if (!isbn){ toast('That doesn’t look like an ISBN. It’s the 10 or 13 digit number by the barcode.'); return; }
+  cvOpen = true; cvPrev = { key, isbn, vol, url: '', msg: 'Looking it up…' }; renderSeries(key);
+  const hit = snapBar.get(isbn); let shopNote = '';
+  if (hit && SNAP && SNAP.s[hit[0]]){ const e = SNAP.s[hit[0]]; shopNote = hit[0] === key ? ` That's Vol ${hit[1]} in our shop.` : ` That ISBN is ${e.n} Vol ${hit[1]} in our shop.`; if (!vol) cvPrev.vol = hit[1]; }
+  let url = ''; const ol = 'https://covers.openlibrary.org/b/isbn/' + isbn + '-M.jpg?default=false'; if (await cvImgOk(ol)) url = ol;
+  if (!url){ try { const j = await (await fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn)).json(); const L = j.items && j.items[0] && j.items[0].volumeInfo.imageLinks; if (L){ const g = String(L.thumbnail || L.smallThumbnail).replace(/^http:/, 'https:').replace('&edge=curl', ''); if (await cvImgOk(g)) url = g; } } catch(e){} }
+  cvPrev = { key, isbn, vol: cvPrev.vol, url, inShop: !!hit, msg: (url ? 'Found this cover.' : 'We couldn’t find a cover for that ISBN. You can still save the ISBN, or paste a picture link.') + shopNote };
+  if (current === key) renderSeries(key); }
+function cvCommit(key, useCover){ const s = shelf.series[key]; const P = cvPrev; if (!s || !P) return; const prev = JSON.parse(JSON.stringify(s));
+  if (useCover && P.url){ s.c = P.url; s.cvm = 1; }
+  if (P.isbn){ s.ib = Object.assign({}, s.ib || {}); s.ib[P.vol || 0] = P.isbn;
+    if (!P.inShop){ const t = `Added from the app: ${s.n}${P.vol ? ' Vol ' + P.vol : ''}, ISBN ${P.isbn}. Not in the shop yet.`; shelf.fb = (shelf.fb || []).concat({ t, at: Date.now() }); try { notifyShop(t); } catch(e){} } }
+  s.t = Date.now(); save(); cvPrev = null; track('cover-add'); toast(useCover ? 'Cover saved' + (P.isbn && !P.inShop ? '. We’ll add it to the shop.' : '') : 'ISBN saved' + (P.isbn && !P.inShop ? '. We’ll add it to the shop.' : ''), () => { shelf.series[key] = prev; save(); if (current === key) renderSeries(key); });
+  renderAll(); renderSeries(key); }
+document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('[data-cvwrap]')) cvOpen = e.target.open; }, true);
+document.addEventListener('click', e => { if (!current) return; const key = current;
+  if (e.target.closest('[data-cvfind]')){ cvFind(key); return; }
+  if (e.target.closest('[data-cvurl]')){ const u = (($('#cvUrl') || {}).value || '').trim(); if (!/^https:\/\/\S+$/.test(u)) return toast('Paste a link that starts with https://');
+    const isbn = isbnTo13(($('#cvIsbn') || {}).value || ''); const vol = parseInt(($('#cvVol') || {}).value, 10) || 0;
+    cvImgOk(u).then(ok => { cvPrev = { key, isbn, vol, url: ok ? u : '', inShop: !!(isbn && snapBar.get(isbn)), msg: ok ? 'Here’s that picture.' : 'That link didn’t open as a picture. Try copying the image address instead of the page address.' }; cvOpen = true; if (current === key) renderSeries(key); }); return; }
+  if (e.target.closest('[data-cvuse]')){ cvCommit(key, true); return; }
+  if (e.target.closest('[data-cvsave]')){ cvCommit(key, false); return; }
+  const d = e.target.closest('[data-cvdel]'); if (d){ const s = shelf.series[key]; if (s && s.ib){ delete s.ib[d.dataset.cvdel]; if (!Object.keys(s.ib).length) delete s.ib; s.t = Date.now(); save(); renderSeries(key); } return; }
+  if (e.target.closest('[data-cvreset]')){ const s = shelf.series[key]; if (s){ delete s.c; delete s.cvm; s.t = Date.now(); const u = coverOf(key); if (u) s.c = u; save(); renderAll(); renderSeries(key); toast('Using the shop’s cover again'); } return; } });
 function aboutHTML(key){
   if (langOf(key)) return '';
   const a = about.get(key) || { desc: '', ra: [] }; const loading = !about.get(key) || about.get(key).loading;
@@ -1850,6 +1888,7 @@ function renderSeries(key){
     ${odd.length ? `<p class="sub">Also: Vol ${odd.join(', ')}</p>` : ''}
     ${edHTML(key)}
     ${aboutHTML(key)}
+    ${cvHTML(key)}
     <div class="legend"><span><i style="background:var(--accent)"></i>Owned</span><span><i style="background:var(--bg);border:1px solid var(--line)"></i>Missing</span>${edCount(s) ? '<span><i class="vol o oe" style="display:inline-block;padding:0;min-width:0"></i>In an omnibus you own</span>' : ''}<span><i style="background:var(--gold)"></i>In stock at the store</span><span><b style="color:var(--good)">✓</b> Read</span><span><b style="color:var(--accent)">↗</b> Lent out</span><span><b style="color:#1d5aae">↙</b> Borrowed</span><span><b style="color:#d9417a">♥</b> Want</span><span><b style="color:#2f9e5f">$</b> Selling</span><span><b style="color:#8a6d3b">✎</b> Note</span></div>
     ${(() => { const H = holds ? holds.items.filter(h => normName(h.s) === normName(s.n)) : []; return H.length ? `<div class="sec"><h4>📦 On hold for you</h4><p class="sub" style="margin:0">${H.map(h => h.v != null ? 'Vol ' + h.v : esc(h.t || '')).join(', ')}: set aside for you at The Mage’s Emporium (yours once paid).</p></div>` : ''; })()}
     ${loansHTML(s)}
@@ -2370,6 +2409,7 @@ function combine(a, b){ const out = JSON.parse(JSON.stringify(a)); const uni = (
   Object.keys(out.series).forEach(k => { if (gone[k] && !((b.series || {})[k] && (b.series[k].t || 0) > gone[k]) && (out.series[k].t || 0) <= gone[k]) delete out.series[k]; });
   Object.entries(b.series || {}).forEach(([k, S]) => { if (gone[k] && (S.t || 0) <= gone[k]) return; const T = out.series[k]; if (!T){ out.series[k] = S; return; }
     T.v = uni(T.v, S.v); ['r','want','sell'].forEach(f => { if (S[f]) T[f] = uni(T[f], S[f]); }); if (T.want) T.want = T.want.filter(v => !T.v.includes(v));
+    if (S.ed && !T.ed) T.ed = S.ed; if (S.ib) T.ib = Object.assign({}, S.ib, T.ib || {}); if (S.cvm && !T.cvm){ T.c = S.c; T.cvm = S.cvm; }
     if (S.ed && T.ed) Object.entries(S.ed).forEach(([t, E]) => { const D = T.ed[t]; if (!D){ T.ed[t] = E; return; } D.v = uni(D.v, E.v); if (E.want) D.want = uni(D.want, E.want).filter(v => !D.v.includes(v)); if (E.r) D.r = uni(D.r, E.r); if (E.c) D.c = Object.assign({}, E.c, D.c || {}); });
     ['ln','cn','vr'].forEach(f => { if (S[f]) T[f] = Object.assign({}, S[f], T[f] || {}); }); Object.keys(S).forEach(f => { if (T[f] == null) T[f] = S[f]; }); });
   ['log'].forEach(f => { out[f] = Object.assign({}, b[f] || {}); Object.entries(a[f] || {}).forEach(([d, n]) => { out[f][d] = Math.max(n, out[f][d] || 0); }); });

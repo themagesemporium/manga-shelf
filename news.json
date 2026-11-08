@@ -1,5 +1,10 @@
 [
  {
+  "at": "2026-11-08T08:30:00-05:00",
+  "t": "Add a cover or ISBN",
+  "b": "Missing or wrong cover? Open the series, tap Add a cover or ISBN, and type the ISBN from the back of the book. We find the cover for you, and books we don't carry yet get sent to the shop to list."
+ },
+ {
   "at": "2026-11-08T08:00:00-05:00",
   "t": "Mark omnibus and deluxe books as read",
   "b": "On a series page, tap Read, then tap the omnibus or deluxe book. When we know which volumes it holds, those get marked read too."
