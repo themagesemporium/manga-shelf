@@ -677,7 +677,25 @@ function renderStats(){
     ['🦋 Social Butterfly', 'Connect with 10 friends.', (shelf.ach||{}).frn || 0, 10, 1],
     ['🔓 Open Shelf', 'Approve a friend to see your shelf live.', (shelf.ach||{}).frv || 0, 1, 1],
     ['👑 Crown Holder', 'Hold a collector title (most books, most series, longest run…) among all our collectors.', C.crowns.length, 1, 1],
-    ['🔮 Mythic', 'Reach the Mythic Archmage rank (1,000 books).', books, 1000, 1],
+    ['🔮 Mythic', 'Reach 1,000 books (the second-highest rank for every class).', books, 1000, 1],
+    ...(() => { let XL = 1, sc = [1], wordy = 0, fixes = 0; const A = shelf.ach || {};
+      try { XL = xpCalc().lv; } catch(e){} try { sc = statCalc().sc; } catch(e){}
+      Object.values(shelf.series).forEach(s => { if (wordsN(s.rv) >= 20) wordy++; Object.values(s.vr || {}).forEach(r => { if (r && wordsN(r.t) >= 20) wordy++; }); });
+      (shelf.fb || []).forEach(f => { if (/^(About |Added from the app:)/.test(f.t || '')) fixes++; });
+      return [
+        ['⭐ Level Up', 'Reach Level 5 and unlock your first avatar frame.', XL, 5],
+        ['🌟 Rising Star', 'Reach Level 10 (your character card turns Rare).', XL, 10],
+        ['💫 Holo Hunter', 'Reach Level 20 and unlock a holo Super Rare card.', XL, 20],
+        ['🎭 Shapeshifter', 'Play as 3 different classes (pick one in your character stats).', (A.cls || []).length, 3],
+        ['🎲 Show-Off', 'Share your character card.', A.shc || 0, 1],
+        ['📸 Shelfie Star', 'Share a shelfie of your collection.', A.shs || 0, 1],
+        ['🖋️ Wordsmith', 'Write 10 reviews of 20+ words.', wordy, 10],
+        ['🛠️ Helper', 'Send 5 fixes (a cover, an ISBN, a correction).', fixes, 5],
+        ['🎁 Taste Tester', 'Buy a book the app recommended for you.', Object.keys(shelf.recBuy || {}).length, 1],
+        ['👑 Legendary', 'Reach Level 40 (Legendary gold card).', XL, 40, 1],
+        ['🌌 Mythic Card', 'Reach Level 50 (Mythic prism card).', XL, 50, 1],
+        ['💎 Stat Master', 'Max out any stat at 20.', Math.max(...sc), 20, 1],
+        ['🌈 Well-Rounded', 'Get every stat to 5 or higher.', Math.min(...sc), 5, 1]]; })(),
     ['🏆 Collector of Legend', 'Earn 25 other achievements.', 0, 25, 1]
   ];
   BADGES[BADGES.length - 1][2] = BADGES.slice(0, -1).filter(b => b[2] >= b[3]).length;
@@ -855,7 +873,7 @@ let lvOpen = false;
 function renderLevel(){ const el = $('#lvlBox'); if (!el) return; if (!xpOn()){ el.innerHTML = ''; return; }
   const X = xpCalc(); if (xpLast == null) xpLast = { xp: X.xp, lv: X.lv }; const S = statCalc(), cls = myClass(S), a = xpNeed(X.lv), b = xpNeed(X.lv + 1), fr = frameOf(X.lv), nf = XP_FRAMES.find(x => x[0] > X.lv), mo = xpMonth(X.xp);
   let books = 0; try { books = collectorNumbers().books; } catch(e){} let r0 = 0; while (r0 + 1 < RANKS.length && books >= RANKS[r0 + 1][0]) r0++; const nx = RANKS[r0 + 1];
-  const rank = rankName(r0, cls), sec = $('#rank');
+  const rank = rankName(r0, cls), sec = $('#rank'); { const A = shelf.ach = shelf.ach || {}; A.cls = A.cls || []; if (!A.cls.includes(cls)){ A.cls = A.cls.concat(cls); setTimeout(save, 0); } }
   if (sec){ const lbl = sec.querySelector('.lbl'); if (lbl) lbl.textContent = 'Your character';
     const hd = `${cls} · Lv ${X.lv} · ${rank} Rank`; $('#rankName').textContent = hd; $('#rankName').style.fontSize = hd.length > 22 ? Math.max(15, Math.min(24, Math.floor(620 / hd.length))) + 'px' : ''; $('#rankName').style.whiteSpace = 'nowrap'; $('#rankName').style.overflow = 'hidden'; $('#rankName').style.textOverflow = 'ellipsis';
     $('#rankNext').innerHTML = `📚 <b>${esc(rank)}</b> rank${nx ? ` · ${nx[0] - books} more ${nx[0] - books === 1 ? 'book' : 'books'} to ${esc(rankName(r0 + 1, cls))}` : ' · the highest rank there is'}`;
@@ -2800,7 +2818,7 @@ function drawCard(d){ const W = 1080, H = 1920, c = document.createElement('canv
   pill('track yours free → ' + d.site, H-70, 'rgba(255,255,255,.9)', ORG, 32, '800');
   return c; }
 let cardFile = null;
-async function shareCard(){ track('share-card'); try { await document.fonts.ready; } catch(e){}
+async function shareCard(){ track('share-card'); shelf.ach = shelf.ach || {}; shelf.ach.shs = (shelf.ach.shs || 0) + 1; save(); try { await document.fonts.ready; } catch(e){}
   const d = cardData(); openSheet(`<h2>Share your collection</h2><label class="sub" for="cardName" style="display:block;margin:0 0 4px">Name on the picture</label><input id="cardName" value="${esc(d.name)}" placeholder="Your first name (or leave empty)" autocomplete="off" style="width:100%;margin:0 0 10px">
     <img id="cardImg" alt="Your collector stats picture" style="width:100%;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.18)">
     <div class="row2" style="margin-top:10px"><button class="btn" id="cardShare">Share</button><button class="btn ghost" id="cardSave">Save image</button><button class="btn ghost" data-close>Close</button></div>
@@ -2884,7 +2902,7 @@ function drawChar(d){ const W = 1080, H = 1920, c = document.createElement('canv
   let px0 = (W - tw()) / 2; labs.forEach(lab => { x.font = fnt('900', csz); const w = x.measureText(lab).width + 44; rr(px0, 1640, w, csz + 36, (csz + 36) / 2); x.fillStyle = 'rgba(255,255,255,.9)'; x.fill(); t(lab, px0 + w / 2, 1640 + csz + 12, csz, '900', '#3b1d6e'); px0 += w + 16; });
   rr(170, 1760, 740, 66, 33); x.fillStyle = '#ffc93c'; x.fill(); t('level up free → app.themagesemporium.com', W / 2, 1804, fit('level up free → app.themagesemporium.com', 680, 32, '900'), '900', '#3b1d6e');
   x.restore(); return c; }
-async function shareChar(){ track('share-char'); try { await document.fonts.ready; } catch(e){}
+async function shareChar(){ track('share-char'); shelf.ach = shelf.ach || {}; shelf.ach.shc = (shelf.ach.shc || 0) + 1; save(); try { await document.fonts.ready; } catch(e){}
   const X = xpCalc(), S = statCalc(), lv = X.lv, flv = myFrameLv(lv), av = myAv() || {}; let img = null;
   if (av.u){ img = await new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = av.u; }); }
   let rk = 0; try { const C1 = collectorNumbers(); while (rk + 1 < RANKS.length && C1.books >= RANKS[rk + 1][0]) rk++; } catch(e){}
