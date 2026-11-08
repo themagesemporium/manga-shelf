@@ -71,17 +71,7 @@ async function runQueue(env){
     else { const cid = await env.FRIENDS.get('push:h:' + it.h); if (cid) sent += await sendTo(env, cid, msg, it.k); } }
   return { sent }; }
 
-/* Con dates from the shop's Upcoming Events page ("Name - Month D(-D), YYYY - City"); window = day before through day after. Cached 6 h. */
-async function conNow(env){ let L = null; try { L = JSON.parse(await env.FRIENDS.get('cons') || 'null'); } catch(e){}
-  if (!L){ L = []; try { const html = await (await fetch('https://themagesemporium.com/pages/upcoming-events')).text(); const MONS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-      html.split(/<\/p>|<br\s*\/?>|\n/i).map(x => x.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()).forEach(line => {
-        const m = line.match(/^(.+?)\s+[-–—]\s+([A-Za-z]+)\.?\s+(\d{1,2})(?:\s*[-–]\s*(?:([A-Za-z]+)\.?\s+)?(\d{1,2}))?,?\s+(\d{4})/); if (!m) return;
-        const mi = MONS.indexOf(m[2].toLowerCase().slice(0, 3)); if (mi < 0) return; const m2 = m[4] ? MONS.indexOf(m[4].toLowerCase().slice(0, 3)) : mi;
-        /* dates in US Eastern: midnight ET = 05:00 UTC (close enough across DST for a day-wide window) */
-        L.push([Date.UTC(+m[6], mi, +m[3] - 1, 5), Date.UTC(+m[6], m2 < 0 ? mi : m2, (m[5] ? +m[5] : +m[3]) + 2, 5)]); }); } catch(e){}
-    await env.FRIENDS.put('cons', JSON.stringify(L), { expirationTtl: 21600 }); }
-  const now = Date.now(); return L.some(([s, e]) => now >= s && now < e); }
-
+async function conNow(env){ let L = null; try { L = JSON.parse(await env.FRIENDS.get('cons') || 'null'); } catch(e){} if (!L){ L = []; try { const html = await (await fetch('https://themagesemporium.com/pages/upcoming-events')).text(); const MONS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']; html.split(/<\/p>|<br\s*\/?>|\n/i).map(x => x.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()).forEach(line => { const m = line.match(/^(.+?)\s+[-–—]\s+([A-Za-z]+)\.?\s+(\d{1,2})(?:\s*[-–]\s*(?:([A-Za-z]+)\.?\s+)?(\d{1,2}))?,?\s+(\d{4})/); if (!m) return; const mi = MONS.indexOf(m[2].toLowerCase().slice(0, 3)); if (mi < 0) return; const m2 = m[4] ? MONS.indexOf(m[4].toLowerCase().slice(0, 3)) : mi; L.push([Date.UTC(+m[6], mi, +m[3] - 1, 5), Date.UTC(+m[6], m2 < 0 ? mi : m2, (m[5] ? +m[5] : +m[3]) + 2, 5)]); }); } catch(e){} await env.FRIENDS.put('cons', JSON.stringify(L), { expirationTtl: 21600 }); } const now = Date.now(); return L.some(([s, e]) => now >= s && now < e); }
 export default {
   async fetch(req, env){
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
@@ -91,12 +81,7 @@ export default {
        /notify/order: from Shopify Flow (Order created -> Send HTTP request), header x-mme-key = env.NOTIFY_KEY. */
     if (p === '/notify/order' && req.method === 'POST'){
       if (!env.NOTIFY_KEY || req.headers.get('x-mme-key') !== env.NOTIFY_KEY) return J({ error: 'forbidden' }, 403);
-      let o = {}; try { o = await req.json(); } catch(e){}
-      /* Convention weekends: when the order took the last copy of a book, say so (Megan takes single copies to cons). */
-      const last = (Array.isArray(o.last) ? o.last : []).filter(Boolean).map(String);
-      if (last.length && await conNow(env)){
-        const n = await sendTo(env, SHOP_CID(env), { t: ('⚠️ Last copy sold · ' + String(o.name || '')).slice(0, 80), b: last.join(' · ').slice(0, 200), u: DESK + '#pick', tag: 'shop-order' });
-        return J({ sent: n, last: last.length }); }
+      let o = {}; try { o = await req.json(); } catch(e){} const last = (Array.isArray(o.last) ? o.last : []).filter(Boolean).map(String); if (last.length && await conNow(env)){ const n = await sendTo(env, SHOP_CID(env), { t: ('⚠️ Last copy sold · ' + String(o.name || '')).slice(0, 80), b: last.join(' · ').slice(0, 200), u: DESK + '#pick', tag: 'shop-order' }); return J({ sent: n, last: last.length }); }
       const n = await sendTo(env, SHOP_CID(env), { t: ('🛒 New order ' + String(o.name || '')).slice(0, 80), b: [o.total ? '$' + o.total : '', o.items ? o.items + ' item' + (+o.items === 1 ? '' : 's') : '', o.channel || '', o.who || ''].filter(Boolean).join(' · ').slice(0, 200), u: DESK + '#pack', tag: 'shop-order' });
       return J({ sent: n }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
