@@ -14,7 +14,9 @@ window._ncCreate = async (jobs, rows) => {
   const vendorOf = p => { p = String(p || '').trim(); const M = [[/tokyopop/i, 'Tokyopop'], [/viz/i, 'Viz Media'], [/yen/i, 'Yen Press'], [/kodansha/i, 'Kodansha'], [/vertical/i, 'Vertical'], [/seven seas|ghost ship/i, 'Seven Seas'], [/square enix/i, 'Square Enix'], [/j-?novel/i, 'J-Novel Club'], [/digital manga|dmp/i, 'Digital Manga Publishing'], [/juné|june\b/i, 'June'], [/dark horse/i, 'Dark Horse'], [/del rey/i, 'Del Rey'], [/cmx|dc comics/i, 'CMX'], [/netcomics/i, 'NETCOMICS'], [/aurora|deux/i, 'Aurora'], [/sublime/i, 'SuBLime'], [/lezhin/i, 'Lezhin'], [/tappytoon/i, 'Tappytoon'], [/ize press/i, 'Ize Press'], [/one peace/i, 'One Peace Books'], [/airship/i, 'Airship'], [/udon/i, 'Udon'], [/kuma/i, 'Kuma'], [/denpa/i, 'Denpa'], [/irodori/i, 'Irodori'], [/cross infinite/i, 'Cross Infinite World'], [/inklore/i, 'Inklore'], [/wordsmith/i, 'Wordsmith Press']];
     for (const [re, v] of M) if (re.test(p)) return v; return p.replace(/,?\s*(LLC|Inc\.?|Ltd\.?|Publishing|Books)$/i, '').trim() || 'Unknown'; };
   const genreOf = (cats, t, name) => { const s = (cats + ' ' + t + ' ' + name).toLowerCase();
-    if (/yaoi|boys'? ?love|\bbl\b|gay|omega|alpha/.test(s)) return 'Yaoi/BL'; if (/yuri|girls'? ?love|lesbian/.test(s)) return 'Yuri';
+    /* Amazon often files a book under both Yuri and Yaoi (e.g. Still Sick, a GL title): when both match, the one that comes first wins */
+    const by = s.search(/yaoi|boys'? ?love|\bbl\b|gay|omega|alpha/), gy = s.search(/yuri|girls'? ?love|lesbian/);
+    if (by >= 0 && (gy < 0 || by < gy)) return 'Yaoi/BL'; if (gy >= 0) return 'Yuri';
     if (/horror/.test(s)) return 'Horror'; if (/romance|love|marriage|bride|kiss|darling|boyfriend|girlfriend|crush|husband|wife|heart/.test(s)) return 'Romance';
     if (/fantasy|isekai|demon|witch|magic|dragon|villainess|reincarnat|another world|sword|knight|prince|princess/.test(s)) return 'Fantasy';
     if (/science fiction|sci-fi|mecha|space/.test(s)) return 'Sci-Fi'; if (/comedy|humor|funny/.test(s)) return 'Comedy';
