@@ -611,7 +611,7 @@ function renderStats(){
   let books = 0, runs = 0, gaps = 0, langs = new Set(), ln = 0, longest = 0, complete = 0;
   keys.forEach(k => { const i = info(k); books += i.s.v.length + edCount(i.s); if (i.own.length >= 2 && !i.gaps.length) runs++; if (!langOf(k)) gaps += i.gaps.length; const l = langOf(k); if (l) langs.add(l); if (isLN(k,i.s)) ln++; longest = Math.max(longest, i.own.length); if (i.complete) complete++; });
   let r = 0; while (r+1 < RANKS.length && books >= RANKS[r+1][0]) r++;
-  let myCls = ''; try { if (xpOn()) myCls = statCalc().cls; } catch(e){} $('#rankName').textContent = rankName(r, myCls);
+  let myCls = ''; try { if (xpOn()) myCls = myClass(statCalc()); } catch(e){} $('#rankName').textContent = rankName(r, myCls);
   const nx = RANKS[r+1];
   $('#rankBar').style.width = nx ? Math.round((books - RANKS[r][0]) / (nx[0] - RANKS[r][0]) * 100) + '%' : '100%';
   const rl = n => setTimeout(() => { try { renderLevel(); } catch(e){ if (n < 5) rl(n + 1); } }, n ? 600 : 0); rl(0);
@@ -811,24 +811,26 @@ function xpCalc(){ const P = []; const add = (k, label, n, each, cap) => { const
 function xpMonth(xp){ const mk = dayKey(new Date()).slice(0, 7); const m = shelf.xpm; if (!m || m.mk !== mk){ shelf.xpm = { mk, base: xp }; try { save(); } catch(e){} return 0; } return Math.max(0, xp - m.base); }
 /* ---------- Character sheet: 8 RPG stats scored 1-20, class from the top stat ---------- */
 const STATS = [
-  ['str', '💪', 'Strength', 'Books owned', [0,10,25,50,75,100,150,200,250,300,400,500,650,800,1000,1250,1500,2000,2500,3000], 'Warden of the Stacks'],
+  ['str', '💪', 'Strength', 'Books owned', [0,10,25,50,75,100,150,200,250,300,400,500,650,800,1000,1250,1500,2000,2500,3000], 'Warrior'],
   ['sta', '🔥', 'Stamina', 'Longest reading streak (days)', [0,1,2,3,4,5,7,10,14,18,21,30,45,60,75,90,120,150,200,365], 'Ranger'],
   ['cha', '🗣️', 'Charisma', 'Friends and reading together', [0,1,2,3,4,6,8,10,12,15,18,21,25,30,35,40,50,60,75,100], 'Bard'],
   ['int', '🧠', 'Intelligence', 'Reviews and ratings', [0,1,3,5,8,12,16,20,25,30,40,50,60,75,90,110,130,160,200,250], 'Scholar'],
   ['wis', '🦉', 'Wisdom', 'Months collecting and reading', [0,1,2,3,4,6,9,12,18,24,30,36,48,60,72,84,96,120,144,180], 'Sage'],
   ['dex', '🎯', 'Dexterity', 'Series finished and no-gap runs', [0,1,2,3,5,7,10,13,16,20,25,30,40,50,60,75,90,110,135,165], 'Rogue'],
-  ['arc', '✨', 'Arcana', 'Different genres read', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22], 'Archmage'],
-  ['luk', '🍀', 'Luck', 'Mystery boxes and crowns', [0,1,2,3,4,5,6,8,10,12,14,16,18,20,25,30,35,40,50,60], 'Fortune Seeker']];
+  ['arc', '✨', 'Arcana', 'Different genres read', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22], 'Wizard'],
+  ['luk', '🍀', 'Luck', 'Mystery boxes and crowns', [0,1,2,3,4,5,6,8,10,12,14,16,18,20,25,30,35,40,50,60], 'Treasure Hunter']];
 /* Class rank ladders: same book thresholds as RANKS, named for your class (preview) */
 const CLASS_RANKS = {
-  'Archmage': ['Apprentice','Initiate','Adept','Conjurer','Archmage','Mythic Archmage','Grand Archmage'],
+  'Wizard': ['Apprentice','Initiate','Adept','Conjurer','Archmage','Mythic Archmage','Grand Archmage'],
   'Rogue': ['Pickpocket','Cutpurse','Shadow','Nightblade','Master Thief','Phantom','Legend of the Night'],
   'Ranger': ['Scout','Tracker','Pathfinder','Ranger','Wildstalker','Beastmaster','Legend of the Wilds'],
   'Bard': ['Busker','Minstrel','Troubadour','Skald','Virtuoso','Maestro','Legendary Bard'],
   'Scholar': ['Student','Reader','Librarian','Scholar','Loremaster','Grand Archivist','Keeper of All Books'],
   'Sage': ['Novice','Seeker','Mystic','Oracle','Sage','Elder Sage','Ancient One'],
-  'Warden of the Stacks': ['Porter','Guard','Sentinel','Knight','Champion','Titan','Titan of the Stacks'],
-  'Fortune Seeker': ['Gambler','Treasure Hunter','Lucky Charm','Fortune’s Favorite','Jackpot','Fate Weaver','Luck Incarnate'] };
+  'Warrior': ['Recruit','Squire','Soldier','Knight','Champion','Warlord','Legendary Hero'],
+  'Treasure Hunter': ['Gambler','Scavenger','Prospector','Relic Seeker','Jackpot','Fate Weaver','Luck Incarnate'] };
+const CLASSES = () => STATS.map(s => s[5]);
+const myClass = S => { const c = shelf.card && shelf.card.cls; return c && CLASSES().includes(c) ? c : S.cls; };
 const rankName = (r, cls) => (xpOn() && cls && CLASS_RANKS[cls] ? CLASS_RANKS[cls][r] : RANKS[r][1]);
 function statCalc(){ const raw = {}; let C = {}; try { C = collectorNumbers(); } catch(e){}
   raw.str = C.books || 0; try { raw.sta = streaks().best || 0; } catch(e){ raw.sta = 0; }
@@ -844,12 +846,12 @@ function statCalc(){ const raw = {}; let C = {}; try { C = collectorNumbers(); }
   let top = 0; sc.forEach((v, i) => { if (v > sc[top]) top = i; }); return { raw, sc, cls: STATS[top][5], top }; }
 function sheetHTML(sc, cls, light){ return `<div style="font-size:13.5px">${STATS.map((s, i) => `<div style="display:grid;grid-template-columns:118px 1fr 26px;gap:8px;align-items:center;margin:3px 0"><span>${s[1]} ${esc(s[2])}</span><span style="height:8px;border-radius:4px;background:${light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.25)'};overflow:hidden"><i style="display:block;height:100%;width:${Math.round(sc[i] / 20 * 100)}%;background:#ffc93c"></i></span><b style="text-align:right">${sc[i]}</b></div>`).join('')}</div>`; }
 function renderLevel(){ const el = $('#lvlBox'); if (!el) return; if (!xpOn()){ el.innerHTML = ''; return; }
-  try { const C0 = collectorNumbers(), cl0 = statCalc().cls; let r0 = 0; while (r0 + 1 < RANKS.length && C0.books >= RANKS[r0 + 1][0]) r0++; $('#rankName').textContent = rankName(r0, cl0); } catch(e){}
+  try { const C0 = collectorNumbers(), cl0 = myClass(statCalc()); let r0 = 0; while (r0 + 1 < RANKS.length && C0.books >= RANKS[r0 + 1][0]) r0++; $('#rankName').textContent = rankName(r0, cl0); } catch(e){}
   const X = xpCalc(), a = xpNeed(X.lv), b = xpNeed(X.lv + 1), fr = frameOf(X.lv), nf = XP_FRAMES.find(x => x[0] > X.lv), mo = xpMonth(X.xp);
   el.innerHTML = `<details class="lvl" style="margin-top:10px"><summary style="cursor:pointer;list-style:none"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:17px">⭐ Level ${X.lv}</b><span style="opacity:.85">${X.xp.toLocaleString()} XP${mo ? ` · +${mo.toLocaleString()} this month` : ''}</span></div>
     <div class="bar"><i style="width:${Math.round((X.xp - a) / (b - a) * 100)}%"></i></div><div class="next">${(b - X.xp).toLocaleString()} XP to Level ${X.lv + 1}${nf ? ` · ${esc(nf[1])} avatar frame at Level ${nf[0]}` : ''} <span aria-hidden="true">▾</span></div></summary>
     <div style="margin-top:8px"><div style="display:flex;align-items:center;gap:10px;margin:0 0 8px">${avHTML(myAv(), (shelf.card && shelf.card.name) || (acct && acct.name) || 'You', true, myFrameLv(X.lv))}<span style="flex:1">${fr ? `Your frame: <b>${esc((frameOf(myFrameLv(X.lv)) || ['', 'None'])[1])}</b>` : 'Your first frame unlocks at Level 5'}</span><button class="btn ghost sm" data-avpick style="width:auto;margin:0">Change avatar</button></div>
-    ${myCid() === '99230547976' ? `<p style="margin:0 0 4px;font-size:13px;opacity:.85">Preview of every frame (only you see this):</p><div style="display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px">${XP_FRAMES.map(x => `<span style="display:inline-flex;flex-direction:column;align-items:center;font-size:11px;gap:4px">${avHTML(myAv(), 'You', true, x[0])}Lv ${x[0]} ${esc(x[1])}</span>`).join('')}</div>` : ''}${(() => { const S = statCalc(); return `<details style="margin:4px 0 10px"><summary style="cursor:pointer;font-weight:700">🎲 Character sheet · ${esc(S.cls)}</summary><div style="margin-top:6px">${sheetHTML(S.sc, S.cls)}<p style="margin:6px 0 0;font-size:12.5px;opacity:.85">${STATS.map(s => `${s[1]} ${esc(s[3])}`).join(' · ')}</p></div></details>`; })()}
+    ${myCid() === '99230547976' ? `<p style="margin:0 0 4px;font-size:13px;opacity:.85">Preview of every frame (only you see this):</p><div style="display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px">${XP_FRAMES.map(x => `<span style="display:inline-flex;flex-direction:column;align-items:center;font-size:11px;gap:4px">${avHTML(myAv(), 'You', true, x[0])}Lv ${x[0]} ${esc(x[1])}</span>`).join('')}</div>` : ''}${(() => { const S = statCalc(); return `<details style="margin:4px 0 10px"><summary style="cursor:pointer;font-weight:700">🎲 Character sheet · ${esc(myClass(S))}</summary><div style="margin-top:6px">${sheetHTML(S.sc, S.cls)}<label style="display:flex;gap:8px;align-items:center;margin:8px 0 0;font-size:13.5px">Class <select data-clspick style="flex:1"><option value="">Auto: ${esc(S.cls)} (your top stat)</option>${CLASSES().map(c => `<option${shelf.card && shelf.card.cls === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label><p style="margin:6px 0 0;font-size:12.5px;opacity:.85">${STATS.map(s => `${s[1]} ${esc(s[3])}`).join(' · ')}</p></div></details>`; })()}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px"><button class="btn ghost sm" data-sharechar style="width:auto;margin:0">📸 Share my character</button></div>
     <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin:2px 0"><input type="checkbox" data-xpshow="lv"${shelf.card && shelf.card.hideLv ? '' : ' checked'}> Friends can see my level</label>
     <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin:2px 0 10px"><input type="checkbox" data-xpshow="sheet"${shelf.card && shelf.card.hideSheet ? '' : ' checked'}> Friends can see my character sheet</label>
@@ -913,6 +915,7 @@ document.addEventListener('click', e => { if (e.target.closest('[data-newsall]')
 setTimeout(loadNews, 800);
 document.addEventListener('change', e => { const t = e.target.closest('[data-xpshow]'); if (!t) return; const k = t.dataset.xpshow === 'lv' ? 'hideLv' : 'hideSheet'; shelf.card = Object.assign({}, shelf.card, { [k]: !t.checked }); save(); if (typeof livePush === 'function') livePush(true); toast(t.checked ? 'Friends can see it' : 'Hidden from friends'); });
 document.addEventListener('click', e => { if (e.target.closest('[data-sharechar]')) shareChar(); });
+document.addEventListener('change', e => { const t = e.target.closest('[data-clspick]'); if (!t) return; shelf.card = Object.assign({}, shelf.card, { cls: t.value || null }); save(); try { renderStats(); } catch(e2){} if (typeof livePush === 'function') livePush(true); toast(t.value ? 'You’re a ' + t.value + ' now' : 'Class set from your stats'); });
 { const _ra = renderAcct; renderAcct = function(){ _ra.apply(this, arguments); try { renderNewsBar(); } catch(e){} }; }
 /* ---------- Import your reading history (Goodreads / StoryGraph CSV, Bookmory backup): marks books READ (not owned), with dates, stars, reviews; "did not finish" goes to Didn't finish.
    Only manga / light novels come in: books matched to the shop's catalog, or titles with a volume number. Everything else is counted as skipped. */
@@ -2684,7 +2687,7 @@ async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted =
 /* ---------- share card (Instagram story size): same look as the old My Collection card; colors follow the top genre ---------- */
 function cardData(){ const C = collectorNumbers(); let r = 0; while (r+1 < RANKS.length && C.books >= RANKS[r+1][0]) r++;
   const earned = BADGES.filter(b => b[2] >= b[3]); const total = BADGES.filter(b => !b[4]).length + BADGES.filter(b => b[4] && b[2] >= b[3]).length;
-  return { name: (shelf.card && shelf.card.name != null ? shelf.card.name : (acct && acct.name) || ''), rank: (() => { try { return rankName(r, xpOn() ? statCalc().cls : ''); } catch(e){ return RANKS[r][1]; } })(), since: C.since ? new Date(C.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '',
+  return { name: (shelf.card && shelf.card.name != null ? shelf.card.name : (acct && acct.name) || ''), rank: (() => { try { return rankName(r, xpOn() ? myClass(statCalc()) : ''); } catch(e){ return RANKS[r][1]; } })(), since: C.since ? new Date(C.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '',
     books: C.books, series: C.series, done: C.done, run: C.run, runName: C.runK ? shelf.series[C.runK].n : '', crowns: C.crowns,
     badges: earned.map(b => b[0]), earned: earned.length, total, g: [C.shojo, C.shonen, C.seinen, C.josei, C.bl, C.horror], site: 'app.themagesemporium.com' }; }
 function drawCard(d){ const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
@@ -2739,39 +2742,52 @@ document.addEventListener('click', e => { const b = e.target.closest('#shareCard
 /* ---------- Character card: a separate, playful Instagram picture (level, frame, class, 8 stats) ---------- */
 /* Class themes for the character card: background colors, glow, motif and a one-line flavor */
 const CLASS_TH = {
-  'Warden of the Stacks': { bg: ['#0d1b2e','#1f3b63','#3d6aa0'], glow: '#7fc4ff', ic: '🛡️', mo: ['🛡️','📚','⚔️'], tag: 'Guards a towering hoard of books.' },
+  'Warrior': { bg: ['#0d1b2e','#1f3b63','#3d6aa0'], glow: '#7fc4ff', ic: '🛡️', mo: ['🛡️','📚','⚔️'], tag: 'Hauls a mountain of manga into battle.' },
   'Ranger': { bg: ['#0b2014','#1d4a2c','#3f7a3a'], glow: '#a6f07a', ic: '🏹', mo: ['🏹','🌲','🔥'], tag: 'Never breaks a reading streak.' },
   'Bard': { bg: ['#3b0a3a','#8c1f6b','#e0603a'], glow: '#ffb35c', ic: '🎻', mo: ['🎵','🎻','✨'], tag: 'Brings the whole party to the shelf.' },
   'Scholar': { bg: ['#2a0c10','#6b1d2a','#b0683a'], glow: '#ffd88a', ic: '📜', mo: ['📜','🪶','📖'], tag: 'Writes the reviews everyone reads.' },
   'Sage': { bg: ['#0e0b2e','#2b2470','#6b5bd6'], glow: '#ffe27a', ic: '🦉', mo: ['🦉','🌙','⭐'], tag: 'Has seen many seasons of manga.' },
   'Rogue': { bg: ['#07121a','#123c44','#5b2b6e'], glow: '#5cf2d0', ic: '🗡️', mo: ['🗡️','🌙','🗝️'], tag: 'Slips in, finishes every series, vanishes.' },
-  'Archmage': { bg: ['#1b0f3b','#4a1d8a','#a03fd0'], glow: '#e59bff', ic: '🔮', mo: ['🔮','✨','🌀'], tag: 'Masters every school of story.' },
-  'Fortune Seeker': { bg: ['#0a2418','#17603a','#c7972a'], glow: '#ffe066', ic: '🍀', mo: ['🍀','💎','🎲'], tag: 'Fate hands them the rarest finds.' } };
+  'Wizard': { bg: ['#1b0f3b','#4a1d8a','#a03fd0'], glow: '#e59bff', ic: '🔮', mo: ['🔮','✨','🌀'], tag: 'Masters every school of story.' },
+  'Treasure Hunter': { bg: ['#0a2418','#17603a','#c7972a'], glow: '#ffe066', ic: '🍀', mo: ['🍀','💎','🎲'], tag: 'Fate hands them the rarest finds.' } };
 function drawChar(d){ const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
-  const T = CLASS_TH[d.cls] || CLASS_TH.Archmage;
+  const T = CLASS_TH[d.cls] || CLASS_TH.Wizard;
   const F = '"Figtree","Nunito",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif', E = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif', fnt = (w, s) => w + ' ' + s + 'px ' + F + ',' + E;
   const rr = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
   const t = (s, X, y, sz, w, col, al, sh) => { x.font = fnt(w || '800', sz); x.fillStyle = col || '#fff'; x.textAlign = al || 'center'; if (sh){ x.save(); x.shadowColor = sh; x.shadowBlur = 24; x.fillText(s, X, y); x.restore(); } else x.fillText(s, X, y); };
   const fit = (s, max, sz, w) => { x.font = fnt(w || '800', sz); while (x.measureText(s).width > max && sz > 24){ sz -= 3; x.font = fnt(w || '800', sz); } return sz; };
-  /* holographic foil border */
-  let foil = x.createLinearGradient(0, 0, W, H); ['#ff6bd5','#ffd36b','#6bffb8','#6bc7ff','#b06bff','#ff6bd5'].forEach((col, i) => foil.addColorStop(i / 5, col)); x.fillStyle = foil; x.fillRect(0, 0, W, H);
+  /* rarity tier from level: cards get fancier as you level up */
+  const RT = d.lv >= 50 ? 6 : d.lv >= 40 ? 5 : d.lv >= 30 ? 4 : d.lv >= 20 ? 3 : d.lv >= 10 ? 2 : d.lv >= 5 ? 1 : 0;
+  const RN = ['COMMON', 'UNCOMMON', 'RARE', 'SUPER RARE', 'ULTRA RARE', 'LEGENDARY', 'MYTHIC'][RT];
+  /* border: plain → colored → holo foil → gold + holo */
+  if (RT >= 5){ let gb = x.createLinearGradient(0, 0, W, H); ['#fff3b0','#e2b43c','#fff7d6','#b8862a','#ffe9a0'].forEach((col, i) => gb.addColorStop(i / 4, col)); x.fillStyle = gb; x.fillRect(0, 0, W, H); }
+  else if (RT >= 3){ let foil = x.createLinearGradient(0, 0, W, H); ['#ff6bd5','#ffd36b','#6bffb8','#6bc7ff','#b06bff','#ff6bd5'].forEach((col, i) => foil.addColorStop(i / 5, col)); x.fillStyle = foil; x.fillRect(0, 0, W, H); }
+  else { x.fillStyle = RT === 0 ? '#b9bec7' : (d.frame && d.frame[2] !== 'arc' ? d.frame[2] : T.glow); x.fillRect(0, 0, W, H); }
+  if (RT >= 5){ let foil = x.createLinearGradient(W, 0, 0, H); ['#ff6bd5','#ffd36b','#6bffb8','#6bc7ff','#b06bff'].forEach((col, i) => foil.addColorStop(i / 4, col)); rr(18, 18, W - 36, H - 36, 62); x.fillStyle = foil; x.fill(); }
   /* card body */
   rr(28, 28, W - 56, H - 56, 56); x.save(); x.clip();
-  let g = x.createLinearGradient(0, 0, W * .4, H); g.addColorStop(0, T.bg[0]); g.addColorStop(.55, T.bg[1]); g.addColorStop(1, T.bg[2]); x.fillStyle = g; x.fillRect(0, 0, W, H);
-  /* motif pattern */
-  x.globalAlpha = .09; for (let r = 0; r < 14; r++) for (let k = 0; k < 7; k++){ const m = T.mo[(r + k) % T.mo.length]; x.font = fnt('400', 64); x.textAlign = 'center'; x.fillText(m, k * 170 + (r % 2 ? 85 : 0) + 20, r * 150 + 60); } x.globalAlpha = 1;
-  /* light rays behind the avatar */
-  x.save(); x.translate(W / 2, 420); for (let i = 0; i < 24; i++){ x.rotate(Math.PI / 12); x.beginPath(); x.moveTo(0, 0); x.lineTo(-40, -760); x.lineTo(40, -760); x.closePath(); x.fillStyle = i % 2 ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.02)'; x.fill(); } x.restore();
-  let rg = x.createRadialGradient(W / 2, 420, 60, W / 2, 420, 420); rg.addColorStop(0, T.glow + '88'); rg.addColorStop(1, T.glow + '00'); x.fillStyle = rg; x.fillRect(0, 0, W, 900);
+  let g = x.createLinearGradient(0, 0, W * .4, H); if (RT === 0){ g.addColorStop(0, '#3a3f4b'); g.addColorStop(1, '#5a6070'); } else { g.addColorStop(0, T.bg[0]); g.addColorStop(.55, T.bg[1]); g.addColorStop(1, T.bg[2]); } x.fillStyle = g; x.fillRect(0, 0, W, H);
+  /* motif pattern (Uncommon+) */
+  if (RT >= 1){ x.globalAlpha = RT >= 3 ? .12 : .07; for (let r = 0; r < 14; r++) for (let k = 0; k < 7; k++){ const m = T.mo[(r + k) % T.mo.length]; x.font = fnt('400', 64); x.textAlign = 'center'; x.fillText(m, k * 170 + (r % 2 ? 85 : 0) + 20, r * 150 + 60); } x.globalAlpha = 1; }
+  /* holo sheen across the card (Ultra Rare+), full prism (Mythic) */
+  if (RT >= 4){ const sh = x.createLinearGradient(0, H * .1, W, H * .9); [['rgba(255,255,255,0)',0],['rgba(255,120,220,.16)',.3],['rgba(255,255,255,.22)',.42],['rgba(120,255,220,.16)',.55],['rgba(120,180,255,.14)',.7],['rgba(255,255,255,0)',1]].forEach(([col, o]) => sh.addColorStop(o, col)); x.fillStyle = sh; x.fillRect(0, 0, W, H); }
+  if (RT >= 6){ x.globalCompositeOperation = 'overlay'; const pr = x.createLinearGradient(0, 0, W, 0); ['#ff4d6d','#ffd23f','#3bf0a0','#3bb0ff','#b04dff','#ff4d6d'].forEach((col, i) => pr.addColorStop(i / 5, col)); x.fillStyle = pr; x.globalAlpha = .45; x.fillRect(0, 0, W, H); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; }
+  /* light rays behind the avatar (Rare+) */
+  if (RT >= 2){ x.save(); x.translate(W / 2, 420); for (let i = 0; i < 24; i++){ x.rotate(Math.PI / 12); x.beginPath(); x.moveTo(0, 0); x.lineTo(-40, -760); x.lineTo(40, -760); x.closePath(); x.fillStyle = i % 2 ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.02)'; x.fill(); } x.restore();
+  let rg = x.createRadialGradient(W / 2, 420, 60, W / 2, 420, 420); rg.addColorStop(0, T.glow + '88'); rg.addColorStop(1, T.glow + '00'); x.fillStyle = rg; x.fillRect(0, 0, W, 900); }
   /* sparkles */
   const star = (cx, cy, r) => { x.beginPath(); for (let i = 0; i < 8; i++){ const a = i * Math.PI / 4, q = i % 2 ? r * .28 : r; x.lineTo(cx + Math.cos(a) * q, cy + Math.sin(a) * q); } x.closePath(); x.fillStyle = 'rgba(255,255,255,.8)'; x.fill(); };
-  [[120,250,22],[960,210,30],[930,640,18],[150,700,16],[880,1080,14],[100,1500,20],[990,1640,24]].forEach(p => star(...p));
+  if (RT >= 2) [[120,250,22],[960,210,30],[930,640,18],[150,700,16],[880,1080,14],[100,1500,20],[990,1640,24]].forEach(p => star(...p));
+  if (RT >= 5) [[300,180,16],[780,560,20],[240,980,14],[820,1420,18],[480,1560,12],[640,200,14],[60,860,18],[1010,900,16]].forEach(p => star(...p));
   /* header */
   rr(250, 72, 580, 62, 31); x.fillStyle = 'rgba(255,255,255,.92)'; x.fill(); t('THE MAGE’S EMPORIUM', W / 2, 115, 30, '800', '#ff5300');
+  { const stars = '★'.repeat(RT + 1), lab = stars + ' ' + RN; x.font = fnt('900', 26); const w = x.measureText(lab).width + 40; rr(W - 60 - w, 150, w, 48, 24);
+    if (RT >= 3){ const bg2 = x.createLinearGradient(W - 60 - w, 0, W - 60, 0); (RT >= 5 ? ['#fff3b0','#e2b43c','#fff7d6'] : ['#ff9be4','#ffe28a','#9bffd6','#9bd2ff']).forEach((col, i, A) => bg2.addColorStop(i / (A.length - 1), col)); x.fillStyle = bg2; } else x.fillStyle = RT === 0 ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.9)';
+    x.fill(); t(lab, W - 60 - w / 2, 183, 26, '900', '#3b1d6e'); }
   /* class crest + avatar */
   t(T.ic, W / 2 + 175, 290, 96, '400');
   const fr = d.frame, fc = fr ? (fr[2] === 'arc' ? '#c06bff' : fr[2]) : 'rgba(255,255,255,.6)';
-  x.save(); x.shadowColor = T.glow; x.shadowBlur = 70; x.beginPath(); x.arc(W / 2, 420, 172, 0, 7); x.fillStyle = fc; x.fill(); x.restore();
+  x.save(); x.shadowColor = T.glow; x.shadowBlur = RT >= 2 ? 70 : 0; x.beginPath(); x.arc(W / 2, 420, 172, 0, 7); x.fillStyle = fc; x.fill(); x.restore();
   x.beginPath(); x.arc(W / 2, 420, 156, 0, 7); x.fillStyle = '#fff6c8'; x.fill();
   if (d.img){ x.save(); x.beginPath(); x.arc(W / 2, 420, 150, 0, 7); x.clip(); x.drawImage(d.img, W / 2 - 150, 270, 300, 300); x.restore(); }
   else t(d.emoji || (d.name || '?').charAt(0).toUpperCase(), W / 2, 475, 150, '800', '#3b1d6e');
@@ -2779,7 +2795,7 @@ function drawChar(d){ const W = 1080, H = 1920, c = document.createElement('canv
   x.save(); x.translate(W / 2 - 175, 300); x.beginPath(); for (let i = 0; i < 24; i++){ const a = i * Math.PI / 12, q = i % 2 ? 62 : 82; x.lineTo(Math.cos(a) * q, Math.sin(a) * q); } x.closePath(); x.fillStyle = '#ffc93c'; x.shadowColor = '#ffc93c'; x.shadowBlur = 30; x.fill(); x.restore();
   t('LV', W / 2 - 175, 285, 28, '900', '#3b1d6e'); t(String(d.lv), W / 2 - 175, 335, 56, '900', '#3b1d6e');
   /* name + class banner */
-  const nm = d.name ? d.name : 'Mystery Reader'; t(nm, W / 2, 690, fit(nm, 900, 84, '900'), '900', '#fff', 'center', T.glow);
+  const nm = d.name ? d.name : 'Mystery Reader'; t(nm, W / 2, 690, fit(nm, 900, 84, '900'), '900', RT >= 4 ? '#ffe27a' : '#fff', 'center', RT >= 2 ? T.glow : null);
   const ttl = d.title ? d.title + ' · ' + d.cls : d.cls; rr(140, 724, 800, 84, 42); x.fillStyle = 'rgba(0,0,0,.35)'; x.fill(); x.lineWidth = 4; x.strokeStyle = T.glow; x.stroke(); t(ttl, W / 2, 782, fit(ttl, 740, 44, '900'), '900', '#fff');
   t('“' + T.tag + '”', W / 2, 852, fit('“' + T.tag + '”', 900, 34, '600'), '600', 'rgba(255,255,255,.9)');
   /* radar chart of the 8 stats */
@@ -2799,7 +2815,7 @@ async function shareChar(){ track('share-char'); try { await document.fonts.read
   const X = xpCalc(), S = statCalc(), lv = X.lv, flv = myFrameLv(lv), av = myAv() || {}; let img = null;
   if (av.u){ img = await new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = av.u; }); }
   let rk = 0; try { const C1 = collectorNumbers(); while (rk + 1 < RANKS.length && C1.books >= RANKS[rk + 1][0]) rk++; } catch(e){}
-  const d = { title: rankName(rk, S.cls), name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', lv, cls: S.cls, sc: S.sc, top: S.top, frame: flv ? frameOf(flv) : null, emoji: av.e || '', img };
+  const mc = myClass(S); const d = { title: rankName(rk, mc), name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', lv, cls: mc, sc: S.sc, top: S.top, frame: flv ? frameOf(flv) : null, emoji: av.e || '', img };
   openSheet(`<h2>Share your character</h2><p class="sub" style="margin:0 0 8px">A just-for-fun card with your level, class and stats. Your collection card is separate.</p><img id="charImg" alt="Your character card" style="width:100%;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.18)">
     <div class="row2" style="margin-top:10px"><button class="btn" id="charShare">Share</button><button class="btn ghost" id="charSave">Save image</button><button class="btn ghost" data-close>Close</button></div>`);
   let cv; try { cv = drawChar(d); $('#charImg').src = cv.toDataURL('image/png'); } catch(e){ d.img = null; cv = drawChar(d); $('#charImg').src = cv.toDataURL('image/png'); }
@@ -2976,7 +2992,7 @@ function shareGate(go){ if (shelf.card && shelf.card.feedAck){ go(); return; }
     <p class="sub">You can change this anytime at the top of the Friends page.</p><div class="row2"><button class="btn" id="feedGo">Continue</button><button class="btn ghost" data-close>Cancel</button></div>`);
   $('#feedGo').onclick = () => { shelf.card = Object.assign({}, shelf.card, { feedAck: Date.now(), noFeed: !$('#feedChk').checked }); save(); closeSheet(); go(); }; }
 function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
-  let act = null; try { const c = monthChal(), st = streaks(); act = { mk: c.mk, rd: c.readsN, cd: c.doneN, ct: c.list.length, bm: c.marks.map(x => x ? 1 : 0).join(''), bl: c.bingoLines, cur: st.cur, best: st.best, pg: estPages(c.mk) }; try { const X = xpCalc(); act.fl = myFrameLv(X.lv); if (!(shelf.card && shelf.card.hideLv)){ act.lv = X.lv; act.xm = xpMonth(X.xp); } if (!(shelf.card && shelf.card.hideSheet)){ const S = statCalc(); act.cs = S.sc; act.cl = S.cls; } } catch(e){} } catch(e){}
+  let act = null; try { const c = monthChal(), st = streaks(); act = { mk: c.mk, rd: c.readsN, cd: c.doneN, ct: c.list.length, bm: c.marks.map(x => x ? 1 : 0).join(''), bl: c.bingoLines, cur: st.cur, best: st.best, pg: estPages(c.mk) }; try { const X = xpCalc(); act.fl = myFrameLv(X.lv); if (!(shelf.card && shelf.card.hideLv)){ act.lv = X.lv; act.xm = xpMonth(X.xp); } if (!(shelf.card && shelf.card.hideSheet)){ const S = statCalc(); act.cs = S.sc; act.cl = myClass(S); } } catch(e){} } catch(e){}
   return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out, act, feed: feedPack(), av: myAv() || (shelf.card && shelf.card.av && shelf.card.av.none ? { none: 1 } : null) }; }
 async function friendShare(){ if (!(shelf.card && shelf.card.feedAck)){ shareGate(friendShare); return; } track('friend-share'); const pk = friendPack(); let nm = pk.name;
   if (!nm){ nm = prompt('Your first name (so your friend knows whose shelf this is):', '') || ''; nm = nm.trim(); if (nm){ shelf.card = Object.assign({}, shelf.card, { name: nm }); save(); pk.name = nm; } }
