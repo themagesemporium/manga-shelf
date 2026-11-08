@@ -614,7 +614,7 @@ function renderStats(){
   $('#rankName').textContent = RANKS[r][1];
   const nx = RANKS[r+1];
   $('#rankBar').style.width = nx ? Math.round((books - RANKS[r][0]) / (nx[0] - RANKS[r][0]) * 100) + '%' : '100%';
-  setTimeout(() => { try { renderLevel(); } catch(e){} }, 0);
+  const rl = n => setTimeout(() => { try { renderLevel(); } catch(e){ if (n < 5) rl(n + 1); } }, n ? 600 : 0); rl(0);
   $('#rankNext').textContent = nx ? `${nx[0]-books} more ${nx[0]-books===1?'book':'books'} to ${nx[1]}` : 'The highest rank there is.';
   $('#sBooks').textContent = books; $('#sSeries').textContent = keys.length; $('#sRuns').textContent = runs; $('#sGaps').textContent = gaps;
   const C = collectorNumbers(); const o = shelf.orders || {}; const yrs = o.first ? (Date.now() - new Date(o.first)) / (365.25*864e5) : 0;
@@ -681,7 +681,7 @@ function renderStats(){
   const shown = BADGES.map((b, i) => [b, i]).filter(([b]) => !b[4] || b[2] >= b[3]); const secret = BADGES.filter(b => b[4] && b[2] < b[3]).length;
   const earnedN = BADGES.filter(b => b[2] >= b[3]).length, openA = !!ls.get('mme-achopen');
   const emo = b => b[0].slice(0, b[0].indexOf(' '));
-  $('#achWrap').innerHTML = (isPaid() ? `<div style="margin-top:10px">${memberChip()}</div>` : '') + (holds ? `<button class="badge" data-goholds style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">📦 ${holds.items.length} ${holds.items.length === 1 ? 'book' : 'books'} on hold for you</button>` : '') + (() => { const c = monthChal(); return `<button class="badge" data-gochal style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">🎯 ${c.label} challenges · ${c.doneN} of ${c.list.length} done · 🎱 Bingo ${c.bingoLines ? '✓ BINGO!' : c.marked + '/24'}</button>`; })() + `<div style="display:flex;gap:8px;margin-top:12px"><button class="badge" data-gofriends style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">👯 Friends</button><button class="badge" data-share style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">📸 Share my shelf</button></div><div class="achhead"><button class="achtl" data-achtog aria-expanded="${openA}">🏅 Achievements · ${earnedN} of ${shown.length} <span style="opacity:.75;font-weight:600">${openA ? 'Hide ▴' : 'Show all ▾'}</span></button></div>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
+  $('#achWrap').innerHTML = (isPaid() ? `<div style="margin-top:10px">${memberChip()}</div>` : '') + (holds ? `<button class="badge" data-goholds style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">📦 ${holds.items.length} ${holds.items.length === 1 ? 'book' : 'books'} on hold for you</button>` : '') + (() => { const c = monthChal(); return `<button class="badge" data-gochal style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">🎯 ${c.label} challenges · ${c.doneN} of ${c.list.length} done · 🎱 Bingo ${c.bingoLines ? '✓ BINGO!' : c.marked + '/24'}</button>`; })() + `<div style="display:flex;gap:8px;margin-top:12px"><button class="badge" data-gofriends style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">👯 Friends</button><button class="badge" data-share style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">📸 Share my shelf</button>${xpOn() ? '<button class="badge" data-sharechar style="flex:1;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.22)">🎲 Share my character</button>' : ''}</div><div class="achhead"><button class="achtl" data-achtog aria-expanded="${openA}">🏅 Achievements · ${earnedN} of ${shown.length} <span style="opacity:.75;font-weight:600">${openA ? 'Hide ▴' : 'Show all ▾'}</span></button></div>` + (openA ? '' : `<div class="achemo" data-achtog title="Tap to see the names">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
   $('#badges').classList.toggle('hid', !openA);
   $('#badges').innerHTML = shown.map(([b, i]) => `<button class="badge${b[2]>=b[3]?'':' off'}" data-b="${i}">${b[0]}</button>`).join('') + (secret ? `<button class="badge off" data-b="secret">🔒 ${secret} secret</button>` : '');
 }
@@ -785,7 +785,7 @@ function estPages(prefix){ const L = shelf.log || {}, R = shelf.rl || {}; let pg
 /* ---------- Levels & XP (preview: Megan's account, or localStorage mme-xp = true, until she says go).
    XP is worked out from the shelf itself, so taking something back takes its XP back too. Daily caps keep spammy actions in check. ---------- */
 const XP_FRAMES = [[5,'Bronze','#b8733a'],[10,'Silver','#a9b4c2'],[15,'Gold','#e2b43c'],[20,'Emerald','#2fa36b'],[25,'Sapphire','#2f6fd6'],[30,'Amethyst','#9a5bd6'],[40,'Ruby','#d6334f'],[50,'Arcane','arc']];
-const xpOn = () => myCid() === '99230547976' || !!ls.get('mme-xp');
+const xpOn = () => { let me = ''; try { me = myCid(); } catch(e){ try { me = String((ls.get('mme-acct') || {}).cid || '').split('/').pop(); } catch(e2){} } return me === '99230547976' || !!ls.get('mme-xp'); };
 const xpNeed = L => L <= 1 ? 0 : Math.round(100 * Math.pow(L - 1, 1.45) / 10) * 10;
 const lvOf = xp => { let L = 1; while (xpNeed(L + 1) <= xp) L++; return L; };
 const frameOf = lv => { let f = null; XP_FRAMES.forEach(x => { if (lv >= x[0]) f = x; }); return f; };
@@ -809,12 +809,39 @@ function xpCalc(){ const P = []; const add = (k, label, n, each, cap) => { const
   add('ach', 'Achievements', ach, 25); add('fix', 'Fixes and corrections', fixes, 10); add('msg', 'Days you messaged the shop', msgDays, 5); add('fr', 'Friends', fr, 10, 200);
   const xp = P.reduce((a, x) => a + x[3], 0); return { xp, lv: lvOf(xp), parts: P }; }
 function xpMonth(xp){ const mk = dayKey(new Date()).slice(0, 7); const m = shelf.xpm; if (!m || m.mk !== mk){ shelf.xpm = { mk, base: xp }; try { save(); } catch(e){} return 0; } return Math.max(0, xp - m.base); }
+/* ---------- Character sheet: 8 RPG stats scored 1-20, class from the top stat ---------- */
+const STATS = [
+  ['str', '💪', 'Strength', 'Books owned', [0,10,25,50,75,100,150,200,250,300,400,500,650,800,1000,1250,1500,2000,2500,3000], 'Warden of the Stacks'],
+  ['sta', '🔥', 'Stamina', 'Longest reading streak (days)', [0,1,2,3,4,5,7,10,14,18,21,30,45,60,75,90,120,150,200,365], 'Ranger'],
+  ['cha', '🗣️', 'Charisma', 'Friends and reading together', [0,1,2,3,4,6,8,10,12,15,18,21,25,30,35,40,50,60,75,100], 'Bard'],
+  ['int', '🧠', 'Intelligence', 'Reviews and ratings', [0,1,3,5,8,12,16,20,25,30,40,50,60,75,90,110,130,160,200,250], 'Scholar'],
+  ['wis', '🦉', 'Wisdom', 'Months collecting and reading', [0,1,2,3,4,6,9,12,18,24,30,36,48,60,72,84,96,120,144,180], 'Sage'],
+  ['dex', '🎯', 'Dexterity', 'Series finished and no-gap runs', [0,1,2,3,5,7,10,13,16,20,25,30,40,50,60,75,90,110,135,165], 'Rogue'],
+  ['arc', '✨', 'Arcana', 'Different genres read', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22], 'Archmage'],
+  ['luk', '🍀', 'Luck', 'Mystery boxes and crowns', [0,1,2,3,4,5,6,8,10,12,14,16,18,20,25,30,35,40,50,60], 'Fortune Seeker']];
+function statCalc(){ const raw = {}; let C = {}; try { C = collectorNumbers(); } catch(e){}
+  raw.str = C.books || 0; try { raw.sta = streaks().best || 0; } catch(e){ raw.sta = 0; }
+  const fr = Object.keys(shelf.friends || {}).length; let act = 0; try { const mk = dayKey(new Date()).slice(0, 7); act = Object.values(typeof F !== 'undefined' ? F : {}).filter(f => f.act && f.act.mk === mk).length; } catch(e){}
+  raw.cha = fr * 3 + act * 2 + (shelf.card && shelf.card.feedAck && !shelf.card.noFeed ? 2 : 0);
+  let iq = 0, gen = new Set(); Object.values(shelf.series).forEach(s => { if (s.st) iq += .5; iq += Math.min(300, wordsN(s.rv)) / 15; Object.values(s.vr || {}).forEach(r => { if (r && r.st) iq += .5; if (r) iq += Math.min(300, wordsN(r.t)) / 15; });
+    const read = (s.r || []).length || Object.values(s.ed || {}).some(E => (E.r || []).length); if (read && s.m && s.m.g) s.m.g.forEach(g => gen.add(g)); });
+  raw.int = Math.round(iq);
+  const L = shelf.log || {}; const first = [C.since && C.since > 946684800000 ? C.since : 0, ...Object.keys(L).filter(d => L[d] > 0).map(d => Date.parse(d + 'T12:00:00'))].filter(Boolean); raw.wis = first.length ? Math.floor((Date.now() - Math.min(...first)) / (30.4 * 864e5)) : 0;
+  let runs = 0, done = 0; Object.keys(shelf.series).forEach(k => { try { const i = info(k); if (i.complete) done++; else if (i.own.length >= 2 && !i.gaps.length) runs++; } catch(e){} }); raw.dex = done * 2 + runs;
+  raw.arc = gen.size; raw.luk = Object.keys(shelf.boxIn || {}).length * 2 + (C.crowns || []).length * 3;
+  const sc = STATS.map(s => Math.max(1, s[4].filter(t => raw[s[0]] >= t).length));
+  let top = 0; sc.forEach((v, i) => { if (v > sc[top]) top = i; }); return { raw, sc, cls: STATS[top][5], top }; }
+function sheetHTML(sc, cls, light){ return `<div style="font-size:13.5px">${STATS.map((s, i) => `<div style="display:grid;grid-template-columns:118px 1fr 26px;gap:8px;align-items:center;margin:3px 0"><span>${s[1]} ${esc(s[2])}</span><span style="height:8px;border-radius:4px;background:${light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.25)'};overflow:hidden"><i style="display:block;height:100%;width:${Math.round(sc[i] / 20 * 100)}%;background:#ffc93c"></i></span><b style="text-align:right">${sc[i]}</b></div>`).join('')}</div>`; }
 function renderLevel(){ const el = $('#lvlBox'); if (!el) return; if (!xpOn()){ el.innerHTML = ''; return; }
   const X = xpCalc(), a = xpNeed(X.lv), b = xpNeed(X.lv + 1), fr = frameOf(X.lv), nf = XP_FRAMES.find(x => x[0] > X.lv), mo = xpMonth(X.xp);
   el.innerHTML = `<details class="lvl" style="margin-top:10px"><summary style="cursor:pointer;list-style:none"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:17px">⭐ Level ${X.lv}</b><span style="opacity:.85">${X.xp.toLocaleString()} XP${mo ? ` · +${mo.toLocaleString()} this month` : ''}</span></div>
     <div class="bar"><i style="width:${Math.round((X.xp - a) / (b - a) * 100)}%"></i></div><div class="next">${(b - X.xp).toLocaleString()} XP to Level ${X.lv + 1}${nf ? ` · ${esc(nf[1])} avatar frame at Level ${nf[0]}` : ''} <span aria-hidden="true">▾</span></div></summary>
     <div style="margin-top:8px"><div style="display:flex;align-items:center;gap:10px;margin:0 0 8px">${avHTML(myAv(), (shelf.card && shelf.card.name) || (acct && acct.name) || 'You', true, myFrameLv(X.lv))}<span style="flex:1">${fr ? `Your frame: <b>${esc((frameOf(myFrameLv(X.lv)) || ['', 'None'])[1])}</b>` : 'Your first frame unlocks at Level 5'}</span><button class="btn ghost sm" data-avpick style="width:auto;margin:0">Change avatar</button></div>
-    ${myCid() === '99230547976' ? `<p style="margin:0 0 4px;font-size:13px;opacity:.85">Preview of every frame (only you see this):</p><div style="display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px">${XP_FRAMES.map(x => `<span style="display:inline-flex;flex-direction:column;align-items:center;font-size:11px;gap:4px">${avHTML(myAv(), 'You', true, x[0])}Lv ${x[0]} ${esc(x[1])}</span>`).join('')}</div>` : ''}<table style="width:100%;font-size:14px;border-collapse:collapse">${X.parts.map(p => `<tr><td>${esc(p[1])}</td><td style="text-align:right">${p[2].toLocaleString()}</td><td style="text-align:right;font-weight:700">+${p[3].toLocaleString()}</td></tr>`).join('')}</table>
+    ${myCid() === '99230547976' ? `<p style="margin:0 0 4px;font-size:13px;opacity:.85">Preview of every frame (only you see this):</p><div style="display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px">${XP_FRAMES.map(x => `<span style="display:inline-flex;flex-direction:column;align-items:center;font-size:11px;gap:4px">${avHTML(myAv(), 'You', true, x[0])}Lv ${x[0]} ${esc(x[1])}</span>`).join('')}</div>` : ''}${(() => { const S = statCalc(); return `<details style="margin:4px 0 10px"><summary style="cursor:pointer;font-weight:700">🎲 Character sheet · ${esc(S.cls)}</summary><div style="margin-top:6px">${sheetHTML(S.sc, S.cls)}<p style="margin:6px 0 0;font-size:12.5px;opacity:.85">${STATS.map(s => `${s[1]} ${esc(s[3])}`).join(' · ')}</p></div></details>`; })()}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px"><button class="btn ghost sm" data-sharechar style="width:auto;margin:0">📸 Share my character</button></div>
+    <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin:2px 0"><input type="checkbox" data-xpshow="lv"${shelf.card && shelf.card.hideLv ? '' : ' checked'}> Friends can see my level</label>
+    <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin:2px 0 10px"><input type="checkbox" data-xpshow="sheet"${shelf.card && shelf.card.hideSheet ? '' : ' checked'}> Friends can see my character sheet</label>
+    <table style="width:100%;font-size:14px;border-collapse:collapse">${X.parts.map(p => `<tr><td>${esc(p[1])}</td><td style="text-align:right">${p[2].toLocaleString()}</td><td style="text-align:right;font-weight:700">+${p[3].toLocaleString()}</td></tr>`).join('')}</table>
     <p style="margin:8px 0 0;opacity:.85;font-size:13px">Earn XP for books, reading, stars, reviews, finished series, streaks, achievements, friends, and helping fix the catalog. Avatar frames unlock at Levels ${XP_FRAMES.map(x => x[0]).join(', ')}.</p></div></details>`; }
 function streaks(){
   const L = shelf.log || {}; const has = d => (L[dayKey(d)]||0) > 0;
@@ -872,6 +899,8 @@ function openNews(){ ls.set('mme-news-seen', Date.parse(NEWS[0].at)); const d = 
 document.addEventListener('click', e => { if (e.target.closest('[data-newsall]')){ openNews(); return; } if (e.target.closest('[data-newsx]')){ ls.set('mme-news-seen', Date.parse(NEWS[0].at)); renderNewsBar(); return; }
   const c = e.target.closest('[data-newsclose]'); if (c && (e.target === c || e.target.closest('.vpx'))){ const p = e.target.closest('.vpop'); if (p) p.remove(); } });
 setTimeout(loadNews, 800);
+document.addEventListener('change', e => { const t = e.target.closest('[data-xpshow]'); if (!t) return; const k = t.dataset.xpshow === 'lv' ? 'hideLv' : 'hideSheet'; shelf.card = Object.assign({}, shelf.card, { [k]: !t.checked }); save(); if (typeof livePush === 'function') livePush(true); toast(t.checked ? 'Friends can see it' : 'Hidden from friends'); });
+document.addEventListener('click', e => { if (e.target.closest('[data-sharechar]')) shareChar(); });
 { const _ra = renderAcct; renderAcct = function(){ _ra.apply(this, arguments); try { renderNewsBar(); } catch(e){} }; }
 /* ---------- Import your reading history (Goodreads / StoryGraph CSV, Bookmory backup): marks books READ (not owned), with dates, stars, reviews; "did not finish" goes to Didn't finish.
    Only manga / light novels come in: books matched to the shop's catalog, or titles with a volume number. Everything else is counted as skipped. */
@@ -2695,6 +2724,40 @@ async function shareCard(){ track('share-card'); try { await document.fonts.read
     if (mob && navigator.canShare && navigator.canShare({ files: [cardFile] })){ navigator.share({ files: [cardFile] }).catch(() => {}); return; }
     const u = URL.createObjectURL(cardFile), a = document.createElement('a'); a.href = u; a.download = 'my-manga-collection.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }; }
 document.addEventListener('click', e => { const b = e.target.closest('#shareCard, [data-share]'); if (b) shareCard(); });
+/* ---------- Character card: a separate, playful Instagram picture (level, frame, class, 8 stats) ---------- */
+function drawChar(d){ const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const F = '"Figtree","Nunito",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif', E = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif', fnt = (w, s) => w + ' ' + s + 'px ' + F + ',' + E;
+  let g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#1b0f3b'); g.addColorStop(.5, '#3b1d6e'); g.addColorStop(1, '#0f2a5c'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 90; i++){ x.beginPath(); x.arc((i * 263 + 40) % W, (i * 397 + 90) % H, 1 + (i % 3), 0, 7); x.fillStyle = 'rgba(255,255,255,' + (.2 + (i % 4) * .1) + ')'; x.fill(); }
+  const rr = (X, Y, w, h, r, f, st, lw) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); if (f){ x.fillStyle = f; x.fill(); } if (st){ x.lineWidth = lw || 4; x.strokeStyle = st; x.stroke(); } };
+  const t = (s, X, y, sz, w, col, al) => { x.font = fnt(w || '800', sz); x.fillStyle = col || '#fff'; x.textAlign = al || 'center'; x.fillText(s, X, y); };
+  const fit = (s, max, sz, w) => { x.font = fnt(w || '800', sz); while (x.measureText(s).width > max && sz > 26){ sz -= 3; x.font = fnt(w || '800', sz); } return sz; };
+  rr(240, 90, 600, 70, 35, 'rgba(255,255,255,.92)'); t('THE MAGE’S EMPORIUM', W / 2, 138, 32, '800', '#ff5300');
+  const fr = d.frame, fc = fr ? (fr[2] === 'arc' ? '#c06bff' : fr[2]) : 'rgba(255,255,255,.5)';
+  if (fr && fr[2] === 'arc'){ x.save(); x.shadowColor = '#ff6bd5'; x.shadowBlur = 60; x.beginPath(); x.arc(W / 2, 380, 170, 0, 7); x.strokeStyle = '#7b5cff'; x.lineWidth = 18; x.stroke(); x.restore(); }
+  x.beginPath(); x.arc(W / 2, 380, 160, 0, 7); x.fillStyle = '#fff6c8'; x.fill(); x.lineWidth = fr ? 18 : 6; x.strokeStyle = fc; x.stroke();
+  if (d.img){ x.save(); x.beginPath(); x.arc(W / 2, 380, 151, 0, 7); x.clip(); x.drawImage(d.img, W / 2 - 151, 229, 302, 302); x.restore(); }
+  else t(d.emoji || (d.name || '?').charAt(0).toUpperCase(), W / 2, 435, 150, '800', '#3b1d6e');
+  const nm = (d.name ? d.name : 'My') + (d.name ? '’s character' : ' character'); t(nm, W / 2, 640, fit(nm, 960, 72, '900'), '900');
+  rr(170, 680, 740, 96, 48, '#ffc93c'); t('⭐ Level ' + d.lv + '  ·  ' + d.cls, W / 2, 745, fit('⭐ Level ' + d.lv + '  ·  ' + d.cls, 680, 46, '900'), '900', '#3b1d6e');
+  if (fr) t(fr[1] + ' frame', W / 2, 830, 32, '700', 'rgba(255,255,255,.85)');
+  rr(70, 880, 940, 860, 60, 'rgba(255,255,255,.1)', 'rgba(255,255,255,.35)', 3); let y = 960;
+  STATS.forEach((s, i) => { t(s[1] + ' ' + s[2], 120, y + 14, 40, '800', '#fff', 'left'); rr(500, y - 16, 380, 36, 18, 'rgba(255,255,255,.18)'); rr(500, y - 16, Math.max(36, 380 * d.sc[i] / 20), 36, 18, '#ffc93c'); t(String(d.sc[i]), 960, y + 14, 44, '900', '#fff', 'right'); y += 98; });
+  t('Character class: ' + d.cls + ' (top stat: ' + STATS[d.top][2] + ')', W / 2, 1790, 30, '700', 'rgba(255,255,255,.85)');
+  rr(190, 1820, 700, 64, 32, 'rgba(255,255,255,.92)'); t('level up free → app.themagesemporium.com', W / 2, 1863, fit('level up free → app.themagesemporium.com', 640, 30, '800'), '800', '#ff5300');
+  return c; }
+async function shareChar(){ track('share-char'); try { await document.fonts.ready; } catch(e){}
+  const X = xpCalc(), S = statCalc(), lv = X.lv, flv = myFrameLv(lv), av = myAv() || {}; let img = null;
+  if (av.u){ img = await new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = av.u; }); }
+  const d = { name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', lv, cls: S.cls, sc: S.sc, top: S.top, frame: flv ? frameOf(flv) : null, emoji: av.e || '', img };
+  openSheet(`<h2>Share your character</h2><p class="sub" style="margin:0 0 8px">A just-for-fun card with your level, class and stats. Your collection card is separate.</p><img id="charImg" alt="Your character card" style="width:100%;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.18)">
+    <div class="row2" style="margin-top:10px"><button class="btn" id="charShare">Share</button><button class="btn ghost" id="charSave">Save image</button><button class="btn ghost" data-close>Close</button></div>`);
+  let cv; try { cv = drawChar(d); $('#charImg').src = cv.toDataURL('image/png'); } catch(e){ d.img = null; cv = drawChar(d); $('#charImg').src = cv.toDataURL('image/png'); }
+  let file = null; cv.toBlob(b => { file = new File([b], 'my-manga-character.png', { type: 'image/png' }); });
+  $('#charShare').onclick = () => { if (file && navigator.share) navigator.share({ files: [file], title: 'My manga character' }).catch(() => {}); };
+  $('#charSave').onclick = () => { if (!file) return; const mob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (mob && navigator.canShare && navigator.canShare({ files: [file] })){ navigator.share({ files: [file] }).catch(() => {}); return; }
+    const u = URL.createObjectURL(file), a = document.createElement('a'); a.href = u; a.download = 'my-manga-character.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }; }
 /* ---------- scan mode: point the camera at a barcode, get a big answer ---------- */
 let scanStream = null, scanReader = null, scanBusy = false;
 function isbn13(code){ code = String(code).replace(/[^0-9Xx]/g, ''); if (code.length === 10){ const x = '978' + code.slice(0, 9); let t = 0; for (let i = 0; i < 12; i++) t += (+x[i]) * (i % 2 ? 3 : 1); return x + ((10 - t % 10) % 10); } return code; }
@@ -2863,7 +2926,7 @@ function shareGate(go){ if (shelf.card && shelf.card.feedAck){ go(); return; }
     <p class="sub">You can change this anytime at the top of the Friends page.</p><div class="row2"><button class="btn" id="feedGo">Continue</button><button class="btn ghost" data-close>Cancel</button></div>`);
   $('#feedGo').onclick = () => { shelf.card = Object.assign({}, shelf.card, { feedAck: Date.now(), noFeed: !$('#feedChk').checked }); save(); closeSheet(); go(); }; }
 function friendPack(){ const out = {}; Object.entries(shelf.series).forEach(([k, s]) => { const o = { n: s.n, v: ints(s) }; if (s.want && s.want.length) o.w = s.want; out[k] = o; });
-  let act = null; try { const c = monthChal(), st = streaks(); act = { mk: c.mk, rd: c.readsN, cd: c.doneN, ct: c.list.length, bm: c.marks.map(x => x ? 1 : 0).join(''), bl: c.bingoLines, cur: st.cur, best: st.best, pg: estPages(c.mk) }; try { const X = xpCalc(); act.lv = X.lv; act.fl = myFrameLv(X.lv); act.xm = xpMonth(X.xp); } catch(e){} } catch(e){}
+  let act = null; try { const c = monthChal(), st = streaks(); act = { mk: c.mk, rd: c.readsN, cd: c.doneN, ct: c.list.length, bm: c.marks.map(x => x ? 1 : 0).join(''), bl: c.bingoLines, cur: st.cur, best: st.best, pg: estPages(c.mk) }; try { const X = xpCalc(); act.fl = myFrameLv(X.lv); if (!(shelf.card && shelf.card.hideLv)){ act.lv = X.lv; act.xm = xpMonth(X.xp); } if (!(shelf.card && shelf.card.hideSheet)){ const S = statCalc(); act.cs = S.sc; act.cl = S.cls; } } catch(e){} } catch(e){}
   return { app: 'mme-friend', v: 1, name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', at: Date.now(), s: out, act, feed: feedPack(), av: myAv() || (shelf.card && shelf.card.av && shelf.card.av.none ? { none: 1 } : null) }; }
 async function friendShare(){ if (!(shelf.card && shelf.card.feedAck)){ shareGate(friendShare); return; } track('friend-share'); const pk = friendPack(); let nm = pk.name;
   if (!nm){ nm = prompt('Your first name (so your friend knows whose shelf this is):', '') || ''; nm = nm.trim(); if (nm){ shelf.card = Object.assign({}, shelf.card, { name: nm }); save(); pk.name = nm; } }
@@ -2927,7 +2990,7 @@ function friendsHTML0(){ const F = Object.assign({}, shelf.friends || {}); const
     const g = (o.w || []).filter(v => !fv.has(v)); if (g.length) gifts.push([o.n, g]); });
   const row = (n, t) => `<div class="frow" data-fn="${esc(normName(n))}" style="padding:6px 0;border-bottom:1px solid var(--line);font-size:14px"><b>${esc(n)}</b> <span class="sub" style="font-size:13px">${t}</span></div>`;
   const sec = (title, sub, arr, fmt, empty) => `<details class="st-sec fsec"${arr.length && arr.length <= 8 ? ' open' : ''}><summary style="cursor:pointer;list-style-position:inside"><h3 style="display:inline">${title} <span class="sub" style="font-weight:400">(${arr.length})</span></h3></summary>${sub ? `<p class="sub" style="margin:6px 0 6px">${sub}</p>` : ''}${arr.length ? arr.map(fmt).join('') : `<p class="sub" style="margin:0">${empty}</p>`}</details>`;
-  h += `<div class="st-sec"><p style="margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">${avHTML(f.av, f.name, true, f.act && (f.act.fl ?? f.act.lv))}<span><b>${esc(f.name)}</b>: ${Object.keys(f.s).length} series · ${Object.values(f.s).reduce((a, o) => a + (o.v || []).length, 0)} books <span class="sub">${f.live ? '(live)' : `(shared ${new Date(f.at).toLocaleDateString()})`}</span></span></p>${f.live ? `<button class="btn ghost sm" data-liveunf="${esc(f.cid)}" style="margin-top:6px">Stop following ${esc(f.name)}</button>` : `<button class="btn ghost sm" data-fdel="${esc(friendSel)}" style="margin-top:6px">Remove ${esc(f.name)}</button>`}</div>`;
+  h += `<div class="st-sec"><p style="margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">${avHTML(f.av, f.name, true, f.act && (f.act.fl ?? f.act.lv))}<span><b>${esc(f.name)}</b>${xpOn() && f.act && f.act.lv ? ` <span class="badge" style="font-size:12px;padding:2px 8px">⭐ Lv ${f.act.lv}${f.act.cl ? ' · ' + esc(f.act.cl) : ''}</span>` : ''}: ${Object.keys(f.s).length} series · ${Object.values(f.s).reduce((a, o) => a + (o.v || []).length, 0)} books <span class="sub">${f.live ? '(live)' : `(shared ${new Date(f.at).toLocaleDateString()})`}</span></span></p>${xpOn() && f.act && Array.isArray(f.act.cs) && f.act.cs.length === 8 ? `<details style="margin:8px 0 0"><summary style="cursor:pointer;font-weight:700">🎲 ${esc(f.name)}’s character sheet${f.act.cl ? ' · ' + esc(f.act.cl) : ''}</summary><div style="margin-top:6px">${sheetHTML(f.act.cs, f.act.cl, true)}</div></details>` : ''}${f.live ? `<button class="btn ghost sm" data-liveunf="${esc(f.cid)}" style="margin-top:6px">Stop following ${esc(f.name)}</button>` : `<button class="btn ghost sm" data-fdel="${esc(friendSel)}" style="margin-top:6px">Remove ${esc(f.name)}</button>`}</div>`;
   const whole = Object.values(f.s).filter(o => (o.v || []).length).sort((a, b) => a.n.localeCompare(b.n)).map(o => [o.n, o.v]);
   h += `<div class="st-sec" style="padding:10px 14px"><input id="fq" type="search" placeholder="Search ${esc(f.name)}’s shelf…" autocomplete="off" style="width:100%"></div>`;
   h += sec('📖 You could borrow', `Volumes you’re missing that ${esc(f.name)} owns.`, borrow, x => row(x[0], 'Vol ' + compactVols(x[1])), 'Nothing to borrow yet.');
