@@ -611,11 +611,11 @@ function renderStats(){
   let books = 0, runs = 0, gaps = 0, langs = new Set(), ln = 0, longest = 0, complete = 0;
   keys.forEach(k => { const i = info(k); books += i.s.v.length + edCount(i.s); if (i.own.length >= 2 && !i.gaps.length) runs++; if (!langOf(k)) gaps += i.gaps.length; const l = langOf(k); if (l) langs.add(l); if (isLN(k,i.s)) ln++; longest = Math.max(longest, i.own.length); if (i.complete) complete++; });
   let r = 0; while (r+1 < RANKS.length && books >= RANKS[r+1][0]) r++;
-  $('#rankName').textContent = RANKS[r][1];
+  let myCls = ''; try { if (xpOn()) myCls = statCalc().cls; } catch(e){} $('#rankName').textContent = rankName(r, myCls);
   const nx = RANKS[r+1];
   $('#rankBar').style.width = nx ? Math.round((books - RANKS[r][0]) / (nx[0] - RANKS[r][0]) * 100) + '%' : '100%';
   const rl = n => setTimeout(() => { try { renderLevel(); } catch(e){ if (n < 5) rl(n + 1); } }, n ? 600 : 0); rl(0);
-  $('#rankNext').textContent = nx ? `${nx[0]-books} more ${nx[0]-books===1?'book':'books'} to ${nx[1]}` : 'The highest rank there is.';
+  $('#rankNext').textContent = nx ? `${nx[0]-books} more ${nx[0]-books===1?'book':'books'} to ${rankName(r + 1, myCls)}` : 'The highest rank there is.';
   $('#sBooks').textContent = books; $('#sSeries').textContent = keys.length; $('#sRuns').textContent = runs; $('#sGaps').textContent = gaps;
   const C = collectorNumbers(); const o = shelf.orders || {}; const yrs = o.first ? (Date.now() - new Date(o.first)) / (365.25*864e5) : 0;
   const vrN = Object.values(shelf.series).reduce((a, x) => a + Object.keys(x.vr || {}).length, 0), cnN = Object.values(shelf.series).reduce((a, x) => a + Object.keys(x.cn || {}).length, 0);
@@ -819,6 +819,17 @@ const STATS = [
   ['dex', '🎯', 'Dexterity', 'Series finished and no-gap runs', [0,1,2,3,5,7,10,13,16,20,25,30,40,50,60,75,90,110,135,165], 'Rogue'],
   ['arc', '✨', 'Arcana', 'Different genres read', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22], 'Archmage'],
   ['luk', '🍀', 'Luck', 'Mystery boxes and crowns', [0,1,2,3,4,5,6,8,10,12,14,16,18,20,25,30,35,40,50,60], 'Fortune Seeker']];
+/* Class rank ladders: same book thresholds as RANKS, named for your class (preview) */
+const CLASS_RANKS = {
+  'Archmage': ['Apprentice','Initiate','Adept','Conjurer','Archmage','Mythic Archmage','Grand Archmage'],
+  'Rogue': ['Pickpocket','Cutpurse','Shadow','Nightblade','Master Thief','Phantom','Legend of the Night'],
+  'Ranger': ['Scout','Tracker','Pathfinder','Ranger','Wildstalker','Beastmaster','Legend of the Wilds'],
+  'Bard': ['Busker','Minstrel','Troubadour','Skald','Virtuoso','Maestro','Legendary Bard'],
+  'Scholar': ['Student','Reader','Librarian','Scholar','Loremaster','Grand Archivist','Keeper of All Books'],
+  'Sage': ['Novice','Seeker','Mystic','Oracle','Sage','Elder Sage','Ancient One'],
+  'Warden of the Stacks': ['Porter','Guard','Sentinel','Knight','Champion','Titan','Titan of the Stacks'],
+  'Fortune Seeker': ['Gambler','Treasure Hunter','Lucky Charm','Fortune’s Favorite','Jackpot','Fate Weaver','Luck Incarnate'] };
+const rankName = (r, cls) => (xpOn() && cls && CLASS_RANKS[cls] ? CLASS_RANKS[cls][r] : RANKS[r][1]);
 function statCalc(){ const raw = {}; let C = {}; try { C = collectorNumbers(); } catch(e){}
   raw.str = C.books || 0; try { raw.sta = streaks().best || 0; } catch(e){ raw.sta = 0; }
   const fr = Object.keys(shelf.friends || {}).length; let act = 0; try { const mk = dayKey(new Date()).slice(0, 7); act = Object.values(typeof F !== 'undefined' ? F : {}).filter(f => f.act && f.act.mk === mk).length; } catch(e){}
@@ -833,6 +844,7 @@ function statCalc(){ const raw = {}; let C = {}; try { C = collectorNumbers(); }
   let top = 0; sc.forEach((v, i) => { if (v > sc[top]) top = i; }); return { raw, sc, cls: STATS[top][5], top }; }
 function sheetHTML(sc, cls, light){ return `<div style="font-size:13.5px">${STATS.map((s, i) => `<div style="display:grid;grid-template-columns:118px 1fr 26px;gap:8px;align-items:center;margin:3px 0"><span>${s[1]} ${esc(s[2])}</span><span style="height:8px;border-radius:4px;background:${light ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.25)'};overflow:hidden"><i style="display:block;height:100%;width:${Math.round(sc[i] / 20 * 100)}%;background:#ffc93c"></i></span><b style="text-align:right">${sc[i]}</b></div>`).join('')}</div>`; }
 function renderLevel(){ const el = $('#lvlBox'); if (!el) return; if (!xpOn()){ el.innerHTML = ''; return; }
+  try { const C0 = collectorNumbers(), cl0 = statCalc().cls; let r0 = 0; while (r0 + 1 < RANKS.length && C0.books >= RANKS[r0 + 1][0]) r0++; $('#rankName').textContent = rankName(r0, cl0); } catch(e){}
   const X = xpCalc(), a = xpNeed(X.lv), b = xpNeed(X.lv + 1), fr = frameOf(X.lv), nf = XP_FRAMES.find(x => x[0] > X.lv), mo = xpMonth(X.xp);
   el.innerHTML = `<details class="lvl" style="margin-top:10px"><summary style="cursor:pointer;list-style:none"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:17px">⭐ Level ${X.lv}</b><span style="opacity:.85">${X.xp.toLocaleString()} XP${mo ? ` · +${mo.toLocaleString()} this month` : ''}</span></div>
     <div class="bar"><i style="width:${Math.round((X.xp - a) / (b - a) * 100)}%"></i></div><div class="next">${(b - X.xp).toLocaleString()} XP to Level ${X.lv + 1}${nf ? ` · ${esc(nf[1])} avatar frame at Level ${nf[0]}` : ''} <span aria-hidden="true">▾</span></div></summary>
@@ -2672,7 +2684,7 @@ async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted =
 /* ---------- share card (Instagram story size): same look as the old My Collection card; colors follow the top genre ---------- */
 function cardData(){ const C = collectorNumbers(); let r = 0; while (r+1 < RANKS.length && C.books >= RANKS[r+1][0]) r++;
   const earned = BADGES.filter(b => b[2] >= b[3]); const total = BADGES.filter(b => !b[4]).length + BADGES.filter(b => b[4] && b[2] >= b[3]).length;
-  return { name: (shelf.card && shelf.card.name != null ? shelf.card.name : (acct && acct.name) || ''), rank: RANKS[r][1], since: C.since ? new Date(C.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '',
+  return { name: (shelf.card && shelf.card.name != null ? shelf.card.name : (acct && acct.name) || ''), rank: (() => { try { return rankName(r, xpOn() ? statCalc().cls : ''); } catch(e){ return RANKS[r][1]; } })(), since: C.since ? new Date(C.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '',
     books: C.books, series: C.series, done: C.done, run: C.run, runName: C.runK ? shelf.series[C.runK].n : '', crowns: C.crowns,
     badges: earned.map(b => b[0]), earned: earned.length, total, g: [C.shojo, C.shonen, C.seinen, C.josei, C.bl, C.horror], site: 'app.themagesemporium.com' }; }
 function drawCard(d){ const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
@@ -2725,31 +2737,69 @@ async function shareCard(){ track('share-card'); try { await document.fonts.read
     const u = URL.createObjectURL(cardFile), a = document.createElement('a'); a.href = u; a.download = 'my-manga-collection.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }; }
 document.addEventListener('click', e => { const b = e.target.closest('#shareCard, [data-share]'); if (b) shareCard(); });
 /* ---------- Character card: a separate, playful Instagram picture (level, frame, class, 8 stats) ---------- */
+/* Class themes for the character card: background colors, glow, motif and a one-line flavor */
+const CLASS_TH = {
+  'Warden of the Stacks': { bg: ['#0d1b2e','#1f3b63','#3d6aa0'], glow: '#7fc4ff', ic: '🛡️', mo: ['🛡️','📚','⚔️'], tag: 'Guards a towering hoard of books.' },
+  'Ranger': { bg: ['#0b2014','#1d4a2c','#3f7a3a'], glow: '#a6f07a', ic: '🏹', mo: ['🏹','🌲','🔥'], tag: 'Never breaks a reading streak.' },
+  'Bard': { bg: ['#3b0a3a','#8c1f6b','#e0603a'], glow: '#ffb35c', ic: '🎻', mo: ['🎵','🎻','✨'], tag: 'Brings the whole party to the shelf.' },
+  'Scholar': { bg: ['#2a0c10','#6b1d2a','#b0683a'], glow: '#ffd88a', ic: '📜', mo: ['📜','🪶','📖'], tag: 'Writes the reviews everyone reads.' },
+  'Sage': { bg: ['#0e0b2e','#2b2470','#6b5bd6'], glow: '#ffe27a', ic: '🦉', mo: ['🦉','🌙','⭐'], tag: 'Has seen many seasons of manga.' },
+  'Rogue': { bg: ['#07121a','#123c44','#5b2b6e'], glow: '#5cf2d0', ic: '🗡️', mo: ['🗡️','🌙','🗝️'], tag: 'Slips in, finishes every series, vanishes.' },
+  'Archmage': { bg: ['#1b0f3b','#4a1d8a','#a03fd0'], glow: '#e59bff', ic: '🔮', mo: ['🔮','✨','🌀'], tag: 'Masters every school of story.' },
+  'Fortune Seeker': { bg: ['#0a2418','#17603a','#c7972a'], glow: '#ffe066', ic: '🍀', mo: ['🍀','💎','🎲'], tag: 'Fate hands them the rarest finds.' } };
 function drawChar(d){ const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const T = CLASS_TH[d.cls] || CLASS_TH.Archmage;
   const F = '"Figtree","Nunito",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif', E = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif', fnt = (w, s) => w + ' ' + s + 'px ' + F + ',' + E;
-  let g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#1b0f3b'); g.addColorStop(.5, '#3b1d6e'); g.addColorStop(1, '#0f2a5c'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-  for (let i = 0; i < 90; i++){ x.beginPath(); x.arc((i * 263 + 40) % W, (i * 397 + 90) % H, 1 + (i % 3), 0, 7); x.fillStyle = 'rgba(255,255,255,' + (.2 + (i % 4) * .1) + ')'; x.fill(); }
-  const rr = (X, Y, w, h, r, f, st, lw) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); if (f){ x.fillStyle = f; x.fill(); } if (st){ x.lineWidth = lw || 4; x.strokeStyle = st; x.stroke(); } };
-  const t = (s, X, y, sz, w, col, al) => { x.font = fnt(w || '800', sz); x.fillStyle = col || '#fff'; x.textAlign = al || 'center'; x.fillText(s, X, y); };
-  const fit = (s, max, sz, w) => { x.font = fnt(w || '800', sz); while (x.measureText(s).width > max && sz > 26){ sz -= 3; x.font = fnt(w || '800', sz); } return sz; };
-  rr(240, 90, 600, 70, 35, 'rgba(255,255,255,.92)'); t('THE MAGE’S EMPORIUM', W / 2, 138, 32, '800', '#ff5300');
-  const fr = d.frame, fc = fr ? (fr[2] === 'arc' ? '#c06bff' : fr[2]) : 'rgba(255,255,255,.5)';
-  if (fr && fr[2] === 'arc'){ x.save(); x.shadowColor = '#ff6bd5'; x.shadowBlur = 60; x.beginPath(); x.arc(W / 2, 380, 170, 0, 7); x.strokeStyle = '#7b5cff'; x.lineWidth = 18; x.stroke(); x.restore(); }
-  x.beginPath(); x.arc(W / 2, 380, 160, 0, 7); x.fillStyle = '#fff6c8'; x.fill(); x.lineWidth = fr ? 18 : 6; x.strokeStyle = fc; x.stroke();
-  if (d.img){ x.save(); x.beginPath(); x.arc(W / 2, 380, 151, 0, 7); x.clip(); x.drawImage(d.img, W / 2 - 151, 229, 302, 302); x.restore(); }
-  else t(d.emoji || (d.name || '?').charAt(0).toUpperCase(), W / 2, 435, 150, '800', '#3b1d6e');
-  const nm = (d.name ? d.name : 'My') + (d.name ? '’s character' : ' character'); t(nm, W / 2, 640, fit(nm, 960, 72, '900'), '900');
-  rr(170, 680, 740, 96, 48, '#ffc93c'); t('⭐ Level ' + d.lv + '  ·  ' + d.cls, W / 2, 745, fit('⭐ Level ' + d.lv + '  ·  ' + d.cls, 680, 46, '900'), '900', '#3b1d6e');
-  if (fr) t(fr[1] + ' frame', W / 2, 830, 32, '700', 'rgba(255,255,255,.85)');
-  rr(70, 880, 940, 860, 60, 'rgba(255,255,255,.1)', 'rgba(255,255,255,.35)', 3); let y = 960;
-  STATS.forEach((s, i) => { t(s[1] + ' ' + s[2], 120, y + 14, 40, '800', '#fff', 'left'); rr(500, y - 16, 380, 36, 18, 'rgba(255,255,255,.18)'); rr(500, y - 16, Math.max(36, 380 * d.sc[i] / 20), 36, 18, '#ffc93c'); t(String(d.sc[i]), 960, y + 14, 44, '900', '#fff', 'right'); y += 98; });
-  t('Character class: ' + d.cls + ' (top stat: ' + STATS[d.top][2] + ')', W / 2, 1790, 30, '700', 'rgba(255,255,255,.85)');
-  rr(190, 1820, 700, 64, 32, 'rgba(255,255,255,.92)'); t('level up free → app.themagesemporium.com', W / 2, 1863, fit('level up free → app.themagesemporium.com', 640, 30, '800'), '800', '#ff5300');
-  return c; }
+  const rr = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
+  const t = (s, X, y, sz, w, col, al, sh) => { x.font = fnt(w || '800', sz); x.fillStyle = col || '#fff'; x.textAlign = al || 'center'; if (sh){ x.save(); x.shadowColor = sh; x.shadowBlur = 24; x.fillText(s, X, y); x.restore(); } else x.fillText(s, X, y); };
+  const fit = (s, max, sz, w) => { x.font = fnt(w || '800', sz); while (x.measureText(s).width > max && sz > 24){ sz -= 3; x.font = fnt(w || '800', sz); } return sz; };
+  /* holographic foil border */
+  let foil = x.createLinearGradient(0, 0, W, H); ['#ff6bd5','#ffd36b','#6bffb8','#6bc7ff','#b06bff','#ff6bd5'].forEach((col, i) => foil.addColorStop(i / 5, col)); x.fillStyle = foil; x.fillRect(0, 0, W, H);
+  /* card body */
+  rr(28, 28, W - 56, H - 56, 56); x.save(); x.clip();
+  let g = x.createLinearGradient(0, 0, W * .4, H); g.addColorStop(0, T.bg[0]); g.addColorStop(.55, T.bg[1]); g.addColorStop(1, T.bg[2]); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  /* motif pattern */
+  x.globalAlpha = .09; for (let r = 0; r < 14; r++) for (let k = 0; k < 7; k++){ const m = T.mo[(r + k) % T.mo.length]; x.font = fnt('400', 64); x.textAlign = 'center'; x.fillText(m, k * 170 + (r % 2 ? 85 : 0) + 20, r * 150 + 60); } x.globalAlpha = 1;
+  /* light rays behind the avatar */
+  x.save(); x.translate(W / 2, 420); for (let i = 0; i < 24; i++){ x.rotate(Math.PI / 12); x.beginPath(); x.moveTo(0, 0); x.lineTo(-40, -760); x.lineTo(40, -760); x.closePath(); x.fillStyle = i % 2 ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.02)'; x.fill(); } x.restore();
+  let rg = x.createRadialGradient(W / 2, 420, 60, W / 2, 420, 420); rg.addColorStop(0, T.glow + '88'); rg.addColorStop(1, T.glow + '00'); x.fillStyle = rg; x.fillRect(0, 0, W, 900);
+  /* sparkles */
+  const star = (cx, cy, r) => { x.beginPath(); for (let i = 0; i < 8; i++){ const a = i * Math.PI / 4, q = i % 2 ? r * .28 : r; x.lineTo(cx + Math.cos(a) * q, cy + Math.sin(a) * q); } x.closePath(); x.fillStyle = 'rgba(255,255,255,.8)'; x.fill(); };
+  [[120,250,22],[960,210,30],[930,640,18],[150,700,16],[880,1080,14],[100,1500,20],[990,1640,24]].forEach(p => star(...p));
+  /* header */
+  rr(250, 72, 580, 62, 31); x.fillStyle = 'rgba(255,255,255,.92)'; x.fill(); t('THE MAGE’S EMPORIUM', W / 2, 115, 30, '800', '#ff5300');
+  /* class crest + avatar */
+  t(T.ic, W / 2 + 175, 290, 96, '400');
+  const fr = d.frame, fc = fr ? (fr[2] === 'arc' ? '#c06bff' : fr[2]) : 'rgba(255,255,255,.6)';
+  x.save(); x.shadowColor = T.glow; x.shadowBlur = 70; x.beginPath(); x.arc(W / 2, 420, 172, 0, 7); x.fillStyle = fc; x.fill(); x.restore();
+  x.beginPath(); x.arc(W / 2, 420, 156, 0, 7); x.fillStyle = '#fff6c8'; x.fill();
+  if (d.img){ x.save(); x.beginPath(); x.arc(W / 2, 420, 150, 0, 7); x.clip(); x.drawImage(d.img, W / 2 - 150, 270, 300, 300); x.restore(); }
+  else t(d.emoji || (d.name || '?').charAt(0).toUpperCase(), W / 2, 475, 150, '800', '#3b1d6e');
+  /* level starburst */
+  x.save(); x.translate(W / 2 - 175, 300); x.beginPath(); for (let i = 0; i < 24; i++){ const a = i * Math.PI / 12, q = i % 2 ? 62 : 82; x.lineTo(Math.cos(a) * q, Math.sin(a) * q); } x.closePath(); x.fillStyle = '#ffc93c'; x.shadowColor = '#ffc93c'; x.shadowBlur = 30; x.fill(); x.restore();
+  t('LV', W / 2 - 175, 285, 28, '900', '#3b1d6e'); t(String(d.lv), W / 2 - 175, 335, 56, '900', '#3b1d6e');
+  /* name + class banner */
+  const nm = d.name ? d.name : 'Mystery Reader'; t(nm, W / 2, 690, fit(nm, 900, 84, '900'), '900', '#fff', 'center', T.glow);
+  const ttl = d.title ? d.title + ' · ' + d.cls : d.cls; rr(140, 724, 800, 84, 42); x.fillStyle = 'rgba(0,0,0,.35)'; x.fill(); x.lineWidth = 4; x.strokeStyle = T.glow; x.stroke(); t(ttl, W / 2, 782, fit(ttl, 740, 44, '900'), '900', '#fff');
+  t('“' + T.tag + '”', W / 2, 852, fit('“' + T.tag + '”', 900, 34, '600'), '600', 'rgba(255,255,255,.9)');
+  /* radar chart of the 8 stats */
+  const cx = W / 2, cy = 1250, R = 225, n = 8, pt = (i, v) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + Math.cos(a) * R * v, cy + Math.sin(a) * R * v]; };
+  [.25, .5, .75, 1].forEach(v => { x.beginPath(); for (let i = 0; i <= n; i++){ const [px, py] = pt(i % n, v); i ? x.lineTo(px, py) : x.moveTo(px, py); } x.strokeStyle = 'rgba(255,255,255,.22)'; x.lineWidth = 2; x.stroke(); });
+  for (let i = 0; i < n; i++){ const [px, py] = pt(i, 1); x.beginPath(); x.moveTo(cx, cy); x.lineTo(px, py); x.strokeStyle = 'rgba(255,255,255,.15)'; x.stroke(); }
+  x.save(); x.beginPath(); d.sc.forEach((v, i) => { const [px, py] = pt(i, Math.max(.08, v / 20)); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.closePath(); x.fillStyle = T.glow + '66'; x.shadowColor = T.glow; x.shadowBlur = 30; x.fill(); x.lineWidth = 6; x.strokeStyle = T.glow; x.stroke(); x.restore();
+  d.sc.forEach((v, i) => { const [px, py] = pt(i, Math.max(.08, v / 20)); x.beginPath(); x.arc(px, py, 10, 0, 7); x.fillStyle = '#fff'; x.fill(); });
+  STATS.forEach((s, i) => { const [px, py] = pt(i, 1.36); t(s[1], px, py - 2, 40, '400'); t(s[2].slice(0, 3).toUpperCase() + ' ' + d.sc[i], px, py + 36, 30, '900', i === d.top ? '#ffc93c' : '#fff'); });
+  /* top three powers */
+  const top3 = d.sc.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]).slice(0, 3);
+  let csz = 34; const labs = top3.map(([v, i]) => STATS[i][1] + ' ' + STATS[i][2] + ' ' + v); const tw = () => { x.font = fnt('900', csz); return labs.reduce((a, l) => a + x.measureText(l).width + 44, 0) + 32; }; while (tw() > 920 && csz > 24) csz -= 2;
+  let px0 = (W - tw()) / 2; labs.forEach(lab => { x.font = fnt('900', csz); const w = x.measureText(lab).width + 44; rr(px0, 1640, w, csz + 36, (csz + 36) / 2); x.fillStyle = 'rgba(255,255,255,.9)'; x.fill(); t(lab, px0 + w / 2, 1640 + csz + 12, csz, '900', '#3b1d6e'); px0 += w + 16; });
+  rr(170, 1760, 740, 66, 33); x.fillStyle = '#ffc93c'; x.fill(); t('level up free → app.themagesemporium.com', W / 2, 1804, fit('level up free → app.themagesemporium.com', 680, 32, '900'), '900', '#3b1d6e');
+  x.restore(); return c; }
 async function shareChar(){ track('share-char'); try { await document.fonts.ready; } catch(e){}
   const X = xpCalc(), S = statCalc(), lv = X.lv, flv = myFrameLv(lv), av = myAv() || {}; let img = null;
   if (av.u){ img = await new Promise(res => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = av.u; }); }
-  const d = { name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', lv, cls: S.cls, sc: S.sc, top: S.top, frame: flv ? frameOf(flv) : null, emoji: av.e || '', img };
+  let rk = 0; try { const C1 = collectorNumbers(); while (rk + 1 < RANKS.length && C1.books >= RANKS[rk + 1][0]) rk++; } catch(e){}
+  const d = { title: rankName(rk, S.cls), name: (shelf.card && shelf.card.name) || (acct && acct.name) || '', lv, cls: S.cls, sc: S.sc, top: S.top, frame: flv ? frameOf(flv) : null, emoji: av.e || '', img };
   openSheet(`<h2>Share your character</h2><p class="sub" style="margin:0 0 8px">A just-for-fun card with your level, class and stats. Your collection card is separate.</p><img id="charImg" alt="Your character card" style="width:100%;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.18)">
     <div class="row2" style="margin-top:10px"><button class="btn" id="charShare">Share</button><button class="btn ghost" id="charSave">Save image</button><button class="btn ghost" data-close>Close</button></div>`);
   let cv; try { cv = drawChar(d); $('#charImg').src = cv.toDataURL('image/png'); } catch(e){ d.img = null; cv = drawChar(d); $('#charImg').src = cv.toDataURL('image/png'); }
