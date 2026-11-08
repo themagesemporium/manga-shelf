@@ -853,7 +853,7 @@ function renderLevel(){ const el = $('#lvlBox'); if (!el) return; if (!xpOn()){ 
   let books = 0; try { books = collectorNumbers().books; } catch(e){} let r0 = 0; while (r0 + 1 < RANKS.length && books >= RANKS[r0 + 1][0]) r0++; const nx = RANKS[r0 + 1];
   const rank = rankName(r0, cls), sec = $('#rank');
   if (sec){ const lbl = sec.querySelector('.lbl'); if (lbl) lbl.textContent = 'Your character';
-    $('#rankName').textContent = `${cls} · Lv ${X.lv}`;
+    const hd = `${cls} · Lv ${X.lv} · ${rank} Rank`; $('#rankName').textContent = hd; $('#rankName').style.fontSize = hd.length > 34 ? '19px' : hd.length > 26 ? '22px' : '';
     $('#rankNext').innerHTML = `📚 <b>${esc(rank)}</b> rank${nx ? ` · ${nx[0] - books} more ${nx[0] - books === 1 ? 'book' : 'books'} to ${esc(rankName(r0 + 1, cls))}` : ' · the highest rank there is'}`;
     [$('#rankBar') && $('#rankBar').parentElement, $('#rankNext'), $('#rankName')].forEach(n => { if (n){ n.setAttribute('data-lvtog', ''); n.style.cursor = 'pointer'; } }); }
   el.innerHTML = `<div data-lvtog role="button" tabindex="0" aria-expanded="${lvOpen}" style="cursor:pointer;margin-top:8px"><div class="bar"><i style="width:${Math.round((X.xp - a) / (b - a) * 100)}%"></i></div>
