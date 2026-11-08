@@ -1253,7 +1253,12 @@ async function doImport(text){ if (!text || !text.trim()){ $('#impMsg').textCont
 $('#impBtn').onclick = () => doImport($('#impTxt').value);
 $('#snapBtn').onclick = () => buildSnap($('#snapBtn'), $('#snapMsg'));
 $('#impFile').onchange = async e => { const f = e.target.files && e.target.files[0]; if (!f) return; if (f.size > 15e6){ $('#impMsg').textContent = 'That file is too big.'; return; } await doImport(await f.text()); e.target.value = ''; };
-function coverOf(k){ const s = shelf.series[k]; if (!s){ const e = SNAP && SNAP.s[k]; const it = e && (e.i || []).find(x => x[4]); return it ? snapImg(it[4]) : ''; } if (s.c) return s.c; const L = live.get(k); if (!L) return ''; const own = new Set(ints(s)); const it = L.items.find(p => p.img && own.has(p.vol)) || L.items.find(p => p.img); return it ? it.img : ''; }
+function coverOf(k){ const s = shelf.series[k]; if (!s){ const e = SNAP && SNAP.s[k]; const it = e && (e.i || []).find(x => x[4]); return it ? snapImg(it[4]) : ''; } if (s.c) return s.c; const L = live.get(k);
+  if (!L){ /* no live data yet: use the snapshot, then omnibus/deluxe pictures for shelves that only hold editions (Gunsmith Cats omnibus etc.) */
+    const hit = SNAP && snapEntry(k); const e = hit && hit[1]; if (!e) return ''; const own = new Set(ints(s));
+    const it = (e.i || []).find(x => x[4] && own.has(x[0])) || (e.i || []).find(x => x[4]); if (it) return snapImg(it[4]);
+    for (const [t, E] of Object.entries(s.ed || {})){ const X = (e.x || {})[t] || []; const m = X.find(x => x[4] && (E.v || []).includes(x[0])) || X.find(x => x[4]); if (m) return snapImg(m[4]); }
+    for (const X of Object.values(e.x || {})){ const m = X.find(x => x[4]); if (m) return snapImg(m[4]); } return ''; } const own = new Set(ints(s)); const it = L.items.find(p => p.img && own.has(p.vol)) || L.items.find(p => p.img); return it ? it.img : ''; }
 function coverHTML(k){ const u = coverOf(k); const n = shelf.series[k].n.replace(/^(the|a)\s+/i,'');
   return `<span class="cover" aria-hidden="true">${u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.remove()">` : esc(n[0] || '?')}</span>`; }
 /* ---------- needs a volume number: shelf entries that look like a shop series but have the volume missing or stuck in the name ---------- */
