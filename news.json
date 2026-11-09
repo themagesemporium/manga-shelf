@@ -1,5 +1,10 @@
 [
  {
+  "at": "2026-11-09T07:00:00-05:00",
+  "t": "Tell us what's inside your omnibus",
+  "b": "On a series page under Editions, set how many volumes each omnibus or deluxe holds (Berserk Deluxe holds 3). The volumes inside shade in on your shelf and count toward your runs."
+ },
+ {
   "at": "2026-11-08T19:20:00-05:00",
   "t": "Daily bonus",
   "b": "Open the app each day for +5 XP, and keep it up for 7 days in a row for a +25 XP streak bonus."
