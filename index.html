@@ -460,6 +460,7 @@ html:has(#sheet.on),html:has(#sheet.on) body,html:has(.vpop) body{overflow:hidde
     <div class="seg2" id="findSeg" role="group" aria-label="Show"><button data-fs="miss" aria-pressed="true">📚 Missing volumes</button><button data-fs="recs" aria-pressed="false">✨ Recommended for you</button></div>
     <div id="findsMiss">
     <p class="note" id="findsNote">Volumes missing from your series that The Mage's Emporium has in stock right now. Your whole shelf is checked automatically when you open the app.</p>
+    <div class="tools" id="findCtl" style="display:flex;gap:8px;margin:0 0 4px"><select id="findShow" aria-label="Show"><option value="stock">In the shop now</option><option value="all">All my missing volumes</option></select><select id="findSort" aria-label="Sort"><option value="shop">Available in shop first</option><option value="az">Series A–Z</option><option value="price">Lowest price first</option></select></div>
     <div class="row2"><button class="btn" id="findBtn">Check again</button><span id="findProg" class="sub" style="align-self:center;margin:0"></span></div>
     <div class="list" id="finds" style="margin-top:14px"></div>
     </div>
@@ -2463,11 +2464,42 @@ function renderFinds(){
   renderLists();
   const tb = document.querySelector('[data-tab="finds"]'); tb.textContent = findsList.length ? `Finds (${findsList.length})` : 'Finds';
   const el = $('#finds');
-  if (!findsList.length){ el.innerHTML = live.size ? `<div class="empty">Nothing you're missing is in stock among the series checked so far.</div>` : ''; return; }
+  if (findShow === 'all') return renderMissAll(el);
+  findsList = findsList.filter(f => !missHidden(f.k, f.p.vol));
+  if (findSort === 'az') findsList.sort((a, b) => a.n.localeCompare(b.n) || a.p.vol - b.p.vol); else if (findSort === 'price') findsList.sort((a, b) => (a.p.price||0) - (b.p.price||0));
+  if (!findsList.length){ el.innerHTML = live.size ? `<div class="empty">Nothing you're missing is in stock among the series checked so far. Switch to “All my missing volumes” to see everything you still need.</div>` : ''; return; }
   const total = findsList.reduce((s,f) => s + (f.p.price||0), 0);
-  const WI = new Set(wantedInStock().map(x => x.p.handle)); findsList.sort((a, b) => (WI.has(b.p.handle) - WI.has(a.p.handle)));
-  el.innerHTML = (WI.size ? `<div class="verdict next" style="text-align:left;margin:0 0 10px"><b>♥ ${WI.size} of these ${WI.size === 1 ? 'is' : 'are'} on your wishlist</b>, so they’re at the top.</div>` : '') + `<p class="count">${findsList.length} volumes waiting for you · $${total.toFixed(2)} total</p>` + findsList.map(f => `<div class="find"><img src="${esc(f.p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(f.n)} Vol ${f.p.vol}</a></b><small>${WI.has(f.p.handle) ? '♥ On your wishlist' : f.gap ? 'Fills a gap' : 'Next in the series'}</small></div><span class="price">$${(f.p.price||0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(f.p.handle)}">🛒 Add</button></div>`).join('');
+  const WI = new Set(wantedInStock().map(x => x.p.handle)); if (findSort === 'shop') findsList.sort((a, b) => (WI.has(b.p.handle) - WI.has(a.p.handle)));
+  el.innerHTML = (WI.size ? `<div class="verdict next" style="text-align:left;margin:0 0 10px"><b>♥ ${WI.size} of these ${WI.size === 1 ? 'is' : 'are'} on your wishlist</b>, so they’re at the top.</div>` : '') + `<p class="count">${findsList.length} volumes waiting for you · $${total.toFixed(2)} total</p>` + findsList.map(f => `<div class="find"><img src="${esc(f.p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b><a href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(f.n)} Vol ${f.p.vol}</a></b><small>${WI.has(f.p.handle) ? '♥ On your wishlist' : f.gap ? 'Fills a gap' : 'Next in the series'}</small></div><span class="price">$${(f.p.price||0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(f.p.handle)}">🛒 Add</button>${missBtns(f.k, f.p.vol)}</div>`).join('');
 }
+
+/* ---------- Finds: show in-stock finds or ALL missing volumes (Megan, Nov 9), sort, ♥ to wishlist, ✕ to hide ---------- */
+var findShow = ls.get('mme-fshow') || 'stock', findSort = ls.get('mme-fsort') || 'shop';
+$('#findShow').value = findShow; $('#findSort').value = findSort;
+$('#findShow').onchange = e => { findShow = e.target.value; ls.set('mme-fshow', findShow); $('#findsNote').textContent = findShow === 'all' ? 'Every volume missing from your series, whether or not the shop has it. ♥ a volume to add it to your wishlist (you’ll hear when it’s in stock), or ✕ to take it off this list.' : 'Volumes missing from your series that The Mage\'s Emporium has in stock right now. Your whole shelf is checked automatically when you open the app.'; track('finds-show-' + findShow); renderFinds(); };
+$('#findSort').onchange = e => { findSort = e.target.value; ls.set('mme-fsort', findSort); renderFinds(); };
+var missHidden = (k, v) => ((shelf.hideMiss || {})[k] || []).includes(v);
+var missBtns = (k, v) => { const w = (shelf.series[k].want || []).includes(v); return `<button class="btn ghost sm" data-mheart="${esc(k)}|${v}" aria-pressed="${w}" aria-label="${w ? 'Remove from' : 'Add to'} wishlist" title="${w ? 'On your wishlist' : 'Add to wishlist'}" style="padding:6px 9px${w ? ';color:#d9417a' : ''}">${w ? '♥' : '♡'}</button><button class="btn ghost sm" data-mhide="${esc(k)}|${v}" aria-label="Remove from this list" title="Remove from this list" style="padding:6px 9px">✕</button>`; };
+var missLimit = 150; if (findShow === 'all') setTimeout(() => $('#findShow').onchange({ target: $('#findShow') }), 0);
+function missAllList(){ const out = [];
+  Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const i = info(k); const tail = i.total ? Array.from({ length: Math.max(0, i.total - i.max) }, (_, j) => i.max + j + 1) : (i.next ? [i.next] : []);
+    const L = live.get(k); const by = new Map((L ? L.items : []).map(p => [p.vol, p])); const w = new Set(i.s.want || []);
+    [...new Set(i.gaps.concat(tail))].forEach(v => { if (missHidden(k, v)) return; const p = by.get(v); out.push({ k, n: i.s.n, v, p, st: p ? (p.inv > 0 ? 2 : 1) : 0, want: w.has(v), gap: v < i.max, img: (p && p.img) || i.s.c || '' }); }); });
+  const az = (a, b) => a.n.localeCompare(b.n) || a.v - b.v;
+  if (findSort === 'az') out.sort(az); else if (findSort === 'price') out.sort((a, b) => (b.st === 2) - (a.st === 2) || (a.st === 2 ? a.p.price - b.p.price : 0) || az(a, b)); else out.sort((a, b) => b.st - a.st || b.want - a.want || az(a, b));
+  return out; }
+function renderMissAll(el){ const L = missAllList(); const inS = L.filter(x => x.st === 2).length;
+  if (!L.length){ el.innerHTML = `<div class="empty">You're not missing anything we know of. 🎉</div>`; return; }
+  el.innerHTML = `<p class="count">${L.length} missing ${L.length === 1 ? 'volume' : 'volumes'} · ${inS} in the shop now</p>` + L.slice(0, missLimit).map(f => `<div class="find"><img src="${esc(f.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="t"><b>${f.p ? `<a href="${STORE}/products/${encodeURIComponent(f.p.handle)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(f.n)} Vol ${f.v}</a>` : `${esc(f.n)} Vol ${f.v}`}</b><small>${f.st === 2 ? '✅ In the shop' : f.st === 1 ? 'Sold out at the shop' : 'Not in the shop yet'} · ${f.gap ? 'Fills a gap' : 'Next in the series'}${f.want ? ' · ♥ Wishlist' : ''}</small></div>${f.st === 2 ? `<span class="price">$${(f.p.price||0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(f.p.handle)}">🛒 Add</button>` : ''}${missBtns(f.k, f.v)}</div>`).join('') + (L.length > missLimit ? `<p style="text-align:center"><button class="btn ghost sm" data-missmore>Show ${Math.min(150, L.length - missLimit)} more</button></p>` : '') + ((shelf.hideMiss && Object.keys(shelf.hideMiss).length) ? `<p style="text-align:center"><button class="btn ghost sm" data-missunhide>Bring back the ones I removed</button></p>` : ''); }
+document.addEventListener('click', e => {
+  const m = e.target.closest('[data-missmore]'); if (m){ missLimit += 150; renderFinds(); return; }
+  if (e.target.closest('[data-missunhide]')){ const prev = shelf.hideMiss; delete shelf.hideMiss; save(); renderFinds(); toast('Removed volumes are back on the list', () => { shelf.hideMiss = prev; save(); renderFinds(); }); return; }
+  const h = e.target.closest('[data-mheart]'); if (h){ const [k, v0] = h.dataset.mheart.split('|'); const v = +v0; const s = shelf.series[k]; if (!s) return; const on = (s.want || []).includes(v);
+    const want = on ? (s.want || []).filter(x => x !== v) : [...new Set((s.want || []).concat(v))].sort((a, b) => a - b); const undo = patchSeries(k, { want: want.length ? want : null }); if (shelf.alert) syncAlerts(); renderFinds();
+    toast(on ? `Took ${s.n} Vol ${v} off your wishlist` : `♥ ${s.n} Vol ${v} is on your wishlist${shelf.alert ? '. We’ll let you know when it’s in stock.' : ''}`, () => { undo(); if (shelf.alert) syncAlerts(); renderFinds(); }); return; }
+  const x = e.target.closest('[data-mhide]'); if (x){ const [k, v0] = x.dataset.mhide.split('|'); const v = +v0; const H = shelf.hideMiss = shelf.hideMiss || {}; const prev = JSON.parse(JSON.stringify(H)); H[k] = [...new Set((H[k] || []).concat(v))]; save(); renderFinds();
+    toast(`Removed ${(shelf.series[k] || {}).n || ''} Vol ${v} from this list`, () => { shelf.hideMiss = prev; save(); renderFinds(); }); }
+});
 
 /* ---------- Finds: Missing volumes | Recommended for you ---------- */
 var findSeg = ls.get('mme-fs') === 'recs' ? 'recs' : 'miss', RX = null, rxLoading = false;
