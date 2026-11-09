@@ -65,6 +65,61 @@
   --good:#6fcf97; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
   --rank1:#1e6fb0; --rank2:#0b2c4d; --display:Fredoka,Figtree,sans-serif;
 }
+:root[data-skin="starlight"]{
+  --bg:#0e1230; --bgimg:radial-gradient(circle at 20% 10%,rgba(255,226,140,.18),transparent 40%),linear-gradient(180deg,#1b1f4d 0%,#0e1230 420px); --surface:#171c45; --surface-2:#20265a; --ink:#f3efe0; --muted:#b4b2cf; --line:#2c3270;
+  --accent:#ffd36b; --accent-ink:#1b1606; --accent-soft:#3a3420; --gold:#ffd36b; --gold-soft:#3a3420;
+  --good:#7fe0a6; --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.4); --rank1:#4a52c9; --rank2:#1d2160; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="starlight"] body:before{content:"";position:absolute;left:0;right:0;top:0;height:560px;pointer-events:none;z-index:0;background-image:radial-gradient(circle,rgba(255,240,200,.9) 1.2px,transparent 2px),radial-gradient(circle,rgba(255,255,255,.55) 1px,transparent 1.8px);background-size:90px 80px,53px 61px;background-position:12px 20px,30px 44px}
+:root[data-skin="starlight"] .wrap,:root[data-skin="neon"] .wrap{position:relative;z-index:1}
+:root[data-skin="neon"]{
+  --bg:#0d0b14; --bgimg:linear-gradient(180deg,#2a0f3d 0%,#120d1f 300px,#0d0b14 100%); --surface:#17121f; --surface-2:#211a2d; --ink:#f4ecff; --muted:#b6a8cc; --line:#3a2b4f;
+  --accent:#ff3fa4; --accent-ink:#fff; --accent-soft:#3a1530; --gold:#2de2e6; --gold-soft:#123536;
+  --good:#5ef2a0; --shadow:0 0 0 1px rgba(255,63,164,.08),0 8px 24px rgba(0,0,0,.45); --rank1:#ff3fa4; --rank2:#2de2e6; --display:Fredoka,Figtree,sans-serif;
+}
+:root[data-skin="sunset"]{
+  --bg:#fff2e6; --bgimg:linear-gradient(180deg,#ff6a3d 0%,#ff9a52 200px,#ffd38a 420px,#fff2e6 640px); --surface:#fffaf4; --surface-2:#ffe7d0; --ink:#3b1a0e; --muted:#80553f; --line:#f6cfa9;
+  --accent:#e2402a; --accent-ink:#fff; --accent-soft:#ffd9cc; --gold:#c97a00; --gold-soft:#fff0c9; --rank1:#c43a1f; --rank2:#7a1f10; --display:Fredoka,Figtree,sans-serif;
+}
+:root[data-skin="lavender"]{
+  --bg:#f6f2fc; --bgimg:linear-gradient(180deg,#cdb9f0 0%,#e6dbf8 280px,#f6f2fc 100%); --surface:#fdfbff; --surface-2:#ece3fa; --ink:#2a2140; --muted:#6c6187; --line:#dccff3;
+  --accent:#7b4fd6; --accent-ink:#fff; --accent-soft:#e7dcfb; --gold:#b07a1a; --gold-soft:#f6ead0; --rank1:#7b4fd6; --rank2:#4a2b94; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="mint"]{
+  --bg:#effbf8; --bgimg:linear-gradient(180deg,#9fe6d5 0%,#d3f4ec 280px,#effbf8 100%); --surface:#fbfffe; --surface-2:#dcf5ee; --ink:#14332d; --muted:#4f736b; --line:#bfe9de;
+  --accent:#ff6f91; --accent-ink:#fff; --accent-soft:#ffdfe7; --gold:#c7880a; --gold-soft:#fff1cc; --rank1:#1f9e85; --rank2:#0f5e4f; --display:Fredoka,Figtree,sans-serif;
+}
+:root[data-skin="peach"]{
+  --bg:#fff6f0; --bgimg:linear-gradient(180deg,#ffc6a8 0%,#ffe4d4 280px,#fff6f0 100%); --surface:#fffcfa; --surface-2:#ffe9dc; --ink:#3b2219; --muted:#85604f; --line:#f7d3c0;
+  --accent:#ef7a55; --accent-ink:#fff; --accent-soft:#ffe0d3; --gold:#c08410; --gold-soft:#fff0cf; --rank1:#e0694a; --rank2:#93391f; --display:Fredoka,Figtree,sans-serif;
+}
+:root[data-skin="storm"]{
+  --bg:#e9eef2; --bgimg:linear-gradient(180deg,#4d6070 0%,#8aa0b0 240px,#e9eef2 560px); --surface:#f8fafb; --surface-2:#dde5eb; --ink:#18232c; --muted:#56687a; --line:#c7d3dc;
+  --accent:#1f8fa3; --accent-ink:#fff; --accent-soft:#d2ecf1; --gold:#e0a400; --gold-soft:#fbefc8; --rank1:#2b4d63; --rank2:#13283a; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="royal"]{
+  --bg:#fbf5ee; --bgimg:linear-gradient(180deg,#5e1023 0%,#8b2238 230px,#f2dfc7 520px,#fbf5ee 100%); --surface:#fffbf6; --surface-2:#f5e6d3; --ink:#2c1418; --muted:#76545a; --line:#ead2b8;
+  --accent:#8b2238; --accent-ink:#fff; --accent-soft:#f6d7dd; --gold:#c39a2e; --gold-soft:#f7ecc9; --rank1:#8b2238; --rank2:#4a0b18; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="royal"] .top h1,:root[data-skin="royal"] .top small,:root[data-skin="storm"] .top h1,:root[data-skin="storm"] .top small,:root[data-skin="sunset"] .top h1,:root[data-skin="sunset"] .top small{color:#fff}
+:root[data-skin="forest"]{
+  --bg:#0f1a14; --bgimg:linear-gradient(180deg,#1f3a2a 0%,#0f1a14 360px); --surface:#16241c; --surface-2:#1e3126; --ink:#e7f2e9; --muted:#9cb5a3; --line:#2a4433;
+  --accent:#9ad86b; --accent-ink:#10200a; --accent-soft:#25381f; --gold:#f2c56b; --gold-soft:#3a3018;
+  --good:#7fe0a6; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); --rank1:#2f6b45; --rank2:#123222; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="cotton"]{
+  --bg:#fbf7ff; --bgimg:linear-gradient(180deg,#ffc8e4 0%,#d8d0ff 260px,#e6f4ff 460px,#fbf7ff 100%); --surface:#fffdff; --surface-2:#f0e8ff; --ink:#2a2140; --muted:#6e6487; --line:#e3d8f6;
+  --accent:#ff6fb5; --accent-ink:#fff; --accent-soft:#ffe0f0; --gold:#7a8cff; --gold-soft:#e6eaff; --rank1:#8e7dff; --rank2:#ff6fb5; --display:Fredoka,Figtree,sans-serif;
+}
+:root[data-skin="ink"]{
+  --bg:#f4f1ea; --bgimg:none; --surface:#fffdf9; --surface-2:#ebe6db; --ink:#111; --muted:#5d5a55; --line:#d8d2c5;
+  --accent:#111; --accent-ink:#fff; --accent-soft:#e3ded3; --gold:#b3261e; --gold-soft:#f5dcd9; --rank1:#111; --rank2:#b3261e; --display:Fraunces,Georgia,serif;
+}
+:root[data-skin="dragon"]{
+  --bg:#1a0e0b; --bgimg:linear-gradient(180deg,#5a1a0e 0%,#2a120c 300px,#1a0e0b 100%); --surface:#24140f; --surface-2:#301b14; --ink:#fbeee4; --muted:#c7a796; --line:#48291e;
+  --accent:#ff6a2b; --accent-ink:#1a0a03; --accent-soft:#3d2015; --gold:#ffc145; --gold-soft:#3d3015;
+  --good:#8be08f; --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.45); --rank1:#c43a12; --rank2:#5a1a0e; --display:Fraunces,Georgia,serif;
+}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background-color:var(--bg);background-image:var(--bgimg);background-repeat:no-repeat;background-size:100% 100%;min-height:100vh;color:var(--ink);font:15px/1.45 Figtree,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(90px + env(safe-area-inset-bottom))}
@@ -481,12 +536,45 @@ const SKINS = [
   ['ocean','Night Ocean','Dark blue with orange','linear-gradient(180deg,#123a5a,#0f1d2e)','#ff9a4d','#1e6fb0'],
   ['night','Midnight','Dark violet','#13101b','#a58cff','#3b2a8f']
 ];
+/* Surprise looks (Megan, Nov 9): locked until earned. Each new achievement has a 1-in-3 chance to unlock one at random, each level-up 1-in-4,
+   and every 4th achievement without a find guarantees one. Names stay hidden ("???") until unlocked. Unlocks live in shelf.ach.sk = {got:[], n, lv, miss}. */
+const SKINS_X = [
+  ['starlight','Starlight','Midnight navy with falling stars','linear-gradient(180deg,#1b1f4d,#0e1230)','#ffd36b','#4a52c9'],
+  ['neon','Neon Tokyo','Hot pink and cyan city lights','linear-gradient(180deg,#2a0f3d,#0d0b14)','#ff3fa4','#2de2e6'],
+  ['sunset','Shonen Sunset','Blazing orange to golden hour','linear-gradient(180deg,#ff6a3d,#ffd38a)','#e2402a','#c43a1f'],
+  ['lavender','Lavender Fields','Soft purple calm','linear-gradient(180deg,#cdb9f0,#f6f2fc)','#7b4fd6','#4a2b94'],
+  ['mint','Mint Soda','Fizzy mint with a pink pop','linear-gradient(180deg,#9fe6d5,#effbf8)','#ff6f91','#1f9e85'],
+  ['peach','Peach Milk','Creamy peach and coral','linear-gradient(180deg,#ffc6a8,#fff6f0)','#ef7a55','#93391f'],
+  ['storm','Thunderstorm','Slate skies and teal lightning','linear-gradient(180deg,#4d6070,#e9eef2)','#1f8fa3','#2b4d63'],
+  ['royal','Royal Court','Burgundy velvet and gold','linear-gradient(180deg,#5e1023,#f2dfc7)','#8b2238','#c39a2e'],
+  ['forest','Spirit Forest','Deep woods and glowing moss','linear-gradient(180deg,#1f3a2a,#0f1a14)','#9ad86b','#2f6b45'],
+  ['cotton','Cotton Candy','Pink and periwinkle sugar','linear-gradient(180deg,#ffc8e4,#d8d0ff)','#ff6fb5','#8e7dff'],
+  ['ink','Ink & Paper','Black ink, red seal stamp','#f4f1ea','#111111','#b3261e'],
+  ['dragon','Dragon\'s Hoard','Ember orange and treasure gold','linear-gradient(180deg,#5a1a0e,#1a0e0b)','#ff6a2b','#ffc145']
+];
+const skGot = () => { const S = (shelf && shelf.ach && shelf.ach.sk) || {}; return new Set(S.got || []); };
+function skinUnlock(earnedN, lv){ if (!shelf || typeof SNAP === 'undefined' || !SNAP) return; const A = shelf.ach = shelf.ach || {}; let S = A.sk;
+  const left = () => SKINS_X.map(x => x[0]).filter(k => !(S.got || []).includes(k)); const give = () => { const L = left(); if (!L.length) return null; const k = L[Math.floor(Math.random() * L.length)]; S.got = (S.got || []).concat(k); S.miss = 0; return k; };
+  const won = [];
+  if (!S){ S = A.sk = { got: [], n: earnedN, lv: lv || 1, miss: 0 }; const start = Math.min(3, Math.floor(earnedN / 4)); for (let i = 0; i < start; i++){ const k = give(); if (k) won.push(k); } }
+  else {
+    for (let i = (S.n || 0); i < earnedN; i++){ if (Math.random() < 1 / 3 || (S.miss || 0) >= 3){ const k = give(); if (k) won.push(k); } else S.miss = (S.miss || 0) + 1; }
+    if (lv && S.lv && lv > S.lv) for (let i = S.lv; i < lv; i++) if (Math.random() < 0.25){ const k = give(); if (k) won.push(k); }
+    S.n = Math.max(S.n || 0, earnedN); if (lv) S.lv = Math.max(S.lv || 1, lv);
+  }
+  if (!won.length){ if (A.sk && (A.sk._n !== earnedN)){ A.sk._n = earnedN; } return; }
+  setTimeout(save, 0); track('skin-unlock');
+  const names = won.map(k => SKINS_X.find(x => x[0] === k)[1]);
+  const el = document.createElement('div'); el.className = 'xppop up'; el.setAttribute('role', 'status'); el.textContent = `✨ New look unlocked: ${names.join(' & ')}! Tap 🎨 to wear it.`;
+  document.body.appendChild(el); setTimeout(() => el.classList.add('go'), 20); setTimeout(() => el.remove(), 5200); }
 function applySkin(k){ if (k && k !== 'emporium') document.documentElement.dataset.skin = k; else delete document.documentElement.dataset.skin; }
 applySkin(ls.get('mme-skin'));
 $('#theme').onclick = () => {
   current = null;
   const cur = document.documentElement.dataset.skin || 'emporium';
-  openSheet(`<h2>Colors</h2><p class="sub">Pick a look. It follows you to your other devices.</p><div class="skins">${SKINS.map(([k,n,d,bg,a,b]) => `<button class="skin" data-skin="${k}" aria-pressed="${k===cur}"><div class="sw" style="background:${bg}"><i style="background:${a}"></i><b style="background:${b}"></b></div><span>${n}<small>${d}</small></span></button>`).join('')}</div><div class="row2"><button class="btn ghost" data-close>Done</button></div>`);
+  const got = skGot(), sk = ([k,n,d,bg,a,b]) => `<button class="skin" data-skin="${k}" aria-pressed="${k===cur}"><div class="sw" style="background:${bg}"><i style="background:${a}"></i><b style="background:${b}"></b></div><span>${n}<small>${d}</small></span></button>`;
+  const lockedN = SKINS_X.filter(x => !got.has(x[0])).length;
+  openSheet(`<h2>Colors</h2><p class="sub">Pick a look. It follows you to your other devices.</p><div class="skins">${SKINS.map(sk).join('')}${SKINS_X.filter(x => got.has(x[0])).map(x => sk(x).replace('</span>', ' <small style="color:var(--gold)">✨ Unlocked</small></span>')).join('')}${SKINS_X.filter(x => !got.has(x[0])).map(() => `<div class="skin" aria-disabled="true" style="opacity:.6;cursor:default"><div class="sw" style="background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 6px,var(--line) 6px,var(--line) 12px);display:flex;align-items:center;justify-content:center;font-size:18px">🔒</div><span>???<small>A hidden look. Earning achievements might reveal it.</small></span></div>`).join('')}</div>${lockedN ? `<p class="sub" style="margin-top:8px">🔒 ${lockedN} hidden ${lockedN === 1 ? 'look' : 'looks'} still to find.</p>` : `<p class="sub" style="margin-top:8px">🌟 You found every hidden look!</p>`}<div class="row2"><button class="btn ghost" data-close>Done</button></div>`);
 };
 function chooseSkin(k){ applySkin(k); ls.set('mme-skin', k); document.querySelectorAll('.skin').forEach(b => b.setAttribute('aria-pressed', b.dataset.skin === k)); if (shelf.skin !== k){ shelf.skin = k; save(); } }
 
@@ -705,7 +793,8 @@ function renderStats(){
   ];
   BADGES[BADGES.length - 1][2] = BADGES.slice(0, -1).filter(b => b[2] >= b[3]).length;
   const shown = BADGES.map((b, i) => [b, i]).filter(([b]) => !b[4] || b[2] >= b[3]); const secret = BADGES.filter(b => b[4] && b[2] < b[3]).length;
-  const earnedN = BADGES.filter(b => b[2] >= b[3]).length, achMode = ls.get('mme-achmode') ?? (ls.get('mme-achopen') ? 2 : 0), openA = achMode === 2;
+  const earnedN = BADGES.filter(b => b[2] >= b[3]).length; try { skinUnlock(earnedN, xpLast ? xpLast.lv : 0); } catch(e){}
+  const achMode = ls.get('mme-achmode') ?? (ls.get('mme-achopen') ? 2 : 0), openA = achMode === 2;
   const emo = b => b[0].slice(0, b[0].indexOf(' '));
   $('#achWrap').innerHTML = (isPaid() ? `<div style="margin-top:10px">${memberChip()}</div>` : '') + (holds ? `<button class="badge" data-goholds style="width:100%;margin-top:12px;font-size:13.5px;padding:8px 10px;background:rgba(255,255,255,.3)">📦 ${holds.items.length} ${holds.items.length === 1 ? 'book' : 'books'} on hold for you</button>` : '') + (() => { const c = monthChal(); return `<button class="badge" data-gochal style="width:auto;margin-top:10px;font-size:12.5px;padding:4px 12px;white-space:nowrap;background:rgba(255,255,255,.3)">🎯 ${esc(String(c.label).slice(0, 3))} challenges ${c.doneN}/${c.list.length} · 🎱 Bingo ${c.bingoLines ? '✓' : c.marked + '/24'}</button>`; })() + `<div style="display:flex;gap:6px;margin-top:8px"><button class="badge" data-gofriends style="flex:1;font-size:12.5px;padding:5px 6px;background:rgba(255,255,255,.22)">👯 Friends</button><button class="badge" data-share style="flex:1;font-size:12.5px;padding:5px 6px;background:rgba(255,255,255,.22)">📸 Shelfie</button>${xpOn() ? '<button class="badge" data-sharechar style="flex:1;font-size:12.5px;padding:5px 6px;background:rgba(255,255,255,.22)">🎲 Character</button>' : ''}</div><div class="achhead"><span class="achtl" style="cursor:default">🏅 Achievements · ${earnedN} of ${shown.length}</span><span style="display:flex;gap:4px">${[[0, 'One line'], [1, 'All'], [2, 'Details']].map(([m, l]) => `<button class="achtl" data-achmode="${m}" aria-pressed="${achMode === m}" style="font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap;${achMode === m ? 'background:rgba(255,255,255,.3)' : 'opacity:.75'}">${l}</button>`).join('')}</span></div>` + (openA ? '' : `<div class="achemo" data-achmode="2" title="Tap to see the names and how to earn each" style="${achMode === 1 ? 'max-height:none' : ''}">${shown.map(([b]) => `<i class="${b[2]>=b[3]?'':'off'}" title="${esc(b[0])}">${emo(b)}</i>`).join('')}${secret ? '<i class="off" title="Secret achievements">🔒</i>' : ''}</div>`);
   $('#badges').classList.toggle('hid', !openA);
