@@ -352,8 +352,8 @@ html:has(#sheet.on),html:has(#sheet.on) body,html:has(.vpop) body{overflow:hidde
   <div id="a2hs" hidden style="margin:6px 0 0"><div class="st-sec" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin:0"><span style="font-size:22px">📲</span><div style="flex:1;min-width:0"><b style="font-size:14px">Get the app on your home screen</b><small class="sub" style="display:block">No App Store needed. Takes 10 seconds.</small></div><button class="btn gold sm" data-a2hs>How</button><button class="iconbtn" data-a2hsx aria-label="Dismiss" style="width:30px;height:30px;font-size:14px">✕</button></div></div>
 
   <section class="rank" id="rank" aria-live="polite">
-    <div class="lbl">Collector rank</div>
-    <h2 id="rankName">—</h2>
+    <div class="lbl">Your character</div>
+    <h2 id="rankName">&nbsp;</h2>
     <div class="bar"><i id="rankBar" style="width:0"></i></div>
     <div class="next" id="rankNext"></div>
     <div id="lvlBox"></div>
@@ -615,11 +615,11 @@ function renderStats(){
   let books = 0, runs = 0, gaps = 0, langs = new Set(), ln = 0, longest = 0, complete = 0;
   keys.forEach(k => { const i = info(k); books += i.s.v.length + edCount(i.s); if (i.own.length >= 2 && !i.gaps.length) runs++; if (!langOf(k)) gaps += i.gaps.length; const l = langOf(k); if (l) langs.add(l); if (isLN(k,i.s)) ln++; longest = Math.max(longest, i.own.length); if (i.complete) complete++; });
   let r = 0; while (r+1 < RANKS.length && books >= RANKS[r+1][0]) r++;
-  let myCls = ''; try { if (xpOn()) myCls = myClass(statCalc()); } catch(e){} $('#rankName').textContent = rankName(r, myCls);
+  /* header text (class · level · rank) is written by renderLevel only, so the old-style rank never flashes first */
   const nx = RANKS[r+1];
   $('#rankBar').style.width = nx ? Math.round((books - RANKS[r][0]) / (nx[0] - RANKS[r][0]) * 100) + '%' : '100%';
-  const rl = n => setTimeout(() => { try { renderLevel(); } catch(e){ if (n < 5) rl(n + 1); } }, n ? 600 : 0); rl(0);
-  $('#rankNext').textContent = nx ? `${nx[0]-books} more ${nx[0]-books===1?'book':'books'} to ${rankName(r + 1, myCls)}` : 'The highest rank there is.';
+  const rl = n => setTimeout(() => { try { renderLevel(); } catch(e){ if (n < 40) rl(n + 1); } }, n ? 50 : 0); rl(0);
+  /* rank line under the bar: renderLevel */
   $('#sBooks').textContent = books; $('#sSeries').textContent = keys.length; $('#sRuns').textContent = runs; $('#sGaps').textContent = gaps;
   const C = collectorNumbers(); const o = shelf.orders || {}; const yrs = o.first ? (Date.now() - new Date(o.first)) / (365.25*864e5) : 0;
   const vrN = Object.values(shelf.series).reduce((a, x) => a + Object.keys(x.vr || {}).length, 0), cnN = Object.values(shelf.series).reduce((a, x) => a + Object.keys(x.cn || {}).length, 0);
