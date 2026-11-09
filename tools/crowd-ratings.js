@@ -1,6 +1,6 @@
 // Crowd spice & gentle-read ratings (Megan, Nov 8 2026: option 2, automatic).
 // Customers rate a series in the app (shelf.series[k].ux = {sp: 0-5, gr: true/false}). Nightly, this tallies every shelf:
-//  - when 3+ customers agree on a value and a listing has no rating yet, it fills that listing in (all volumes and editions of the series);
+//  - when 3+ customers have rated a series, the majority value goes on its listings, it fills that listing in (all volumes and editions of the series);
 //  - when 3+ agree on a value that differs from the shop's rating, the crowd wins too (Megan, Nov 8: "It can override ratings if three or more agree").
 //    Changed ratings are listed in claude_tmp.crowd_changes for the record.
 // Run with window._api defined: await _crRun(). Result in window._CR.
@@ -19,9 +19,12 @@ window._crRun = async (opt = {}) => {
         const V = votes[key] = votes[key] || { sp: {}, gr: {} }; if (s.ux.sp >= 1 && s.ux.sp <= 5) V.sp[s.ux.sp] = (V.sp[s.ux.sp] || 0) + 1; if (s.ux.gr != null) V.gr[!!s.ux.gr] = (V.gr[!!s.ux.gr] || 0) + 1; any = true; }
       if (any) CR.voters++; }
     a = c.pageInfo.hasNextPage ? c.pageInfo.endCursor : null; } while (a);
-  const top = m => { const e = Object.entries(m).sort((x, y) => y[1] - x[1]); return e.length && e[0][1] >= NEED && !(e[1] && e[1][1] === e[0][1]) ? e[0] : null; };
+  /* majority rule (Megan, Nov 8): needs 3+ ratings in total; the value with the most votes wins. A spice tie goes to the middle (median) vote; a gentle-read tie changes nothing. */
+  const top = (m, spice) => { const e = Object.entries(m).sort((x, y) => y[1] - x[1]); const total = e.reduce((a, x) => a + x[1], 0); if (!e.length || total < NEED) return null;
+    if (!(e[1] && e[1][1] === e[0][1])) return [e[0][0], total];
+    if (!spice) return null; const all = e.flatMap(([v, c]) => Array(c).fill(+v)).sort((a, b) => a - b); return [String(all[Math.floor((all.length - 1) / 2)]), total]; };
   const writes = [];
-  for (const [key, V] of Object.entries(votes)){ const sp = top(V.sp), gr = top(V.gr); if (!sp && !gr) continue; CR.series++;
+  for (const [key, V] of Object.entries(votes)){ const sp = top(V.sp, true), gr = top(V.gr, false); if (!sp && !gr) continue; CR.series++;
     const e = SN.s[key]; const pids = [...(e.i || []), ...Object.values(e.x || {}).flat()].map(x => x[6]).filter(Boolean).map(id => 'gid://shopify/Product/' + id);
     for (let i = 0; i < pids.length; i += 100){ const r = await _api(`query($i:[ID!]!){nodes(ids:$i){... on Product{id sp:metafield(namespace:"custom",key:"spice_level"){value} gr:metafield(namespace:"custom",key:"gentle_read"){value}}}}`, { i: pids.slice(i, i + 100) });
       for (const p of r.data.nodes.filter(Boolean)){
