@@ -4,7 +4,7 @@ on:
     - cron: '41 9 * * *'   # daily about 4:41am Eastern
   workflow_dispatch:
     inputs:
-      steps: { description: 'pages,editions,audit,readalikes,gaps', default: 'pages,editions,audit,readalikes,gaps' }
+      steps: { description: 'ages,lntitles,pages,editions,audit,readalikes,gaps', default: 'ages,lntitles,pages,editions,audit,readalikes,gaps' }
       days: { description: 'look-back days for new listings', default: '45' }
 permissions:
   contents: read

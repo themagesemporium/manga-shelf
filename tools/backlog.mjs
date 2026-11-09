@@ -26,7 +26,7 @@ window._api = async (query, variables) => {
   throw new Error('Shopify API kept throttling');
 };
 const load = f => (0, eval)(fs.readFileSync(ROOT + 'tools/' + f, 'utf8'));
-const only = (process.env.STEPS || 'pages,editions,audit,readalikes,gaps').split(',');
+const only = (process.env.STEPS || 'ages,lntitles,pages,editions,audit,readalikes,gaps').split(',');
 const days = +(process.env.DAYS || 45);
 const since = new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
 const step = async (name, fn) => { if (!only.includes(name)) return; const t = Date.now(); try { await fn(); } catch (e){ out(`${name} failed:`, String(e).slice(0, 300)); } console.log(name, 'took', Math.round((Date.now() - t) / 1000), 's'); };
@@ -61,5 +61,32 @@ await step('gaps', async () => {
   load('app-gaps.js'); await window._agRun(); const G = window._AGOUT || {};
   out(`App shelf gaps (new since last run): ${(G.unmatched || []).length} unmatched names, ${(G.volGaps || []).length} series with missing volumes, ${(G.notes || []).length} customer notes/messages.`);
   save('gaps.json', G);
+});
+
+// Age rating: a series uses its highest volume's rating (Megan's rule: never lower a rating). Same custom.series + product type.
+await step('ages', async () => {
+  const R = ['All Ages', 'Teen', 'Older Teen', 'Mature'], P = []; let a = null;
+  do { const r = await _api(`query($a:String){products(first:250,after:$a,query:"(product_type:Manga OR product_type:'Light Novel' OR product_type:Manhwa OR product_type:'Graphic Novel') AND -tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{id title productType s:metafield(namespace:"custom",key:"series"){value} ar:metafield(namespace:"custom",key:"age_rating"){value}}}}`, { a });
+    const p = r.data.products; P.push(...p.nodes); a = p.pageInfo.hasNextPage ? p.pageInfo.endCursor : null; } while (a);
+  const G = {}; P.forEach(p => { const s = p.s && p.s.value; if (!s) return; (G[s + '|' + p.productType] = G[s + '|' + p.productType] || []).push(p); });
+  const fix = [], log = [];
+  for (const [k, list] of Object.entries(G)){ const rs = list.map(p => R.indexOf(p.ar && p.ar.value)).filter(i => i >= 0); if (!rs.length) continue; const top = Math.max(...rs);
+    const low = list.filter(p => R.indexOf(p.ar && p.ar.value) !== top); if (!low.length) continue;
+    low.forEach(p => fix.push({ ownerId: p.id, namespace: 'custom', key: 'age_rating', type: 'single_line_text_field', value: R[top] })); log.push([k.split('|')[0], R[top], low.length]); }
+  for (let i = 0; i < fix.length; i += 25){ const r = await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: fix.slice(i, i + 25) }); if (r.data && r.data.metafieldsSet.userErrors.length) console.log(JSON.stringify(r.data.metafieldsSet.userErrors).slice(0, 200)); }
+  out(`Age ratings: ${P.length} listings, ${Object.keys(G).length} series; raised ${fix.length} volumes in ${log.length} series to match their highest-rated volume.`);
+  save('ages.json', log);
+});
+// Light novel titles end in "Light Novel" (store convention), e.g. "Spice and Wolf Vol 17 Light Novel".
+await step('lntitles', async () => {
+  const P = []; let a = null;
+  do { const r = await _api(`query($a:String){products(first:250,after:$a,query:"product_type:'Light Novel' AND -tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{id title tags}}}`, { a });
+    const p = r.data.products; P.push(...p.nodes); a = p.pageInfo.hasNextPage ? p.pageInfo.endCursor : null; } while (a);
+  const todo = P.filter(p => !/novel|\bLN\b/i.test(p.title) && !p.tags.some(t => /^bundle$/i.test(t)) && !/\bset\b/i.test(p.title));
+  const done = [];
+  for (const p of todo){ const t = p.title.replace(/\s+-\s+(BRAND NEW CONDITION|Pre-Order|Ex Library)$/i, ''); const tail = p.title.slice(t.length); const nt = t.replace(/\s+$/, '') + ' Light Novel' + tail;
+    const r = await _api(`mutation($p:ProductUpdateInput!){productUpdate(product:$p){userErrors{message}}}`, { p: { id: p.id, title: nt } }); if (r.data && !r.data.productUpdate.userErrors.length) done.push([p.title, nt]); }
+  out(`Light novel titles: ${P.length} light novels, added "Light Novel" to ${done.length} titles.`);
+  save('lntitles.json', done);
 });
 process.exit(0);
