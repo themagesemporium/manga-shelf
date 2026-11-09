@@ -1,8 +1,8 @@
 // Crowd spice & gentle-read ratings (Megan, Nov 8 2026: option 2, automatic).
 // Customers rate a series in the app (shelf.series[k].ux = {sp: 0-5, gr: true/false}). Nightly, this tallies every shelf:
 //  - when 3+ customers agree on a value and a listing has no rating yet, it fills that listing in (all volumes and editions of the series);
-//  - when 3+ agree on a value that differs from a rating the shop already set, nothing changes: it goes to claude_tmp.crowd_conflicts
-//    for Megan to accept or dismiss on the Packing Desk (To-Do tab).
+//  - when 3+ agree on a value that differs from the shop's rating, the crowd wins too (Megan, Nov 8: "It can override ratings if three or more agree").
+//    Changed ratings are listed in claude_tmp.crowd_changes for the record.
 // Run with window._api defined: await _crRun(). Result in window._CR.
 window._crRun = async (opt = {}) => {
   const CR = window._CR = { voters: 0, series: 0, set: 0, conflicts: [], err: [] };
@@ -26,12 +26,12 @@ window._crRun = async (opt = {}) => {
     for (let i = 0; i < pids.length; i += 100){ const r = await _api(`query($i:[ID!]!){nodes(ids:$i){... on Product{id sp:metafield(namespace:"custom",key:"spice_level"){value} gr:metafield(namespace:"custom",key:"gentle_read"){value}}}}`, { i: pids.slice(i, i + 100) });
       for (const p of r.data.nodes.filter(Boolean)){
         if (sp){ const cur = p.sp ? parseInt(p.sp.value) : null; if (cur == null) writes.push({ ownerId: p.id, namespace: 'custom', key: 'spice_level', type: 'single_line_text_field', value: SPICE[+sp[0]] });
-          else if (cur !== +sp[0]) CR.conflicts.push({ key, name: e.n, field: 'spice', shop: cur, crowd: +sp[0], votes: sp[1], pid: p.id }); }
+          else if (cur !== +sp[0]){ writes.push({ ownerId: p.id, namespace: 'custom', key: 'spice_level', type: 'single_line_text_field', value: SPICE[+sp[0]] }); CR.conflicts.push({ key, name: e.n, field: 'spice', shop: cur, crowd: +sp[0], votes: sp[1], pid: p.id }); } }
         if (gr){ const cur = p.gr ? p.gr.value === 'true' : null, want = gr[0] === 'true'; if (cur == null) writes.push({ ownerId: p.id, namespace: 'custom', key: 'gentle_read', type: 'boolean', value: String(want) });
-          else if (cur !== want) CR.conflicts.push({ key, name: e.n, field: 'gentle', shop: cur, crowd: want, votes: gr[1], pid: p.id }); } } } }
+          else if (cur !== want){ writes.push({ ownerId: p.id, namespace: 'custom', key: 'gentle_read', type: 'boolean', value: String(want) }); CR.conflicts.push({ key, name: e.n, field: 'gentle', shop: cur, crowd: want, votes: gr[1], pid: p.id }); } } } } }
   for (let i = 0; i < writes.length; i += 25){ const r = await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: writes.slice(i, i + 25) }); const ue = r.data.metafieldsSet.userErrors; if (ue.length) CR.err.push(ue[0].message); else CR.set += Math.min(25, writes.length - i); }
   // one conflict row per series + field (with every listing id), for the Desk
   const by = {}; CR.conflicts.forEach(c => { const k = c.key + '|' + c.field; const o = by[k] = by[k] || { key: c.key, name: c.name, field: c.field, shop: c.shop, crowd: c.crowd, votes: c.votes, pids: [] }; o.pids.push(c.pid); });
   const rows = Object.values(by);
-  await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: (await _api('{shop{id}}')).data.shop.id, namespace: 'claude_tmp', key: 'crowd_conflicts', type: 'json', value: JSON.stringify({ at: new Date().toISOString(), rows }) }] });
+  await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: (await _api('{shop{id}}')).data.shop.id, namespace: 'claude_tmp', key: 'crowd_changes', type: 'json', value: JSON.stringify({ at: new Date().toISOString(), rows }) }] });
   CR.conflicts = rows; return CR; };
