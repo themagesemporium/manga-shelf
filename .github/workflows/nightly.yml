@@ -1,7 +1,7 @@
-name: App data refresh (twice daily)
+name: App data refresh (every 2 hours)
 on:
   schedule:
-    - cron: '17 8,20 * * *'   # about 3:17am and 3:17pm Eastern (an hour later in summer)
+    - cron: '17 */2 * * *'   # every 2 hours, at :17 past (Megan upgraded her plan Nov 9, 2026)
   workflow_dispatch: {}
 permissions:
   contents: write
