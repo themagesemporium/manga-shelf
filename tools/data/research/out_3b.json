@@ -1,0 +1,2677 @@
+{
+ "done": [
+  {
+   "s": "Pleasure Dome",
+   "t": "Manga",
+   "set": {
+    "spice_level": "5 Ghost Pepper",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "Kitty Media explicit yaoi imprint"
+  },
+  {
+   "s": "Skyscrapers of Oz",
+   "t": "Manga",
+   "set": {
+    "spice_level": "5 Ghost Pepper",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "Kitty Media explicit yaoi imprint"
+  },
+  {
+   "s": "My Only King",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Beyond My Touch",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Call Me Princess",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "One Piece East Blue",
+   "t": "Manga",
+   "set": {
+    "genre": "Shonen",
+    "has_anime": true
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Fruits Basket 1st Bite",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "med",
+   "src": "appears to be a standalone Tokyopop sampler/preview book, not the main numbered series"
+  },
+  {
+   "s": "The Dawn of the Witch",
+   "t": "Light Novel",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Why Don't You Eat Me, My Dear Wolf?",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "one-shot; Seven Seas lists author as Ao Koishikawa (store has Kikuo) https://www.penguin.com.au/books/why-dont-you-eat-me-my-dear-wolf-9781685794866"
+  },
+  {
+   "s": "Tokyo Zombie",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "content_notes": [
+     "Graphic violence/gore",
+     "Disturbing imagery",
+     "Strong language"
+    ]
+   },
+   "conf": "high",
+   "src": "Last Gasp single volume"
+  },
+  {
+   "s": "Ysquare",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "Yen Press 'Y Square' is a standalone 1-vol book by Judith Park (sequel Y Square Plus is separate); store author JiUn Yun looks wrong"
+  },
+  {
+   "s": "Princess Honey",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "likely 'Priceless Honey' by Shiuko Kano (DMP, 1 vol) - check title https://www.animenewsnetwork.com/encyclopedia/manga.php?id=14966"
+  },
+  {
+   "s": "I Didn't Mean To Fall In Love",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "one-shot; sequel '-Double-' is separate https://penguinrandomhouse.com/books/722398/"
+  },
+  {
+   "s": "Hyperventilation",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "single volume, Tokyopop 2022"
+  },
+  {
+   "s": "This Wonderful Season With You",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "1 Sweet"
+   },
+   "conf": "high",
+   "src": "one-shot, Tokyopop"
+  },
+  {
+   "s": "Delivery for You!",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "1 vol https://www.animenewsnetwork.com/encyclopedia/manga.php?id=26514"
+  },
+  {
+   "s": "Be My Love, My Lord",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "one-shot; author Adumi Nagano"
+  },
+  {
+   "s": "Don't Call Me Dirty",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "one-shot by Gorou Kanbe (store author Rie Aruga is wrong); BL https://www.animenewsnetwork.com/encyclopedia/manga.php?id=23419"
+  },
+  {
+   "s": "Glass Syndrome",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "one-shot"
+  },
+  {
+   "s": "Yagi The Bookshop Goat",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "one-shot"
+  },
+  {
+   "s": "Cheri, My Destiny!",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "one-shot (comicbookyeti)"
+  },
+  {
+   "s": "Platinum Blood",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "one-shot"
+  },
+  {
+   "s": "Neon Genesis Evangelion Comic Tribute",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Mobile Suit Gundam Ground Zero",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Rascal Does Not Dream of a Sister Home Alone",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 2
+   },
+   "conf": "high",
+   "src": "ANN GN 1-2 https://www.animenewsnetwork.com/encyclopedia/releases.php?id=55274"
+  },
+  {
+   "s": "Alien Nine Emulators",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Disturbing imagery"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Drakuun Rise of the Dragon Princess",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Nudity",
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Drakuun The Revenge of Gustav",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Nudity",
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Drakuun Shadow of the Warlock",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Nudity",
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "From Up Above",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "I'll Be Your Slave",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Hate To Love You",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Falling Into Love",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Koi Cupid",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Don't Rush Love",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Dragon King's Imperial Wrath",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Chibi Vampire Airmail",
+   "t": "Manga",
+   "set": {
+    "content_notes": []
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Do You Like Big Girls?",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "My New Life as a Cat",
+   "t": "Manga",
+   "set": {
+    "has_anime": false
+   },
+   "conf": "med",
+   "src": "Wikipedia lists only a voice comic, no anime"
+  },
+  {
+   "s": "Twilight out of Focus Afterimages in Slow Motion",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "To Me, The One Who Loved You",
+   "t": "Light Novel",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "To Every You I've Loved Before",
+   "t": "Light Novel",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Sweet Poolside",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Dogs Prelude",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "standalone prequel 'Dogs: Prelude'"
+  },
+  {
+   "s": "Melting Lover",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "You Are My Happiness",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Restart After Growing Hungry",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Pulse",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "My Mate is a Feline Gentleman",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Very Very Sweet",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Naruto The Worst Job",
+   "t": "Manga",
+   "set": {
+    "genre": "Shonen",
+    "has_anime": true
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Don't Call Me Daddy",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "by Gorou Kanbe (store author wrong); BL one-shot, sequel to Don't Call Me Dirty"
+  },
+  {
+   "s": "Fragtime The Complete Collection",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Song of Yoru and Asa Encore",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Pet Detective Agency",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Can An Otaku Like Me Really Be an Idol!?",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Canis Dead Mr. Rain",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity",
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Star Craft Ghost Academy",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Seven Deadly Sins Original Sins",
+   "t": "Manga",
+   "set": {
+    "genre": "Shonen",
+    "series_volumes": 1,
+    "has_anime": true
+   },
+   "conf": "high",
+   "src": "short story collection, 1 vol https://kodansha.us/series/the-seven-deadly-sins-original-sins-short-story-collection/"
+  },
+  {
+   "s": "Faust",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 2,
+    "content_notes": [
+     "Graphic violence/gore",
+     "Disturbing imagery"
+    ]
+   },
+   "conf": "med",
+   "src": "Del Rey published Faust vols 1-2"
+  },
+  {
+   "s": "Sick",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "Denpa/Kuma 'sick' by Tomo Kurahashi"
+  },
+  {
+   "s": "The Song of Yoru and Asa",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "1 vol + separate Encore"
+  },
+  {
+   "s": "Boys of the Dead",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "content_notes": [
+     "Graphic violence/gore",
+     "Sexual content",
+     "Disturbing imagery"
+    ]
+   },
+   "conf": "high",
+   "src": "single hardcover"
+  },
+  {
+   "s": "One Million Characters",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Castle of Dreams Omnibus",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Cat in a Hot Girls' Dorm",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Mushroom Girls in Love",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Dark Metro",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Disturbing imagery"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Shakespeare A Midsummer Night's Dream",
+   "t": "Graphic Novel",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Sacrifical Princess and the King of Beasts",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Gadirok Requiem Chrous",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Don't Mess With My Daughter",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "real title is 'Don't Meddle With My Daughter' by Nozomu Tamaki (Seven Seas Ghost Ship); store author 'Kang Doo' wrong"
+  },
+  {
+   "s": "Heavenly Demon Reborn!",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "A Hero in the Demon's Castle",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Remnants of Filth",
+   "t": "Light Novel",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Graphic violence/gore",
+     "Abuse",
+     "Death of a loved one",
+     "Disturbing imagery"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "LustGlass",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Be With You",
+   "t": "Manga",
+   "set": {
+    "genre": "Romance",
+    "has_anime": false
+   },
+   "conf": "med",
+   "src": "Takuji Ichikawa's 'Ima, Ai ni Yukimasu' - live-action film/TV only"
+  },
+  {
+   "s": "Asian Beat",
+   "t": "Manga",
+   "set": {
+    "content_notes": []
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Beyond The Promised Neverland",
+   "t": "Manga",
+   "set": {
+    "genre": "Shonen",
+    "has_anime": true,
+    "content_notes": [
+     "Graphic violence/gore",
+     "Disturbing imagery"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Fourth Generation Head: Tatsuyuki Oyamato",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Fruits Basket Planner",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Tanpenshu",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Sexual content",
+     "Nudity",
+     "Strong language"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Abandoned",
+   "t": "Graphic Novel",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Strong language"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Attack on Titan Character Encyclopedia",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Naruto Itachi's Story Midnight",
+   "t": "Light Novel",
+   "set": {
+    "genre": "Shonen",
+    "series_volumes": 1,
+    "has_anime": true
+   },
+   "conf": "med",
+   "src": "Midnight is one book; Itachi's Story is 2 books total (Daylight + Midnight) if grouped"
+  },
+  {
+   "s": "Kase-san and Cherry Blossoms",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 5
+   },
+   "conf": "med",
+   "src": "English 'Kase-san and...' series is 5 vols; Cherry Blossoms is vol 5 https://okazu.yuricon.com/2019/03/13/yuri-manga-kase-san-and-cherry-blossoms-english/"
+  },
+  {
+   "s": "Tomcats",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "As Many As There Are Stars",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "med",
+   "src": "Hoshi no Kazuhodo, 1 vol (Gentosha) https://www.animenewsnetwork.com/encyclopedia/manga.php?id=16457 ; store author 'Fantasy' is garbled (left out: spice_level,content_notes)"
+  },
+  {
+   "s": "Three Wolves Mountain",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Princess Princess Plus",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Whole of Humanity Has Gone Yuri Except for Me",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "single omnibus volume (ANN)"
+  },
+  {
+   "s": "Shino Can't Say Her Name",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Oath to Love and Passion",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "When a Magician's Pupil Smiles",
+   "t": "Manga",
+   "set": {
+    "spice_level": "2 Ketchup",
+    "content_notes": []
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Dream Gold Knights in the Dark City",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Inubaka",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "One Piece Ace's Story",
+   "t": "Manga",
+   "set": {
+    "genre": "Shonen",
+    "has_anime": true
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Naruto Sasuke's Story The Uchiha and the Heavenly Stardust The Manga",
+   "t": "Manga",
+   "set": {
+    "genre": "Shonen",
+    "has_anime": true
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Color of Rage",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Sexual content",
+     "Nudity",
+     "Sexual assault"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Sneeze Story Collection",
+   "t": "Manga",
+   "set": {
+    "content_notes": []
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Stop Bullying Me!",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Anime Impact",
+   "t": "Manga",
+   "set": {
+    "content_notes": []
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Land of the Rising Dead A Tokyo School Girl's Guide to Surviving the Zombie Aocalypse",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Would You Like To Be A Family?",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Star Collector",
+   "t": "Graphic Novel",
+   "set": {
+    "spice_level": "2 Ketchup"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Mizuno and Chayama",
+   "t": "Manga",
+   "set": {
+    "spice_level": "1 Sweet"
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Ibitsu",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Disturbing imagery"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "I Love You So Much, I Hate You",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Servant and Lord",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Duetto",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Crimson Empire Circumstances to Serve a Noble",
+   "t": "Manga",
+   "set": {
+    "genre": "Romance",
+    "has_anime": false,
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Not simple",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Abuse",
+     "Sexual content",
+     "Death of a loved one"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Ristorante Paradiso",
+   "t": "Manga",
+   "set": {
+    "content_notes": []
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Cats of the Louvre",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Death of a loved one"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Yuri Life No Love, No Life!",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Puri Puri",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Killing Me!",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Ayako",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Sexual content",
+     "Nudity",
+     "Sexual assault",
+     "Abuse",
+     "Graphic violence/gore",
+     "Death of a loved one"
+    ]
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "La Satanica",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Seven Days Monday - Thursday",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Love Full of Scars",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Living for Tomorrow",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Gadirok Requiem Chorus",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Nekomonogarati Cat Tale Black",
+   "t": "Light Novel",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Romeo and Juliet",
+   "t": "Graphic Novel",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "1 Sweet"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Gay Who Turned Kaiju",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "high",
+   "src": "one-volume https://yenpress.com/series/the-gay-who-turned-kaiju"
+  },
+  {
+   "s": "The Walking Cat A Cat's-Eye View of the Zombie Apocalypse Omnibus",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Jujutsu Kaisen Summer of Ashes, Autumn of Dust",
+   "t": "Light Novel",
+   "set": {
+    "genre": "Shonen",
+    "series_volumes": 1,
+    "has_anime": true
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Jujutsu Kaisen Thorny Road at Dawn",
+   "t": "Light Novel",
+   "set": {
+    "genre": "Shonen",
+    "series_volumes": 1,
+    "has_anime": true
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Fairy Tail Rhodonite",
+   "t": "Manga",
+   "set": {
+    "genre": "Shonen",
+    "has_anime": false
+   },
+   "conf": "med",
+   "src": "spinoff not animated (parent Fairy Tail is)"
+  },
+  {
+   "s": "Attack on Titan Anthology",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "An Older Guy's VR First Love",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "content_notes": [
+     "Death of a loved one"
+    ]
+   },
+   "conf": "high",
+   "src": "single volume https://kodansha.us/series/an-older-guys-vr-first-love/"
+  },
+  {
+   "s": "Super Mario Manga Mania",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Seekers: Kallik's Adventure",
+   "t": "Graphic Novel",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Seekers: Toklo's Story",
+   "t": "Graphic Novel",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Zombie Handbook",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Tengu-Jin",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Beautiful People",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "content_notes": [
+     "Self-harm/suicide",
+     "Death of a loved one"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Angelics Runes",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Disney Descendants The Rotten To The Core Trilogy The Complete Collection",
+   "t": "Graphic Novel",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Truly Kindly",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Love!!",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "The Spiral of Sand",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Delivery Cupid",
+   "t": "Graphic Novel",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "My Paranoid Next Door Neighbor",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Secret Thorns",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Desire Dangerous Feelings",
+   "t": "Light Novel",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Last Portrait",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Beyond Seiryo University",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Just Around the Corner",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "You Will Fall in Love",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Freefall Romance",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Manic Love",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Love Syndrome",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "DMP 2011, single volume"
+  },
+  {
+   "s": "Deeply Loving a Maniac",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Love + Alpha",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Men of Tattoos",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Sweet Revolution",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Blue Sky",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "high",
+   "src": "ANN: one GN release"
+  },
+  {
+   "s": "A Love Song for the Miserable",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 2,
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Loving Gaze",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "You Make My Head Spin!",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Official Fruits Basket Journal",
+   "t": "Manga",
+   "set": {
+    "author": "Natsuki Takaya",
+    "genre": "Shojo",
+    "series_volumes": 1
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "His Arrogance",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Love Skit",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Clear Skies",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "I Give to You",
+   "t": "Manga",
+   "set": {
+    "series_volumes": 1,
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "standalone yaoi one-shot"
+  },
+  {
+   "s": "Waru",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "9th Sleep",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Feverish",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Passionate Theory",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Our Kingdom Arabian Nights",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Sweet Admiration",
+   "t": "Light Novel",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Body Language",
+   "t": "Light Novel",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Secretary's Job?",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "I've Moved Next Door To You",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Desire Sensibility",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Prime Minister's Secret Diplomacy",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "La Vie En Rose",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Sugarmilk",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Gorgeous Carat Galaxy",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Kabuki Moon",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ],
+    "language": "English"
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Golden Prince and Argent King",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The First Stage of Love",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Cute Beast",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Tricky Prince",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Dawn of Love",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Hard Rock",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Desert Prince",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Honey/Chocolate",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Temperature Rising",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Honey Colored Pancakes",
+   "t": "Manga",
+   "set": {
+    "spice_level": "2 Ketchup",
+    "content_notes": []
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Yokan Premonition",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "A Liar In Love",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Man Who Doesn't Take Off His Clothes",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Samejima-Kun and Sasahara-Kun",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Yu-Gi-Oh! The Move Ani",
+   "t": "Manga",
+   "set": {
+    "genre": "Shonen",
+    "has_anime": true
+   },
+   "conf": "high",
+   "src": "knowledge"
+  },
+  {
+   "s": "Yellow 2 Episode 2",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "A Murmur of the Heart",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Enmusu",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Necraholic",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Yellow 2 Episode 1",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Love Quest",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Love Potion",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "A Fallen Saint's Kiss",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Yashakiden The Demon Princess",
+   "t": "Light Novel",
+   "set": {
+    "content_notes": [
+     "Graphic violence/gore",
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Intriguing Secrets",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "You and Harwion",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Guilty Original Sin",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Eternal Love",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Return to Scandalous Seiryo University",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Martin and John",
+   "t": "Manga",
+   "set": {
+    "content_notes": [
+     "Death of a loved one",
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Family Created by Yuuya",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Two of Hearts",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Love Machine",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Maid In Heaven",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Chocolate Surprise",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Spicy But Sweet",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "Take Me To Heaven",
+   "t": "Manga",
+   "set": {
+    "spice_level": "4 Hot Sauce",
+    "content_notes": [
+     "Sexual content",
+     "Nudity"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "World's End",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  },
+  {
+   "s": "The Paradise on The Hill",
+   "t": "Manga",
+   "set": {
+    "spice_level": "3 Salsa",
+    "content_notes": [
+     "Sexual content"
+    ]
+   },
+   "conf": "med",
+   "src": "knowledge"
+  }
+ ],
+ "skip": [
+  {
+   "s": "Disciple of Ligh",
+   "t": "Light Novel",
+   "why": "series name truncated: real title is 'Disciple of the Lich: Or How I Was Cursed by the Gods and Dropped Into the Abyss' (Seven Seas LN); suggested content_notes [Graphic violence/gore, Disturbing imagery]; author is not Keiichi Sigsawa"
+  },
+  {
+   "s": "1520",
+   "t": "Manga",
+   "why": "couldn't identify an Udon release '1520' by Takumi Ishida; check the physical book"
+  }
+ ]
+}
