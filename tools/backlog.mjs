@@ -63,30 +63,6 @@ await step('gaps', async () => {
   save('gaps.json', G);
 });
 
-// Age rating: a series uses its highest volume's rating (Megan's rule: never lower a rating). Same custom.series + product type.
-await step('ages', async () => {
-  const R = ['All Ages', 'Teen', 'Older Teen', 'Mature'], P = []; let a = null;
-  do { const r = await _api(`query($a:String){products(first:250,after:$a,query:"(product_type:Manga OR product_type:'Light Novel' OR product_type:Manhwa OR product_type:'Graphic Novel') AND -tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{id title productType s:metafield(namespace:"custom",key:"series"){value} ar:metafield(namespace:"custom",key:"age_rating"){value}}}}`, { a });
-    const p = r.data.products; P.push(...p.nodes); a = p.pageInfo.hasNextPage ? p.pageInfo.endCursor : null; } while (a);
-  const G = {}; P.forEach(p => { const s = p.s && p.s.value; if (!s) return; (G[s + '|' + p.productType] = G[s + '|' + p.productType] || []).push(p); });
-  const fix = [], log = [];
-  for (const [k, list] of Object.entries(G)){ const rs = list.map(p => R.indexOf(p.ar && p.ar.value)).filter(i => i >= 0); if (!rs.length) continue; const top = Math.max(...rs);
-    const low = list.filter(p => R.indexOf(p.ar && p.ar.value) !== top); if (!low.length) continue;
-    low.forEach(p => fix.push({ ownerId: p.id, namespace: 'custom', key: 'age_rating', type: 'single_line_text_field', value: R[top] })); log.push([k.split('|')[0], R[top], low.length]); }
-  for (let i = 0; i < fix.length; i += 25){ const r = await _api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: fix.slice(i, i + 25) }); if (r.data && r.data.metafieldsSet.userErrors.length) console.log(JSON.stringify(r.data.metafieldsSet.userErrors).slice(0, 200)); }
-  out(`Age ratings: ${P.length} listings, ${Object.keys(G).length} series; raised ${fix.length} volumes in ${log.length} series to match their highest-rated volume.`);
-  save('ages.json', log);
-});
-// Light novel titles end in "Light Novel" (store convention), e.g. "Spice and Wolf Vol 17 Light Novel".
-await step('lntitles', async () => {
-  const P = []; let a = null;
-  do { const r = await _api(`query($a:String){products(first:250,after:$a,query:"product_type:'Light Novel' AND -tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{id title tags}}}`, { a });
-    const p = r.data.products; P.push(...p.nodes); a = p.pageInfo.hasNextPage ? p.pageInfo.endCursor : null; } while (a);
-  const todo = P.filter(p => !/novel|\bLN\b/i.test(p.title) && !p.tags.some(t => /^bundle$/i.test(t)) && !/\bset\b/i.test(p.title));
-  const done = [];
-  for (const p of todo){ const t = p.title.replace(/\s+-\s+(BRAND NEW CONDITION|Pre-Order|Ex Library)$/i, ''); const tail = p.title.slice(t.length); const nt = t.replace(/\s+$/, '') + ' Light Novel' + tail;
-    const r = await _api(`mutation($p:ProductUpdateInput!){productUpdate(product:$p){userErrors{message}}}`, { p: { id: p.id, title: nt } }); if (r.data && !r.data.productUpdate.userErrors.length) done.push([p.title, nt]); }
-  out(`Light novel titles: ${P.length} light novels, added "Light Novel" to ${done.length} titles.`);
-  save('lntitles.json', done);
-});
+await step('ages', async () => { load('series-fixes.js'); const r = await window._ageRun(); out(`Age ratings: raised ${r.fixed} volumes in ${r.series.length} series to their series' highest rating.`); save('ages.json', r.series); });
+await step('lntitles', async () => { load('series-fixes.js'); const r = await window._lnRun(); out(`Light novel titles: added "Light Novel" to ${r.length} titles.`); save('lntitles.json', r); });
 process.exit(0);
