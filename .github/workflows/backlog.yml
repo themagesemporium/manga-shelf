@@ -1,0 +1,33 @@
+name: Store backlog catch-up
+on:
+  schedule:
+    - cron: '41 9 * * *'   # daily about 4:41am Eastern
+  workflow_dispatch:
+    inputs:
+      steps: { description: 'pages,editions,audit,readalikes,gaps', default: 'pages,editions,audit,readalikes,gaps' }
+      days: { description: 'look-back days for new listings', default: '45' }
+permissions:
+  contents: read
+concurrency: backlog
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Catch up the store backlog
+        env:
+          SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
+          SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
+          STEPS: ${{ github.event.inputs.steps }}
+          DAYS: ${{ github.event.inputs.days }}
+        run: node tools/backlog.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backlog-out
+          path: backlog-out/
+          retention-days: 14
