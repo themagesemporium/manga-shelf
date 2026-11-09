@@ -7,7 +7,7 @@ window._raRun = async () => {
   // 1. one product's facts per series (first product with genres wins), plus stock
   const S = {}; let a = null;
   do {
-    const r = await _api(`query($a:String){products(first:250,after:$a,query:"(product_type:Manga OR product_type:'Light Novel' OR product_type:Manhwa OR product_type:'Graphic Novel') AND -tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{productType totalInventory se:metafield(namespace:"custom",key:"series"){value} g:metafield(namespace:"custom",key:"genres"){value} th:metafield(namespace:"custom",key:"themes"){value} au:metafield(namespace:"custom",key:"audience"){value} ag:metafield(namespace:"custom",key:"age_rating"){value} sp:metafield(namespace:"custom",key:"spice_level"){value} fm:metafield(namespace:"custom",key:"format"){value} at:metafield(namespace:"custom",key:"author"){value}}}}`, { a });
+    const r = await _api(`query($a:String){products(first:100,after:$a,query:"(product_type:Manga OR product_type:'Light Novel' OR product_type:Manhwa OR product_type:'Graphic Novel') AND -tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{productType totalInventory se:metafield(namespace:"custom",key:"series"){value} g:metafield(namespace:"custom",key:"genres"){value} th:metafield(namespace:"custom",key:"themes"){value} au:metafield(namespace:"custom",key:"audience"){value} ag:metafield(namespace:"custom",key:"age_rating"){value} sp:metafield(namespace:"custom",key:"spice_level"){value} fm:metafield(namespace:"custom",key:"format"){value} at:metafield(namespace:"custom",key:"author"){value}}}}`, { a });
     if (!r.data){ await new Promise(z => setTimeout(z, 3000)); continue; }
     r.data.products.nodes.forEach(n => {
       if (!n.se || !n.se.value) return; const k = N(n.se.value) + '|' + n.productType;
@@ -22,7 +22,7 @@ window._raRun = async () => {
   // 2. series pages
   _RA.st = 'pages'; const C = []; a = null;
   do {
-    const r = await _api(`query($a:String){collections(first:250,after:$a,query:"handle:series-*"){pageInfo{hasNextPage endCursor} nodes{id handle title productsCount{count} ruleSet{rules{column relation condition}}}}}`, { a });
+    const r = await _api(`query($a:String){collections(first:100,after:$a,query:"handle:series-*"){pageInfo{hasNextPage endCursor} nodes{id handle title productsCount{count} ruleSet{rules{column relation condition}}}}}`, { a });
     if (!r.data){ await new Promise(z => setTimeout(z, 3000)); continue; }
     C.push(...r.data.collections.nodes); a = r.data.collections.pageInfo.hasNextPage ? r.data.collections.pageInfo.endCursor : null;
   } while (a);
