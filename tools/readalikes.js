@@ -22,14 +22,14 @@ window._raRun = async () => {
   // 2. series pages
   _RA.st = 'pages'; const C = []; a = null;
   do {
-    const r = await _api(`query($a:String){collections(first:250,after:$a,query:"handle:series-*"){pageInfo{hasNextPage endCursor} nodes{id handle title productsCount ruleSet{rules{column relation condition}}}}}`, { a });
+    const r = await _api(`query($a:String){collections(first:250,after:$a,query:"handle:series-*"){pageInfo{hasNextPage endCursor} nodes{id handle title productsCount{count} ruleSet{rules{column relation condition}}}}}`, { a });
     if (!r.data){ await new Promise(z => setTimeout(z, 3000)); continue; }
     C.push(...r.data.collections.nodes); a = r.data.collections.pageInfo.hasNextPage ? r.data.collections.pageInfo.endCursor : null;
   } while (a);
-  const P = C.filter(c => !c.title.startsWith('ZZ') && !c.handle.endsWith('-new') && c.productsCount > 0).map(c => {
+  const P = C.filter(c => !c.title.startsWith('ZZ') && !c.handle.endsWith('-new') && (c.productsCount&&c.productsCount.count!=null?c.productsCount.count:c.productsCount) > 0).map(c => {
     const rs = (c.ruleSet && c.ruleSet.rules) || []; const sw = rs.find(r => r.column === 'TITLE' && r.relation === 'STARTS_WITH'); const ty = rs.find(r => r.column === 'TYPE');
     const f = S[N(sw ? sw.condition : c.title) + '|' + (ty ? ty.condition : 'Manga')] || S[N(c.title) + '|' + (ty ? ty.condition : 'Manga')];
-    return f ? { id: c.id, t: c.title, w: (N(c.title).split(' ').filter(x => x.length >= 4 && !['with','from','your','that','this'].includes(x))[0] || N(c.title)), nt: N(c.title), n: c.productsCount, ...f } : null;
+    return f ? { id: c.id, t: c.title, w: (N(c.title).split(' ').filter(x => x.length >= 4 && !['with','from','your','that','this'].includes(x))[0] || N(c.title)), nt: N(c.title), n: (c.productsCount&&c.productsCount.count!=null?c.productsCount.count:c.productsCount), ...f } : null;
   }).filter(Boolean);
   _RA.n = P.length;
   // 3. score + write
