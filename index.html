@@ -918,11 +918,13 @@ function xpCalc(){ const P = []; const add = (k, label, n, each, cap) => { const
   days.forEach(d => { const t = new Date(d + 'T12:00:00'); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; if (run % 7 === 0) weeks++; prev = t; });
   const byDay = {}; (shelf.fb || []).forEach(f => { const d = dayKey(new Date(f.at)); const fix = /^(About |Added from the app:)/.test(f.t || ''); const o = byDay[d] = byDay[d] || { fix: 0, msg: 0 }; if (fix) o.fix = Math.min(5, o.fix + 1); else o.msg = 1; });
   const fixes = Object.values(byDay).reduce((a, o) => a + o.fix, 0), msgDays = Object.values(byDay).reduce((a, o) => a + o.msg, 0);
-  let ach = 0; try { ach = (BADGES || []).filter(b => b[2] >= b[3] && !/Level Up|Rising Star|Holo Hunter|Legendary|Mythic Card|Stat Master|Well-Rounded|Collector of Legend/.test(b[0])).length; } catch(e){}
+  let ach = 0; try { ach = (BADGES || []).filter(b => b[2] >= b[3] && !/Level Up|Rising Star|Holo Hunter|Legendary|Mythic Card/.test(b[0])).length; } catch(e){}
   const fr = Object.keys(shelf.friends || {}).length;
   add('own', 'Books on your shelf', own, 2); add('rd', 'Volumes read', rd, 5); add('st', 'Star ratings', stars, 3); add('rv', 'Reviews (20+ words)', revs, 15);
   add('done', 'Series completed', done, 50); add('want', 'Wishlist adds', want, 1, 200); add('day', 'Reading days', days.length, 5); add('wk', '7-day reading streaks', weeks, 25);
   add('ach', 'Achievements', ach, 25); add('fix', 'Fixes and corrections', fixes, 10); add('msg', 'Days you messaged the shop', msgDays, 5); add('fr', 'Friends', fr, 10, 200); { const V = shelf.visit || {}; add('vis', 'Days you opened the app', V.n || 0, 5); add('vwk', '7-day login streaks', V.wk || 0, 25); } add('ux', 'Spice & gentle ratings', Object.values(shelf.series).filter(s => s.ux && (s.ux.sp != null || s.ux.gr != null)).length, 3); add('rb', 'Recommended books bought', Object.keys(shelf.recBuy || {}).length, 25);
+  /* Level achievements (Megan, Nov 9: give their XP back): worked out in one go from the XP above, so the level is stable (same result every time) and nobody loses a level. */
+  const base = P.reduce((a, x) => a + x[3], 0); let nL = 0; for (let i = 0; i < 6; i++){ const lv = lvOf(base + nL * 25), n = [5, 10, 20, 40, 50].filter(t => lv >= t).length; if (n === nL) break; nL = n; } add('achl', 'Level achievements', nL, 25);
   const xp = P.reduce((a, x) => a + x[3], 0); return { xp, lv: lvOf(xp), parts: P }; }
 function xpMonth(xp){ if (!SNAP) return 0; const mk = dayKey(new Date()).slice(0, 7); const m = shelf.xpm; if (!m || m.mk !== mk || !m.v){ shelf.xpm = { mk, base: xp, v: 2 }; try { save(); } catch(e){} return 0; } return Math.max(0, xp - m.base); }
 /* ---------- Character sheet: 8 RPG stats scored 1-20, class from the top stat ---------- */
