@@ -1,0 +1,2273 @@
+{
+"done": [
+{
+"s": "Something's Wrong With Us",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Abuse",
+"Death of a loved one",
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Cheeky Brat",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "A Condition Called Love",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Free Life Fantasy Online Immortal Princess",
+"t": "Light Novel",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Vampire Dormitory",
+"t": "Manga",
+"set": {
+"spice_level": "2 Ketchup",
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Iceblade Sorcerer Shall Rule the World",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Her Majesty's Dog",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Knight of the Ice",
+"t": "Manga",
+"set": {
+"spice_level": "1 Sweet",
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Bottom-Tier Character Tomozaki",
+"t": "Light Novel",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "B.O.D.Y.",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Descending Stories",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Death of a loved one",
+"Self-harm/suicide",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge (Showa Genroku Rakugo Shinju)"
+},
+{
+"s": "Honey and Clover",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Death of a loved one"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Mysterious Disappearances",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Disturbing imagery"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Steel of the Celestial Shadows",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "How To Raise A Boring Girlfriend",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Hana-Kimi For You In Full Blossom",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Hazure Skill: The Guild Member with a Worthless Skill Is Actually a Legendary Assassin",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Blue Flag",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "The Maid I Hired Recently Is Mysterious",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Teppu",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Strong language"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "12 Beast",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Nudity",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Kashimashi Girl Meets Girl",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Blood Alone",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Aria",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Alice in the Country of Clover Cheshire Cat Waltz",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "I Belong to the Baddest Girl at School",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Soul Eater Not!",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "NTR Netsuzou Trap",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content",
+"Sexual assault"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Wonderland",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Disturbing imagery",
+"Death of a loved one"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Unnamed Memory",
+"t": "Light Novel",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Disciple of the Lich",
+"t": "Light Novel",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Cheerful Amnesia",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Shout Out Loud!",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "My Girlfriend's A Geek",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Gacha Gacha",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Nudity",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Maoh Juvenile Remix",
+"t": "Manga",
+"set": {
+"has_anime": false
+},
+"conf": "med",
+"src": "own knowledge (only a 2008 live-action drama, Maoh)"
+},
+{
+"s": "Life Lessons with Uramichi Oniisan",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Strong language"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Hero Tales",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Am I Actually the Strongest?",
+"t": "Light Novel",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Beauty and the Beast of Paradise Lost",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Disturbing imagery"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Apple Black",
+"t": "Graphic Novel",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Chun Rhang Yhur Jhun",
+"t": "Manga",
+"set": {
+"has_anime": false,
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Element Line",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Other Side of Secret",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Nudity",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "A Midnight Opera",
+"t": "Graphic Novel",
+"set": {
+"spice_level": "2 Ketchup"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Flat Earth/Exchange",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Tied To You",
+"t": "Manhwa",
+"set": {
+"content_notes": [
+"Sexual content",
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge (Mature-rated BL manhwa)"
+},
+{
+"s": "Reborn Rich",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Death of a loved one"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Couple",
+"t": "Manga",
+"set": {
+"spice_level": "3 Salsa",
+"content_notes": [
+"Sexual content",
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Pantheon High",
+"t": "Graphic Novel",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Rainbow and Black",
+"t": "Manga",
+"set": {
+"spice_level": "1 Sweet",
+"content_notes": []
+},
+"conf": "med",
+"src": "ANN Fall 2020 manga guide (note: English publisher is Seven Seas, not Kodansha; 3 vols, complete)"
+},
+{
+"s": "Fujoshi Rumi",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "My Summer of You",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Cain Saga",
+"t": "Manga",
+"set": {
+"has_anime": false
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Dictatorial Grimoire",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Disturbing imagery"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Witch Buster",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Ray",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Il Gatto Sul G",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content",
+"Abuse"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Genkaku Picasso",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Death of a loved one",
+"Self-harm/suicide"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Knight Captain is the New Princess-To-Be",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Liar Liar",
+"t": "Light Novel",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "I Got A Cheat Skill World Became Unrivaled Real",
+"t": "Light Novel",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Sotus",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Fall in Love Like A Comic",
+"t": "Manga",
+"set": {
+"genre": "Romance",
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Skyblue Shore",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Crimson Empire",
+"t": "Manga",
+"set": {
+"genre": "Romance",
+"has_anime": false,
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Dive in the Vampire Bund",
+"t": "Manga",
+"set": {
+"genre": "Action",
+"has_anime": false
+},
+"conf": "med",
+"src": "own knowledge (spinoff has no anime; parent Dance in the Vampire Bund does)"
+},
+{
+"s": "Song of the Hanging Sky",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Death of a loved one"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Devil Within",
+"t": "Manga",
+"set": {
+"spice_level": "2 Ketchup",
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Under The Glass Moon",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Exo-Drive Reincarnation Games All-Japan Isekai Battle Tournament",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Sweety",
+"t": "Manga",
+"set": {
+"spice_level": "2 Ketchup"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Mao-Chan",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "I Hear The Sunspot Limit",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Happy Boys",
+"t": "Manga",
+"set": {
+"spice_level": "2 Ketchup",
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Sheeply Horned Witch Romi",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "My Cute Little Kitten",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Do You Love Your Mom and Her Two-Hit Multi-Target Attacks?",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Oh! My Brother",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Death of a loved one"
+]
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Secret",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Death of a loved one"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Freak",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Disturbing imagery"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Neko Ramen",
+"t": "Manga",
+"set": {
+"series_volumes": 4
+},
+"conf": "med",
+"src": "own knowledge (Tokyopop 4 vols)"
+},
+{
+"s": "Blank Slate",
+"t": "Manga",
+"set": {
+"genre": "Action",
+"has_anime": false
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Deka Kyoshi",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Abuse",
+"Disturbing imagery"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Maid War Chronicle",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Night Head",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Disturbing imagery"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Until I Love Myself",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Abuse",
+"Sexual assault",
+"Self-harm/suicide"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "AOI House in Love!",
+"t": "Graphic Novel",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Vampire Cheerleaders",
+"t": "Graphic Novel",
+"set": {
+"content_notes": [
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Canon",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Children of the Sea",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Love Hurts Aishiatteru Futari",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Pavane For A Dead Girl",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Death of a loved one"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Time Lag Yaoi",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Imadoki! Nowadays",
+"t": "Manga",
+"set": {
+"genre": "Shojo",
+"has_anime": false,
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Naruto The Official Fanbook",
+"t": "Manga",
+"set": {
+"genre": "Informational",
+"series_volumes": 1
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Hatsune Mikubon",
+"t": "Manga",
+"set": {
+"series_volumes": 1
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Boys of Summer",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Make Love and Peace",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content",
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Battle Angel Alita Loot Crate Edition",
+"t": "Manga",
+"set": {
+"genre": "Sci-Fi",
+"has_anime": true
+},
+"conf": "high",
+"src": "own knowledge (1993 OVA)"
+},
+{
+"s": "Naruto The Movie Ninja Clash in the Land of Snow",
+"t": "Manga",
+"set": {
+"genre": "Action"
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Heaven's Will: A Poem of Atonement",
+"t": "Manga",
+"set": {
+"genre": "Mystery",
+"has_anime": false
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "King of the Lamp",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Alice in the Country of Diamonds Bet On My Heart",
+"t": "Light Novel",
+"set": {
+"series_volumes": 1,
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Rhysmyth",
+"t": "Manga",
+"set": {
+"spice_level": "1 Sweet"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Aspirin",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Blade of the Immortal On Silent Wings II",
+"t": "Manga",
+"set": {
+"series_volumes": 31
+},
+"conf": "med",
+"src": "own knowledge (Dark Horse BotI 31 vols; On Silent Wings II is vol 9 - the series name is arc-specific, may want normalizing)"
+},
+{
+"s": "Uzamaid Our Maid Is Way To Annoying",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "War Angels",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Hard-Boiled Stories From The Cat Bar",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Wanted",
+"t": "Manga",
+"set": {
+"genre": "Adventure",
+"has_anime": false,
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Daemonium",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "12 Days",
+"t": "Graphic Novel",
+"set": {
+"content_notes": [
+"Death of a loved one",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Bomba!",
+"t": "Manga",
+"set": {
+"series_volumes": 1,
+"content_notes": [
+"Sexual content",
+"Disturbing imagery",
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Bleach Official Character Book Souls",
+"t": "Manga",
+"set": {
+"genre": "Informational",
+"series_volumes": 1,
+"has_anime": true
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "My Alcoholic Escape From Reality",
+"t": "Manga",
+"set": {
+"series_volumes": 1
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Red Room",
+"t": "Graphic Novel",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Disturbing imagery",
+"Strong language",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Trash",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Goku Midnight Eye",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Nudity",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Naruto The Official Character Data Book",
+"t": "Manga",
+"set": {
+"genre": "Informational",
+"has_anime": true
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "The Cat Proposed",
+"t": "Manga",
+"set": {
+"spice_level": "2 Ketchup",
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Gakuen Polizi",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Croquis",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Digiko's Champion Cup Theater",
+"t": "Manga",
+"set": {
+"series_volumes": 1
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Kurogane Communication",
+"t": "Manga",
+"set": {
+"language": "English"
+},
+"conf": "high",
+"src": "Del Rey English edition"
+},
+{
+"s": "Days of Cool Idols",
+"t": "Manga",
+"set": {
+"series_volumes": 1
+},
+"conf": "high",
+"src": "https://www.animenewsnetwork.com/encyclopedia/manga.php?id=10797"
+},
+{
+"s": "Midnight Bloom",
+"t": "Manga",
+"set": {
+"series_volumes": 1,
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Electric Hands",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Nabi The Prototype",
+"t": "Manga",
+"set": {
+"series_volumes": 1
+},
+"conf": "high",
+"src": "https://animenewsnetwork.com/encyclopedia/manga.php?id=10471"
+},
+{
+"s": "Shaman Warrior",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Sulk",
+"t": "Graphic Novel",
+"set": {
+"content_notes": [
+"Strong language"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "RA.I",
+"t": "Manga",
+"set": {
+"series_volumes": 4
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Magic Knight Rayearth Part One Book One",
+"t": "Manga",
+"set": {
+"series_volumes": 3
+},
+"conf": "med",
+"src": "own knowledge (Part One = 3 books; whole Rayearth run 6)"
+},
+{
+"s": "Gadirock Requiem Chorus",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Jojos Bizarre Adv Shining Diamonds Heartbreak",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge (note: this is a novel, not manga)"
+},
+{
+"s": "Aho-Girl A Clueless Girl",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Yami-Hara",
+"t": "Light Novel",
+"set": {
+"content_notes": [
+"Disturbing imagery",
+"Abuse"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Greatest Demon Lord Reborn As A Typical Nobody Side Story",
+"t": "Light Novel",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "One More Step Come Stand By My Side",
+"t": "Manga",
+"set": {
+"series_volumes": 1,
+"content_notes": []
+},
+"conf": "med",
+"src": "https://www.animenewsnetwork.com/encyclopedia/manga.php?id=27807 (1-vol anthology)"
+},
+{
+"s": "Phantasm Japan",
+"t": "Light Novel",
+"set": {
+"series_volumes": 1,
+"content_notes": [
+"Graphic violence/gore",
+"Disturbing imagery"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "This Reincarnated Countess Is Trying to Escape from Her Prince",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Book Girl and the Captive Fool",
+"t": "Light Novel",
+"set": {
+"series_volumes": 8
+},
+"conf": "med",
+"src": "own knowledge (Book Girl main LN series, Yen 8 vols)"
+},
+{
+"s": "Lore Olympus",
+"t": "Graphic Novel",
+"set": {
+"content_notes": [
+"Sexual assault",
+"Abuse",
+"Self-harm/suicide"
+]
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "One Piece",
+"t": "Light Novel",
+"set": {
+"genre": "Adventure",
+"has_anime": true
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Hollow Regalia Corpse Reviver",
+"t": "Light Novel",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Harlequin Violet Blind Date",
+"t": "Manga",
+"set": {
+"series_volumes": 1,
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Revenge of My Youth",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Battle Royal Remastered",
+"t": "Light Novel",
+"set": {
+"series_volumes": 1
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Doom Breaker",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Magic Knight Rayearth Part One Book Three",
+"t": "Manga",
+"set": {
+"series_volumes": 3
+},
+"conf": "med",
+"src": "own knowledge (Part One = 3 books)"
+},
+{
+"s": "X/1999 Intermezzo",
+"t": "Manga",
+"set": {
+"genre": "Supernatural",
+"has_anime": true
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Boy Meets Maria",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "10 20 and 30",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Dorothea",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Reanima",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Marriage to Kitsune-sama",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Japan",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Sexual assault"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Snegurochka of the Spring Breeze",
+"t": "Manga",
+"set": {
+"spice_level": "3 Salsa",
+"content_notes": [
+"Sexual content",
+"Nudity",
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Alice in the Country of Joker: The Nightmare Trilogy",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Saver",
+"t": "Manga",
+"set": {
+"spice_level": "1 Sweet"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Scooter Girl",
+"t": "Graphic Novel",
+"set": {
+"content_notes": [
+"Strong language",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Angel Heart",
+"t": "Manga",
+"set": {
+"series_status": "Complete"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Return of the Condor Heroes (Thai Edition)",
+"t": "Manga",
+"set": {
+"has_anime": true
+},
+"conf": "med",
+"src": "own knowledge (2001 Condor Hero anime); Thai edition status unknown"
+},
+{
+"s": "Zipang",
+"t": "Manga",
+"set": {
+"series_status": "Complete"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Tales of Xillia Side;Milla",
+"t": "Manga",
+"set": {
+"series_status": "Complete"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Seitokai no Ichizon Mokushiroku",
+"t": "Light Novel",
+"set": {
+"series_status": "Complete"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Otokogi",
+"t": "Manga",
+"set": {
+"series_status": "Complete",
+"has_anime": false
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Clubbing",
+"t": "Graphic Novel",
+"set": {
+"series_volumes": 1
+},
+"conf": "high",
+"src": "own knowledge (DC Minx one-shot)"
+},
+{
+"s": "DNAgents",
+"t": "Graphic Novel",
+"set": {
+"series_volumes": 3
+},
+"conf": "med",
+"src": "https://www.goodreads.com/series/263891-dnagents"
+},
+{
+"s": "Zoo The Graphic Novel",
+"t": "Graphic Novel",
+"set": {
+"series_volumes": 1,
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Marvel Comics A Manga Tribute",
+"t": "Graphic Novel",
+"set": {
+"series_volumes": 1
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Godhand Teru",
+"t": "Manga",
+"set": {
+"series_status": "Complete"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Times Two",
+"t": "Manga",
+"set": {
+"spice_level": "1 Sweet"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Tenjo Tenge Korean Edition",
+"t": "Manga",
+"set": {
+"series_volumes": 22,
+"series_status": "Complete",
+"has_anime": true
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Inuyasha",
+"t": "Manga",
+"set": {
+"series_volumes": 18,
+"series_status": "Complete"
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Hard Boiled Angel",
+"t": "Manhwa",
+"set": {
+"series_volumes": 3,
+"series_status": "English run ended early",
+"has_anime": false,
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "https://www.animenewsnetwork.com/encyclopedia/manga.php?id=4837"
+},
+{
+"s": "Marvel Sentinel",
+"t": "Graphic Novel",
+"set": {
+"series_volumes": 3,
+"series_status": "Complete",
+"has_anime": false
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Divalicious!",
+"t": "Graphic Novel",
+"set": {
+"spice_level": "1 Sweet"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "A Tale of the Secret Saint Light Novel",
+"t": "Light Novel",
+"set": {
+"genre": "Fantasy",
+"series_status": "Ongoing",
+"has_anime": true,
+"language": "English"
+},
+"conf": "med",
+"src": "ANN id=30151; anime announced 2025, premiered 2026; volume count & age not confirmed"
+},
+{
+"s": "Sushi Girl",
+"t": "Graphic Novel",
+"set": {
+"series_volumes": 1,
+"series_status": "One-shot",
+"has_anime": false,
+"language": "English"
+},
+"conf": "med",
+"src": "Sushi Girl by Tavicat (Mixx) - single volume"
+},
+{
+"s": "Jojo's Bizarre Adventure",
+"t": "Manga",
+"set": {
+"series_status": "Ongoing"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Red River",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content",
+"Sexual assault",
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Shangri-La Frontier",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "How Heavy Are The Dumbbells You Lift",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "2.5 Dimensional Seduction",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Nudity"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Banana Fish",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual assault",
+"Graphic violence/gore",
+"Drug use",
+"Abuse",
+"Death of a loved one",
+"Strong language"
+]
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "The King's Beast",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Nodame Cantabile",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "We Were There",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Death of a loved one",
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Wolf Girl and Black Prince",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Library Wars: Love and War",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "City",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "His Favorite",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "High School Prodigies Have It Easy Even in Another World!",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content",
+"Nudity",
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Kiss Me At The Stroke Of Midnight",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content",
+"Nudity"
+],
+"series_status": "Ongoing",
+"has_anime": true
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Kei X Yaku Bound By Law",
+"t": "Manga",
+"set": {
+"spice_level": "4 Hot Sauce",
+"content_notes": [
+"Sexual content",
+"Nudity",
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Whisper Me A Love Song",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Saint Young Men",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "For The Kid I Saw In My Dreams",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore",
+"Abuse",
+"Death of a loved one",
+"Disturbing imagery"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "The Disappearance of Nagato Yuki-Chan",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "The Dragon Knight's Beloved",
+"t": "Manga",
+"set": {
+"spice_level": "2 Ketchup"
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Am I Actually The Strongest?",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "He's My Only Vampire",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Emma",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "high",
+"src": "own knowledge"
+},
+{
+"s": "Tune In to the Midnight Heart",
+"t": "Manga",
+"set": {
+"content_notes": []
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Genshiken",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Sexual content"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+},
+{
+"s": "Rasetsu",
+"t": "Manga",
+"set": {
+"content_notes": [
+"Graphic violence/gore"
+]
+},
+"conf": "med",
+"src": "own knowledge"
+}
+],
+"skip": [
+{
+"s": "Gene Bride",
+"t": "Manga",
+"why": "unsure of content (workplace harassment themes) - needs a look at the book"
+},
+{
+"s": "Stand By Youth",
+"t": "Manga",
+"why": "could not confirm content of this Tokyopop manhwa"
+},
+{
+"s": "The Other Side of the Mirror",
+"t": "Manga",
+"why": "could not confirm content of Jo Chen's The Other Side of the Mirror"
+},
+{
+"s": "Flipside",
+"t": "Graphic Novel",
+"why": "could not identify content for this small-press graphic novel"
+},
+{
+"s": "Rolling",
+"t": "Manga",
+"why": "could not confirm content of this Tokyopop manhwa"
+},
+{
+"s": "Dystopia Love at Last Sight",
+"t": "Graphic Novel",
+"why": "could not confirm content"
+},
+{
+"s": "Amongst Us",
+"t": "Graphic Novel",
+"why": "could not confirm content"
+},
+{
+"s": "Mutiny",
+"t": "Graphic Novel",
+"why": "could not confirm content of Manga Mutiny"
+},
+{
+"s": "Tasty Bullet",
+"t": "Manga",
+"why": "could not confirm content"
+},
+{
+"s": "Yellow Stringer",
+"t": "Graphic Novel",
+"why": "could not confirm content"
+},
+{
+"s": "Anh Mat Cua Chang",
+"t": "Manga",
+"why": "could not identify this Vietnamese edition title"
+},
+{
+"s": "Manga Historical Records",
+"t": "Manga",
+"why": "could not confirm Chinese edition volume count/status"
+},
+{
+"s": "Ya, Inoma!",
+"t": "Manhwa",
+"why": "could not confirm Korean edition volumes/status"
+},
+{
+"s": "Makaido",
+"t": "Manga",
+"why": "could not confirm Chinese edition volumes/status"
+},
+{
+"s": "A-DO",
+"t": "Manga",
+"why": "could not confirm content"
+}
+]
+}
