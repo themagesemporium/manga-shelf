@@ -11,7 +11,7 @@
   {%- else -%}
     <p class="tme-wlp-sub">Hearts you add are saved on this device. <a href="{{ routes.account_login_url }}">Sign in</a> to keep your wishlist everywhere (including the My Manga Emporium app) and get an email when a book comes back in stock or goes on sale.</p>
   {%- endif -%}
-  <div class="tme-wlp-tools"><label>Show <select id="tme-wl-show"><option value="all">Everything</option><option value="in">In stock now</option></select></label></div>
+  <div class="tme-wlp-tools"><input type="search" id="tme-wl-q" placeholder="Find a book on your list" aria-label="Find a book on your list"> <label>Sort <select id="tme-wl-sort"><option value="new">Newest saves first</option><option value="az">A–Z</option></select></label> <label>Show <select id="tme-wl-show"><option value="all">Everything</option><option value="in">In stock now</option></select></label> <span id="tme-wl-count" class="tme-wlp-count"></span></div>
   <div id="tme-wl-list" class="tme-wlp-list"><p>Loading your wishlist…</p></div>
 </div>
 <style>
@@ -19,13 +19,13 @@
   .tme-wlp-sub{margin:4px 0 12px}
   .tme-wlp-pref{border:1px solid rgba(0,0,0,.15);border-radius:8px;padding:8px 12px;margin:0 0 14px}
   .tme-wlp-pref label{display:block;margin:4px 0;cursor:pointer}.tme-wlp-pref span{opacity:.7;font-size:.9em}
-  .tme-wlp-tools{margin:0 0 10px}
+  .tme-wlp-tools{margin:0 0 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tme-wlp-tools input{flex:1 1 200px;min-width:0;padding:6px 8px;border:1px solid rgba(0,0,0,.25);border-radius:6px;font:inherit}.tme-wlp-count{opacity:.7;font-size:.9em}
   .tme-wlp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
   .tme-wlc{position:relative;background:#fff;border-radius:8px;padding:8px;box-shadow:0 1px 3px rgba(0,0,0,.12);display:flex;flex-direction:column;gap:4px;font-size:14px}
   .tme-wlc img{width:100%;aspect-ratio:2/3;object-fit:contain;background:#f6f6f6;border-radius:4px}
   .tme-wlc a{color:inherit;text-decoration:none;font-weight:600}
   .tme-wlc .p{font-weight:700}.tme-wlc .in{color:#2f7d4f;font-size:12px;font-weight:700}.tme-wlc .out{opacity:.65;font-size:12px}
-  .tme-wlc .x{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.9);box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:pointer;font-size:16px;line-height:28px}
+  .tme-wlc .x{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;color:#333;background:rgba(255,255,255,.95);box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:pointer;font-size:16px;line-height:28px}
   .tme-wlp-empty{grid-column:1/-1}
 </style>
 <script>
@@ -41,7 +41,9 @@ function tmeWlPage(){
         var ps = (j.resources && j.resources.results && j.resources.results.products) || [], re = new RegExp('\\bvol(?:ume)?\\.?\\s*0*' + Math.round(it.v) + '\\b', 'i');
         var hit = ps.find(function(x){ return re.test(x.title) && (!!it.ln === /novel/i.test(x.title + ' ' + (x.type || ''))); }) || ps.find(function(x){ return re.test(x.title); });
         return hit ? fetch(hit.url.split('?')[0] + '.js').then(function(r){ return r.ok ? r.json() : null; }) : null; }); }).catch(function(){ return null; }); }
-  function draw(W){ var items = (W.items || []).slice().sort(function(a, b){ return String(a.s || a.t).localeCompare(String(b.s || b.t)) || (a.v || 0) - (b.v || 0); });
+  function draw(W){ var q = (document.getElementById('tme-wl-q') || {}).value || '', ord = (show && document.getElementById('tme-wl-sort') || {}).value || 'new';
+    var items = (W.items || []).filter(function(it){ return !q || (String(it.s || '') + ' ' + String(it.t || '')).toLowerCase().indexOf(q.toLowerCase()) >= 0; }).sort(function(a, b){ var az = String(a.s || a.t).localeCompare(String(b.s || b.t)) || (a.v || 0) - (b.v || 0); return ord === 'az' ? az : (String(b.at || '').localeCompare(String(a.at || '')) || az); });
+    var cnt = document.getElementById('tme-wl-count'); if (cnt) cnt.textContent = (W.items || []).length + ' saved';
     if (show && W.prefs) document.querySelectorAll('[name=tme-wl-pref]').forEach(function(r){ r.checked = r.value === (W.prefs.email || 'hourly'); });
     if (!items.length){ box.innerHTML = '<p class="tme-wlp-empty">Your wishlist is empty. Tap <b>Add to Wishlist</b> on any book (or ♥ in the app) to save it here.</p>'; return; }
     box.innerHTML = items.map(function(it, i){ var name = it.s ? it.s + (it.ln ? ' (Light Novel)' : '') + ' Vol ' + it.v : (it.t || 'Saved item');
@@ -53,6 +55,7 @@ function tmeWlPage(){
         var st = el.querySelector('.st'); st.className = 'st ' + (pr.available ? 'in' : 'out'); st.textContent = pr.available ? 'In stock' : 'Out of stock: we’ll email you'; el.dataset.in = pr.available ? 1 : 0; filter(); }); }); }
   function filter(){ var only = show && show.value === 'in'; box.querySelectorAll('.tme-wlc').forEach(function(el){ el.hidden = only && el.dataset.in !== '1'; }); }
   if (show) show.onchange = filter;
+  var qq = document.getElementById('tme-wl-q'), so = document.getElementById('tme-wl-sort'), tq; if (qq) qq.oninput = function(){ clearTimeout(tq); tq = setTimeout(function(){ draw(TMEWL.list()); }, 250); }; if (so) so.onchange = function(){ draw(TMEWL.list()); };
   box.addEventListener('click', function(e){ var b = e.target.closest('[data-rm]'); if (!b) return; var el = b.closest('.tme-wlc'); TMEWL.toggle(el._it); });
   document.querySelectorAll('[name=tme-wl-pref]').forEach(function(r){ r.onchange = function(){ TMEWL.setPref(r.value); }; });
   TMEWL.on(draw);
