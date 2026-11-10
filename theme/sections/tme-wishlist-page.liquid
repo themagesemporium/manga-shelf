@@ -29,7 +29,7 @@
   .tme-wlp-empty{grid-column:1/-1}
 </style>
 <script>
-(function(){
+function tmeWlPage(){
   var box = document.getElementById('tme-wl-list'), show = document.getElementById('tme-wl-show'), cache = {};
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function money(c){ return '$' + (c / 100).toFixed(2); }
@@ -56,7 +56,8 @@
   box.addEventListener('click', function(e){ var b = e.target.closest('[data-rm]'); if (!b) return; var el = b.closest('.tme-wlc'); TMEWL.toggle(el._it); });
   document.querySelectorAll('[name=tme-wl-pref]').forEach(function(r){ r.onchange = function(){ TMEWL.setPref(r.value); }; });
   TMEWL.on(draw);
-})();
+}
+if (window.TMEWL) tmeWlPage(); else document.addEventListener('DOMContentLoaded', tmeWlPage);
 </script>
 
 {% schema %}
