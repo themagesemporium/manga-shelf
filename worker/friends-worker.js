@@ -113,7 +113,7 @@ async function wlProxy(env, req, url){ const cid = await proxyCid(env, url); con
   if (cid === null) return JS({ error: 'forbidden' }, 403); if (!cid) return JS({ login: true, items: [] });
   if (req.method !== 'POST') { const w = await wlGet(env, cid); return JS({ items: w.items, prefs: w.prefs }); }
   let b = {}; try { b = await req.json(); } catch(e){} const w = await wlGet(env, cid); const now = new Date().toISOString().slice(0, 10);
-  const clean = it => { const o = {}; if (it.s && +it.v){ o.s = String(it.s).slice(0, 160); o.v = Math.round(+it.v * 10) / 10; if (it.ln) o.ln = 1; } if (it.p && /^\d+$/.test(String(it.p))) o.p = String(it.p); if (it.t) o.t = String(it.t).slice(0, 160); o.at = now; return wkey(o) ? o : null; };
+  const clean = it => { const o = {}; if (it.s && +it.v){ o.s = String(it.s).slice(0, 160); o.v = Math.round(+it.v * 10) / 10; if (it.ln) o.ln = 1; } if (it.p && /^\d+$/.test(String(it.p))) o.p = String(it.p); if (it.t) o.t = String(it.t).slice(0, 160); if (it.h && /^[a-z0-9-]+$/.test(String(it.h))) o.h = String(it.h).slice(0, 200); o.at = now; return wkey(o) ? o : null; };
   const has = k => w.items.findIndex(x => wkey(x) === k);
   if (b.op === 'add' || b.op === 'merge'){ for (const raw of (b.op === 'add' ? [b] : (Array.isArray(b.items) ? b.items.slice(0, 200) : []))){ const it = clean(raw); if (!it) continue; const k = wkey(it); if (has(k) < 0){ w.items.push(it); w.rm = w.rm.filter(x => wkey(x) !== k); } } }
   else if (b.op === 'rm'){ const it = clean(b); if (it){ const k = wkey(it); const pk = it.p ? 'p:' + it.p : ''; const before = w.items.length; w.items = w.items.filter(x => wkey(x) !== k && !(pk && x.p === it.p)); if (w.items.length !== before) w.rm.push({ s: it.s, v: it.v, ln: it.ln, p: it.p, at: now }); } }

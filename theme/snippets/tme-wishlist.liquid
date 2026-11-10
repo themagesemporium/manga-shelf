@@ -1,0 +1,44 @@
+{%- comment -%}
+  One-list wishlist (replaces SE Wishlist Engine). Rendered once in layout/theme.liquid.
+  The list lives in the customer's metafield custom.store_wishlist, the same list the My Manga Emporium app uses.
+  Saves go through the app proxy /apps/mme/wl (Cloudflare worker mme-friends checks Shopify's signature).
+  Signed-out shoppers' hearts are kept in this browser and merged into their account when they sign in.
+{%- endcomment -%}
+<script>
+window.TMEWL = (function(){
+  var LOGGED = {{ customer != blank | json }}, GK = 'tme-wl-guest';
+  var START = {%- if customer and customer.metafields.custom.store_wishlist -%}{{ customer.metafields.custom.store_wishlist.value | json }}{%- else -%}null{%- endif -%};
+  var W = { items: [], prefs: {} }; try { if (START) W = typeof START === 'string' ? JSON.parse(START) : START; } catch(e){}
+  W.items = W.items || []; W.prefs = W.prefs || {};
+  function ls(k, v){ try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch(e){ return null; } }
+  if (!LOGGED) W.items = ls(GK) || [];
+  function key(it){ return it.s && +it.v ? String(it.s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + '|' + Math.round(+it.v) + (it.ln ? '|ln' : '') : (it.p ? 'p:' + it.p : ''); }
+  function has(it){ var k = key(it); return W.items.some(function(x){ return key(x) === k || (it.p && x.p && String(x.p) === String(it.p)); }); }
+  var subs = []; function emit(){ subs.forEach(function(f){ try { f(W); } catch(e){} }); }
+  function post(body){ return fetch('/apps/mme/wl', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' }).then(function(r){ return r.json(); }); }
+  function toggle(it){ var on = !has(it), k = key(it);
+    if (on) W.items.push(Object.assign({ at: new Date().toISOString().slice(0, 10) }, it)); else W.items = W.items.filter(function(x){ return key(x) !== k && !(it.p && x.p && String(x.p) === String(it.p)); });
+    emit(); if (!LOGGED){ ls(GK, W.items); return Promise.resolve(on); }
+    return post(Object.assign({ op: on ? 'add' : 'rm' }, it)).then(function(r){ if (r && r.items){ W.items = r.items; emit(); } return on; })
+      .catch(function(){ if (on) W.items = W.items.filter(function(x){ return key(x) !== k; }); else W.items.push(it); emit(); alert('Sorry, that didn’t save. Please try again.'); return !on; }); }
+  function setPref(email){ W.prefs.email = email; emit(); return LOGGED ? post({ op: 'prefs', email: email }) : Promise.resolve(); }
+  // signed in with guest hearts waiting: move them into the account
+  if (LOGGED){ var g = ls(GK); if (g && g.length) post({ op: 'merge', items: g }).then(function(r){ if (r && r.items){ W.items = r.items; ls(GK, []); emit(); } }).catch(function(){}); }
+  // the account list may have changed in the app since this page was cached: refresh once
+  if (LOGGED) fetch('/apps/mme/wl', { credentials: 'same-origin' }).then(function(r){ return r.json(); }).then(function(r){ if (r && r.items){ W.items = r.items; W.prefs = r.prefs || {}; emit(); } }).catch(function(){});
+  return { has: has, toggle: toggle, setPref: setPref, on: function(f){ subs.push(f); f(W); }, list: function(){ return W; }, logged: LOGGED, key: key };
+})();
+document.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('[data-tme-wish]'); if (!b) return; e.preventDefault(); var d = b.dataset;
+  var it = { p: d.p, t: d.t, h: d.h }; if (d.s && +d.v){ it.s = d.s; it.v = +d.v; if (d.ln === '1') it.ln = 1; }
+  b.disabled = true; TMEWL.toggle(it).then(function(on){ b.disabled = false; if (on && !TMEWL.logged){ var n = b.parentNode.querySelector('.tme-wish-note'); if (n) n.hidden = false; } }); });
+TMEWL.on(function(){ document.querySelectorAll('[data-tme-wish]').forEach(function(b){ var d = b.dataset; var it = { p: d.p }; if (d.s && +d.v){ it.s = d.s; it.v = +d.v; if (d.ln === '1') it.ln = 1; }
+  var on = TMEWL.has(it); b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on); var l = b.querySelector('.tme-wish-label'); if (l) l.textContent = on ? 'Added to Wishlist' : 'Add to Wishlist'; }); });
+</script>
+<style>
+  .tme-wish{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #d0312d;border-radius:2px;padding:7px 12px;margin:4px 0 8px;font:inherit;font-size:15px;color:{{ settings.text_color | default: '#234d61' }};cursor:pointer;line-height:1.2}
+  .tme-wish svg{width:18px;height:18px;flex:none;fill:none;stroke:#d0312d;stroke-width:2}
+  .tme-wish.is-on svg{fill:#d0312d}
+  .tme-wish:hover{background:#fff5f5}
+  .tme-wish:disabled{opacity:.6}
+  .tme-wish-note{font-size:12px;opacity:.8;margin:0 0 8px}
+</style>
