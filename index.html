@@ -1508,7 +1508,10 @@ async function doImport(text){ if (!text || !text.trim()){ $('#impMsg').textCont
 $('#impBtn').onclick = () => doImport($('#impTxt').value);
 $('#snapBtn').onclick = () => buildSnap($('#snapBtn'), $('#snapMsg'));
 $('#impFile').onchange = async e => { const f = e.target.files && e.target.files[0]; if (!f) return; if (f.size > 15e6){ $('#impMsg').textContent = 'That file is too big.'; return; } await doImport(await f.text()); e.target.value = ''; };
-function coverOf(k){ const s = shelf.series[k]; if (!s){ const e = SNAP && SNAP.s[k]; const it = e && (e.i || []).find(x => x[4]); return it ? snapImg(it[4]) : ''; } if (s.c) return s.c; const L = live.get(k);
+const autoCov = c => /covers\.openlibrary\.org\/b\/id\/|books\.google|googleusercontent\.com\/books|books\.googleapis/.test(String(c || ''));
+const tNorm = x => String(x || '').toLowerCase().replace(/\((manga|light novel|novel|english|[a-z]+ edition)\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\b(the|a|an|vol|volume|omnibus|edition|manga|light novel)\b/g, ' ').replace(/\s+/g, ' ').trim();
+const titleOk = (doc, want) => { const d = tNorm(doc), w = tNorm(want); if (!d || !w || w.length < 3) return false; return d === w || (d.startsWith(w + ' ') && /^(\d+|hardcover|paperback|collection|complete)( |$)/.test(d.slice(w.length + 1))); };
+function coverOf(k){ const s = shelf.series[k]; if (s && s.c && autoCov(s.c)){ const L0 = live.get(k); const it0 = L0 && (L0.items.find(p => p.img && new Set(ints(s)).has(p.vol)) || L0.items.find(p => p.img)); if (it0) return it0.img; const h0 = SNAP && snapEntry(k); const e0 = h0 && h0[1]; const i0 = e0 && (e0.i || []).find(x => x[4]); if (i0) return snapImg(i0[4]); } if (!s){ const e = SNAP && SNAP.s[k]; const it = e && (e.i || []).find(x => x[4]); return it ? snapImg(it[4]) : ''; } if (s.c) return s.c; const L = live.get(k);
   if (!L){ /* no live data yet: use the snapshot, then omnibus/deluxe pictures for shelves that only hold editions (Gunsmith Cats omnibus etc.) */
     const hit = SNAP && snapEntry(k); const e = hit && hit[1]; if (!e) return ''; const own = new Set(ints(s));
     const it = (e.i || []).find(x => x[4] && own.has(x[0])) || (e.i || []).find(x => x[4]); if (it) return snapImg(it[4]);
@@ -1824,18 +1827,18 @@ function applySnap(){ if (!SNAP) return; try { linkOtherReads(); } catch(e){} le
     const items = snapItems(e);
     live.set(k, { at: Date.now(), v2: 1, items, total: e.t || 0, snap: SNAP.at });
     const s = shelf.series[k]; if (e.m && !s.m) s.m = { a: e.m.aud || '', g: e.m.gen ? String(e.m.gen).split(/,\s*/).filter(Boolean) : [], au: e.m.au || '', p: e.m.pub || '' };
-    if (!s.c){ const own = new Set(ints(s)); const it = items.find(p => p.img && own.has(p.vol)) || items.find(p => p.img); if (it) s.c = it.img; } });
+    if (!s.c || autoCov(s.c)){ const own = new Set(ints(s)); const it = items.find(p => p.img && own.has(p.vol)) || items.find(p => p.img); if (it) s.c = it.img; } });
   renderAll(); renderFinds(); try { fixBadge(); } catch(e){} if (current) renderSeries(current); if (typeof miss !== 'undefined' && miss.length) olCovers(miss); }
 // books the shop doesn't carry: borrow an English cover from Open Library (a few at a time, remembered on the shelf)
 let olBusy = false;
 async function olCovers(keys){ if (olBusy || window.claude) return; olBusy = true; let n = 0;
   const sib = nm => { const q = normName(nm); let best = null; snapNorm.forEach((k, key) => { const b = key.split('|')[0]; if (b.length >= 5 && q.startsWith(b) && (!best || b.length > best[0].length)) best = [b, k]; }); const e = best && SNAP.s[best[1]]; const im = e && (e.i || []).find(x => x[4]); return im ? snapImg(im[4]) : ''; };
-  for (const k of keys.slice(0, 40)){ const s = shelf.series[k]; if (!s || s.c || (s.ct||0) >= 2) continue; s.ct = 2; n++;
+  for (const k of keys.slice(0, 40)){ const s = shelf.series[k]; if (!s) continue; const redo = s.c && autoCov(s.c) && (s.ct||0) < 3; if (!redo && (s.c || (s.ct||0) >= 3)) continue; if (redo) s.c = ''; s.ct = 3; n++; /* ct 3 (Nov 9): covers must match the title; older guesses are re-checked once */
     const t = s.n.replace(/\((manga|light novel|english|[a-z]+ edition)\)/ig, ' ').replace(/\s+/g, ' ').trim();
     try { const r = await fetch('https://openlibrary.org/search.json?' + new URLSearchParams({ q: t, limit: '10', fields: 'cover_i,title,language' })); const j = await r.json();
-      const d = (j.docs || []).filter(x => x.cover_i); const en = d.find(x => (x.language || []).includes('eng')) || d[0]; if (en) s.c = 'https://covers.openlibrary.org/b/id/' + en.cover_i + '-M.jpg'; } catch(e){}
+      const d = (j.docs || []).filter(x => x.cover_i && titleOk(x.title, t)); const en = d.find(x => (x.language || []).includes('eng')) || d[0]; if (en) s.c = 'https://covers.openlibrary.org/b/id/' + en.cover_i + '-M.jpg'; } catch(e){}
     if (!s.c){ try { const r = await fetch('https://www.googleapis.com/books/v1/volumes?' + new URLSearchParams({ q: t, maxResults: '10', printType: 'books', langRestrict: langOf(k) ? '' : 'en' })); const j = await r.json();
-      const it = (j.items || []).find(x => x.volumeInfo && x.volumeInfo.imageLinks); if (it){ const L = it.volumeInfo.imageLinks; s.c = String(L.thumbnail || L.smallThumbnail).replace(/^http:/, 'https:').replace('&edge=curl', ''); } } catch(e){} }
+      const it = (j.items || []).find(x => x.volumeInfo && x.volumeInfo.imageLinks && titleOk(x.volumeInfo.title, t)); if (it){ const L = it.volumeInfo.imageLinks; s.c = String(L.thumbnail || L.smallThumbnail).replace(/^http:/, 'https:').replace('&edge=curl', ''); } } catch(e){} }
     if (!s.c) s.c = sib(t);
     await new Promise(r => setTimeout(r, 350)); }
   olBusy = false; if (n){ save(); } }
