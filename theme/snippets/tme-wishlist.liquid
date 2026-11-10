@@ -6,7 +6,7 @@
 {%- endcomment -%}
 <script>
 window.TMEWL = (function(){
-  var LOGGED = {{ customer != blank | json }}, GK = 'tme-wl-guest';
+  var LOGGED = {% if customer %}true{% else %}false{% endif %}, GK = 'tme-wl-guest';
   var START = {%- if customer and customer.metafields.custom.store_wishlist -%}{{ customer.metafields.custom.store_wishlist.value | json }}{%- else -%}null{%- endif -%};
   var W = { items: [], prefs: {} }; try { if (START) W = typeof START === 'string' ? JSON.parse(START) : START; } catch(e){}
   W.items = W.items || []; W.prefs = W.prefs || {};
