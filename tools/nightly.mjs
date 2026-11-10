@@ -46,4 +46,7 @@ catch (e){ failed = true; out('Want List failed:', String(e).slice(0, 300)); }
 // 3) customer spice & gentle-read ratings: fill or override a listing's rating when 3+ customers agree
 try { load('crowd-ratings.js'); const C = await window._crRun(); out(`Customer ratings: ${C.voters} customers rated, ${C.series} series with 3+ agreeing, ${C.set} listings updated (${C.conflicts.length} series had a shop rating changed).${C.err.length ? ' Errors: ' + JSON.stringify(C.err).slice(0, 300) : ''}`); }
 catch (e){ out('Customer ratings failed:', String(e).slice(0, 300)); }
+// 4) one-list wishlist: rebuild the alert index the worker uses for back-in-stock and price-drop emails
+try { load('wl-index.js'); const W = await window._wiRun(); out(`Wishlist index: ${W.customers} customers, ${W.items} items, ${W.keys} books, ${W.parts} parts.${W.err.length ? ' Errors: ' + W.err.join(' | ') : ''}`); }
+catch (e){ out('Wishlist index failed:', String(e).slice(0, 300)); }
 process.exit(failed ? 1 : 0);

@@ -72,6 +72,111 @@ async function runQueue(env){
   return { sent }; }
 
 async function conNow(env){ let L = null; try { L = JSON.parse(await env.FRIENDS.get('cons') || 'null'); } catch(e){} if (!L){ L = []; try { const html = await (await fetch('https://themagesemporium.com/pages/upcoming-events')).text(); const MONS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']; html.split(/<\/p>|<br\s*\/?>|\n/i).map(x => x.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()).forEach(line => { const m = line.match(/^(.+?)\s+[-–—]\s+([A-Za-z]+)\.?\s+(\d{1,2})(?:\s*[-–]\s*(?:([A-Za-z]+)\.?\s+)?(\d{1,2}))?,?\s+(\d{4})/); if (!m) return; const mi = MONS.indexOf(m[2].toLowerCase().slice(0, 3)); if (mi < 0) return; const m2 = m[4] ? MONS.indexOf(m[4].toLowerCase().slice(0, 3)) : mi; L.push([Date.UTC(+m[6], mi, +m[3] - 1, 5), Date.UTC(+m[6], m2 < 0 ? mi : m2, (m[5] ? +m[5] : +m[3]) + 2, 5)]); }); } catch(e){} await env.FRIENDS.put('cons', JSON.stringify(L), { expirationTtl: 21600 }); } const now = Date.now(); return L.some(([s, e]) => now >= s && now < e); }
+/* ---------- One-list wishlist (Nov 2026) ----------
+   The list lives in each customer's Shopify metafield custom.store_wishlist (json):
+     {updated, items:[{s: series, v: volume, ln: 1 for light novels, p: product id (optional), t: title (optional), at}], rm:[...], prefs:{email:'hourly'|'daily'|'off'}}
+   The app reads/writes it directly (customer account). The website reaches it through the Shopify app proxy
+   (themagesemporium.com/apps/mme/... -> this worker /proxy/..., signed by Shopify with the Mage Nightly app secret).
+   Admin access: client-credentials token for the Mage Nightly app (env SHOPIFY_CLIENT_ID / SHOPIFY_CLIENT_SECRET).
+   Alerts: every cron tick looks at products changed since the last tick; a wishlisted book that comes back in stock,
+   or drops 10%+ in price, is queued for its wishers. Hourly folks get one email at the top of the hour, daily folks at 9am ET.
+   Email goes through Resend (env RESEND_KEY) from alerts@mail.themagesemporium.com. App users with notifications on get a push right away.
+   KV: adm:tok (Admin token)  wl:idx {keys:{key:[cid]}, pref:{cid:'hourly'|'daily'|'off'}, at}  wl:ps {key:[price, avail]}  wl:q {cid:[[kind,key,title,price,old,handle,img]]}  wl:last (ISO time of last product scan)  wl:sent:<hourbucket> */
+const SHOPD = 'the-mages-emporium.myshopify.com', AV = '2026-10', SITE = 'https://themagesemporium.com';
+async function admTok(env){ const t = await env.FRIENDS.get('adm:tok'); if (t) return t;
+  if (!env.SHOPIFY_CLIENT_ID || !env.SHOPIFY_CLIENT_SECRET) throw new Error('no-admin-secrets');
+  const r = await fetch(`https://${SHOPD}/admin/oauth/access_token`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'client_credentials', client_id: env.SHOPIFY_CLIENT_ID, client_secret: env.SHOPIFY_CLIENT_SECRET }) });
+  const j = await r.json().catch(() => ({})); if (!j.access_token) throw new Error('admin-token ' + r.status);
+  await env.FRIENDS.put('adm:tok', j.access_token, { expirationTtl: Math.max(600, (+j.expires_in || 86400) - 900) }); return j.access_token; }
+async function adm(env, query, variables){ const r = await fetch(`https://${SHOPD}/admin/api/${AV}/graphql.json`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-shopify-access-token': await admTok(env) }, body: JSON.stringify({ query, variables }) });
+  const j = await r.json().catch(() => ({})); if (r.status === 401) await env.FRIENDS.delete('adm:tok'); if (!j.data) throw new Error('admin ' + r.status + ' ' + JSON.stringify(j.errors || j).slice(0, 160)); return j.data; }
+async function hmacHex(secret, msg){ const k = await crypto.subtle.importKey('raw', te.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']); return [...new Uint8Array(await crypto.subtle.sign('HMAC', k, te.encode(msg)))].map(b => b.toString(16).padStart(2, '0')).join(''); }
+async function proxyCid(env, url){ // Shopify app proxy signature -> logged-in customer id ('' if logged out), or null if the request isn't from Shopify
+  const q = new URLSearchParams(url.search); const sig = q.get('signature'); if (!sig || !env.SHOPIFY_CLIENT_SECRET) return null; q.delete('signature');
+  const m = {}; for (const [k, v] of q) (m[k] = m[k] || []).push(v);
+  const msg = Object.keys(m).sort().map(k => k + '=' + m[k].join(',')).join('');
+  if (await hmacHex(env.SHOPIFY_CLIENT_SECRET, msg) !== sig) return null; if (Math.abs(Date.now() / 1000 - +q.get('timestamp')) > 3600) return null;
+  return q.get('logged_in_customer_id') || ''; }
+const wkey = it => it.s && +it.v ? String(it.s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + '|' + Math.round(+it.v) + (it.ln ? '|ln' : '') : it.p ? 'p:' + it.p : '';
+const gid = cid => 'gid://shopify/Customer/' + cid;
+async function wlGet(env, cid){ const d = await adm(env, `query($id:ID!){customer(id:$id){sw:metafield(namespace:"custom",key:"store_wishlist"){value}}}`, { id: gid(cid) });
+  let w = {}; try { w = JSON.parse(d.customer && d.customer.sw && d.customer.sw.value || '{}') || {}; } catch(e){} if (!Array.isArray(w.items)) w.items = []; if (!Array.isArray(w.rm)) w.rm = []; w.prefs = w.prefs || {}; return w; }
+async function wlPut(env, cid, w){ w.updated = new Date().toISOString(); w.rm = (w.rm || []).slice(-200);
+  const d = await adm(env, `mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: gid(cid), namespace: 'custom', key: 'store_wishlist', type: 'json', value: JSON.stringify(w) }] });
+  const er = d.metafieldsSet.userErrors; if (er && er.length) throw new Error(er[0].message); await wlIndex(env, cid, w); return w; }
+async function wlIndex(env, cid, w){ const X = (await get(env, 'wl:idx')) || { keys: {}, pref: {} }; X.keys = X.keys || {}; X.pref = X.pref || {};
+  for (const k of Object.keys(X.keys)){ X.keys[k] = X.keys[k].filter(c => c !== cid); if (!X.keys[k].length) delete X.keys[k]; }
+  for (const it of w.items){ const k = wkey(it); if (!k) continue; (X.keys[k] = X.keys[k] || []).push(cid); }
+  X.pref[cid] = (w.prefs && w.prefs.email) || 'hourly'; await put(env, 'wl:idx', X); const R = (await get(env, 'wl:recent')) || {}; R[cid] = Date.now(); await put(env, 'wl:recent', R); }
+// the website's heart, through the app proxy. GET -> {items,prefs}; POST {op:'add'|'rm', s,v,ln,p,t} | {op:'prefs', email} | {op:'merge', items:[...]} (guest hearts after login)
+async function wlProxy(env, req, url){ const cid = await proxyCid(env, url); const JS = (o, st = 200) => new Response(JSON.stringify(o), { status: st, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+  if (cid === null) return JS({ error: 'forbidden' }, 403); if (!cid) return JS({ login: true, items: [] });
+  if (req.method !== 'POST') { const w = await wlGet(env, cid); return JS({ items: w.items, prefs: w.prefs }); }
+  let b = {}; try { b = await req.json(); } catch(e){} const w = await wlGet(env, cid); const now = new Date().toISOString().slice(0, 10);
+  const clean = it => { const o = {}; if (it.s && +it.v){ o.s = String(it.s).slice(0, 160); o.v = Math.round(+it.v * 10) / 10; if (it.ln) o.ln = 1; } if (it.p && /^\d+$/.test(String(it.p))) o.p = String(it.p); if (it.t) o.t = String(it.t).slice(0, 160); o.at = now; return wkey(o) ? o : null; };
+  const has = k => w.items.findIndex(x => wkey(x) === k);
+  if (b.op === 'add' || b.op === 'merge'){ for (const raw of (b.op === 'add' ? [b] : (Array.isArray(b.items) ? b.items.slice(0, 200) : []))){ const it = clean(raw); if (!it) continue; const k = wkey(it); if (has(k) < 0){ w.items.push(it); w.rm = w.rm.filter(x => wkey(x) !== k); } } }
+  else if (b.op === 'rm'){ const it = clean(b); if (it){ const k = wkey(it); const pk = it.p ? 'p:' + it.p : ''; const before = w.items.length; w.items = w.items.filter(x => wkey(x) !== k && !(pk && x.p === it.p)); if (w.items.length !== before) w.rm.push({ s: it.s, v: it.v, ln: it.ln, p: it.p, at: now }); } }
+  else if (b.op === 'prefs'){ if (['hourly', 'daily', 'off'].includes(b.email)) w.prefs.email = b.email; }
+  else return JS({ error: 'bad op' }, 400);
+  await wlPut(env, cid, w); return JS({ ok: 1, items: w.items, prefs: w.prefs }); }
+// alert engine (called from the cron)
+const ET_HOUR = () => +new Date().toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false }) % 24;
+async function wlScan(env){ if (!env.SHOPIFY_CLIENT_ID) return { skip: 'no admin' };
+  const X = await get(env, 'wl:idx'); if (!X || !X.keys) return { skip: 'no index' };
+  const since = (await env.FRIENDS.get('wl:last')) || new Date(Date.now() - 15 * 60e3).toISOString(); const started = new Date().toISOString();
+  const PS = (await get(env, 'wl:ps')) || {}; const Q = (await get(env, 'wl:q')) || {}; let changed = false, events = 0, a = null, pages = 0; const seen = {}; const seeded = !!(await env.FRIENDS.get('wl:seeded'));
+  do { const d = await adm(env, `query($q:String,$a:String){products(first:100,after:$a,query:$q){pageInfo{hasNextPage endCursor} nodes{id title handle status productType totalInventory tags featuredMedia{preview{image{url}}} priceRangeV2{minVariantPrice{amount}} se:metafield(namespace:"custom",key:"series"){value} vo:metafield(namespace:"custom",key:"volume"){value}}}}`, { q: `updated_at:>'${since}'`, a });
+    for (const n of d.products.nodes){ if ((n.tags || []).some(t => /shopify collective|zz delete/i.test(t))) continue; const pid = n.id.split('/').pop();
+      const ln = /light novel|novel/i.test(n.productType || '') ? 1 : 0; const vol = n.vo && +n.vo.value || +(String(n.title).match(/\bvol(?:ume)?\.?\s*(\d+(?:\.\d)?)/i) || [])[1] || 0;
+      const keys = ['p:' + pid]; if (n.se && n.se.value && vol) keys.push(wkey({ s: n.se.value, v: vol, ln }));
+      const avail = n.status === 'ACTIVE' && n.totalInventory > 0, price = +n.priceRangeV2.minVariantPrice.amount;
+      for (const k of keys){ if (seen[k]) continue; seen[k] = 1; const prev = PS[k];
+        let kind = ''; if (avail && prev && !prev[1]) kind = 'back'; else if (avail && !prev && seeded) kind = 'new'; else if (avail && prev && prev[1] && price <= prev[0] * 0.9 + 0.001) kind = 'drop';
+        const ref = prev && prev[1] && avail && kind !== 'drop' ? Math.max(price, prev[0]) : price; /* reference price only resets on a drop or a restock, so small cuts add up */
+        if (!prev || prev[0] !== ref || prev[1] !== avail){ PS[k] = [ref, avail]; changed = true; }
+        if (!kind || !X.keys[k]) continue;
+        const ev = [kind, k, n.title, price, prev ? prev[0] : 0, n.handle, n.featuredMedia && n.featuredMedia.preview && n.featuredMedia.preview.image ? n.featuredMedia.preview.image.url : ''];
+        for (const cid of X.keys[k]){ if (X.pref[cid] === 'off') continue; const L = Q[cid] = Q[cid] || []; if (!L.some(e => e[1] === k && e[0] === kind)) { L.push(ev); events++; }
+          try { await sendTo(env, cid, { t: (kind === 'drop' ? '🏷️ Price drop: ' : '📚 Back in stock: ') + n.title.slice(0, 60), b: kind === 'drop' ? `Now $${price.toFixed(2)} (was $${(prev ? prev[0] : price).toFixed(2)})` : `$${price.toFixed(2)} at The Mage's Emporium`, u: SITE + '/products/' + n.handle, tag: 'wl-' + pid }, 'stock'); } catch(e){} } } }
+    a = d.products.pageInfo.hasNextPage ? d.products.pageInfo.endCursor : null; pages++; } while (a && pages < 5);
+  if (changed) await put(env, 'wl:ps', PS); if (events) await put(env, 'wl:q', Q); await env.FRIENDS.put('wl:last', started);
+  const sent = await wlSend(env, Q, X); return { events, sent }; }
+async function wlSend(env, Q, X){ const now = new Date(); if (now.getUTCMinutes() >= 10 || !env.RESEND_KEY) return 0; const bucket = 'wl:sent:' + now.toISOString().slice(0, 13); if (await env.FRIENDS.get(bucket)) return 0;
+  const daily = ET_HOUR() === 9; const due = Object.keys(Q).filter(cid => Q[cid].length && (X.pref[cid] || 'hourly') !== 'off' && ((X.pref[cid] || 'hourly') === 'hourly' || daily)).slice(0, 100); if (!due.length) return 0;
+  await env.FRIENDS.put(bucket, '1', { expirationTtl: 7200 });
+  const d = await adm(env, `query($ids:[ID!]!){nodes(ids:$ids){... on Customer{id firstName defaultEmailAddress{emailAddress marketingState} sw:metafield(namespace:"custom",key:"store_wishlist"){value}}}}`, { ids: due.map(gid) });
+  const mails = []; const done = [];
+  for (const c of d.nodes || []){ if (!c) continue; const cid = c.id.split('/').pop(); const to = c.defaultEmailAddress && c.defaultEmailAddress.emailAddress; let pref = 'hourly'; try { pref = (JSON.parse(c.sw.value).prefs || {}).email || 'hourly'; } catch(e){}
+    done.push(cid); if (!to || pref === 'off' || (pref === 'daily' && !daily)) { if (pref !== 'daily') continue; done.pop(); continue; }
+    const ev = Q[cid]; const unsub = `https://mme-friends.themagesemporium.workers.dev/wl/unsub?c=${cid}&t=${(await hmacHex(env.SHOPIFY_CLIENT_SECRET, 'unsub:' + cid)).slice(0, 24)}`;
+    const esc = s => String(s).replace(/[&<>"]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[x]));
+    const rows = ev.map(([kind, , title, price, old, handle, img]) => `<tr><td style="padding:8px 0;width:72px;vertical-align:top">${img ? `<img src="${esc(img)}&width=144" width="64" style="border-radius:6px;display:block">` : ''}</td><td style="padding:8px 0 8px 12px;vertical-align:top;font:15px/1.4 Arial,sans-serif;color:#1b2b4b"><a href="${SITE}/products/${esc(handle)}?utm_source=wishlist&utm_medium=email" style="color:#1b2b4b;font-weight:bold;text-decoration:none">${esc(title)}</a><br>${kind === 'drop' ? `<span style="color:#b4233b;font-weight:bold">Price drop: $${(+price).toFixed(2)}</span> <s style="color:#888">$${(+old).toFixed(2)}</s>` : `<span style="color:#2f7d4f;font-weight:bold">${kind === 'new' ? 'Now available' : 'Back in stock'}: $${(+price).toFixed(2)}</span>`}</td></tr>`).join('');
+    const n = ev.length, subj = n === 1 ? (ev[0][0] === 'drop' ? 'Price drop on your wishlist: ' : 'Back in stock from your wishlist: ') + ev[0][2] : `${n} books on your wishlist are ready for you`;
+    const html = `<div style="max-width:560px;margin:0 auto;padding:20px;font:15px/1.5 Arial,sans-serif;color:#1b2b4b"><p style="font-size:20px;font-weight:bold;margin:0 0 4px">Hi ${esc(c.firstName || 'there')}!</p><p style="margin:0 0 12px">Good news from The Mage's Emporium: ${n === 1 ? 'a book' : 'some books'} on your wishlist ${n === 1 ? 'is' : 'are'} ready for you. Used copies go fast!</p><table style="border-collapse:collapse;width:100%">${rows}</table><p style="margin:18px 0"><a href="${SITE}/pages/wishlist?utm_source=wishlist&utm_medium=email" style="background:#f0662b;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:bold">See your wishlist</a></p><p style="font-size:12px;color:#777">You're getting this because you hearted these books. Change how often you hear from us on your <a href="${SITE}/pages/wishlist" style="color:#777">wishlist page</a>, or <a href="${unsub}" style="color:#777">stop wishlist emails</a>.</p></div>`;
+    mails.push({ from: "The Mage's Emporium <alerts@mail.themagesemporium.com>", to: [to], reply_to: 'themagesemporium@gmail.com', subject: subj.slice(0, 120), html, headers: { 'List-Unsubscribe': `<${unsub}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } }); }
+  let sent = 0; if (mails.length){ const r = await fetch('https://api.resend.com/emails/batch', { method: 'POST', headers: { authorization: 'Bearer ' + env.RESEND_KEY, 'content-type': 'application/json' }, body: JSON.stringify(mails) }); if (r.ok) sent = mails.length; else { await env.FRIENDS.put('wl:err', (r.status + ' ' + (await r.text())).slice(0, 500), { expirationTtl: 7 * 86400 }); return 0; } }
+  const Q2 = (await get(env, 'wl:q')) || {}; for (const cid of done) delete Q2[cid]; await put(env, 'wl:q', Q2); return sent; }
+async function wlUnsub(env, url){ const cid = url.searchParams.get('c') || '', t = url.searchParams.get('t') || ''; const H = s => new Response(`<!doctype html><meta name=viewport content="width=device-width"><div style="font:16px Arial;max-width:480px;margin:40px auto;padding:0 16px">${s}</div>`, { headers: { 'content-type': 'text/html' } });
+  if (!/^\d+$/.test(cid) || !env.SHOPIFY_CLIENT_SECRET || (await hmacHex(env.SHOPIFY_CLIENT_SECRET, 'unsub:' + cid)).slice(0, 24) !== t) return H('That link doesn’t look right.');
+  const w = await wlGet(env, cid); w.prefs.email = 'off'; await wlPut(env, cid, w); return H('<b>Done.</b> You won’t get wishlist emails anymore. Your wishlist is still saved, and you can turn emails back on from your <a href="' + SITE + '/pages/wishlist">wishlist page</a>.'); }
+// index rebuild: the nightly GitHub job writes the shop metafield mme_app.wl_index ({keys,pref}); load it when newer
+async function wlLoadIndex(env){ const d = await adm(env, `{shop{metafield(namespace:"mme_app",key:"wl_index"){value updatedAt}}}`); const m = d.shop.metafield; if (!m) return 0;
+  const cur = (await get(env, 'wl:idx')) || {}; if (cur.at && cur.at >= m.updatedAt) return 0; let H; try { H = JSON.parse(m.value); } catch(e){ return 0; }
+  const n = Math.min(+H.parts || 0, 24); if (!n) return 0; const q = '{shop{' + [...Array(n).keys()].map(i => `p${i}:metafield(namespace:"mme_app",key:"wl_index${i}"){value}`).join(' ') + '}}';
+  const P = (await adm(env, q)).shop; const keys = {}; for (let i = 0; i < n; i++){ try { Object.assign(keys, JSON.parse(P['p' + i].value)); } catch(e){ return 0; } }
+  /* keep changes the worker saw since the nightly build (website hearts) */ const recent = (await get(env, 'wl:recent')) || {};
+  const X = { keys, pref: H.pref || {}, at: m.updatedAt }; await put(env, 'wl:idx', X);
+  for (const [cid, at] of Object.entries(recent)){ if (at < Date.parse(H.at || m.updatedAt)) delete recent[cid]; else { try { await wlIndex(env, cid, await wlGet(env, cid)); } catch(e){} } } await put(env, 'wl:recent', recent); return 1; }
+// one-time baseline: remember every listing's price and stock (a few pages per tick) so the first alerts are real changes
+async function wlSeed(env){ if (await env.FRIENDS.get('wl:seeded')) return 1; const PS = (await get(env, 'wl:ps')) || {}; let a = (await env.FRIENDS.get('wl:seedcur')) || null, pages = 0, done = false;
+  do { const d = await adm(env, `query($a:String){products(first:250,after:$a,query:"-tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{id title status productType totalInventory priceRangeV2{minVariantPrice{amount}} se:metafield(namespace:"custom",key:"series"){value} vo:metafield(namespace:"custom",key:"volume"){value}}}}`, { a });
+    for (const n of d.products.nodes){ const pid = n.id.split('/').pop(); const ln = /light novel|novel/i.test(n.productType || '') ? 1 : 0; const vol = n.vo && +n.vo.value || +(String(n.title).match(/\bvol(?:ume)?\.?\s*(\d+(?:\.\d)?)/i) || [])[1] || 0;
+      const st = [+n.priceRangeV2.minVariantPrice.amount, n.status === 'ACTIVE' && n.totalInventory > 0]; PS['p:' + pid] = st; if (n.se && n.se.value && vol){ const k = wkey({ s: n.se.value, v: vol, ln }); if (!PS[k] || (st[1] && !PS[k][1])) PS[k] = st; } }
+    a = d.products.pageInfo.hasNextPage ? d.products.pageInfo.endCursor : null; pages++; if (!a) done = true; } while (a && pages < 4);
+  await put(env, 'wl:ps', PS); if (done){ await env.FRIENDS.put('wl:seeded', new Date().toISOString()); await env.FRIENDS.delete('wl:seedcur'); } else await env.FRIENDS.put('wl:seedcur', a); return done ? 1 : 0; }
+async function wlTick(env){ try { if (!env.SHOPIFY_CLIENT_ID) return { skip: 'no admin' }; if (new Date().getUTCMinutes() < 10) await wlLoadIndex(env); if (!(await env.FRIENDS.get('wl:seeded'))){ await wlSeed(env); await env.FRIENDS.put('wl:last', new Date().toISOString()); return { seeding: 1 }; } return await wlScan(env); } catch(e){ await env.FRIENDS.put('wl:err', String(e).slice(0, 500), { expirationTtl: 7 * 86400 }); return { error: String(e) }; } }
+
 export default {
   async fetch(req, env){
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
@@ -84,7 +189,12 @@ export default {
       let o = {}; try { o = await req.json(); } catch(e){} const last = (Array.isArray(o.last) ? o.last : []).filter(Boolean).map(String); if (last.length && await conNow(env)){ const n = await sendTo(env, SHOP_CID(env), { t: ('⚠️ Last copy sold · ' + String(o.name || '')).slice(0, 80), b: last.join(' · ').slice(0, 200), u: DESK + '#pick', tag: 'shop-order' }); return J({ sent: n, last: last.length }); }
       const n = await sendTo(env, SHOP_CID(env), { t: ('🛒 New order ' + String(o.name || '')).slice(0, 80), b: [o.total ? '$' + o.total : '', o.items ? o.items + ' item' + (+o.items === 1 ? '' : 's') : '', o.channel || '', o.who || ''].filter(Boolean).join(' · ').slice(0, 200), u: DESK + '#pack', tag: 'shop-order' });
       return J({ sent: n }); }
+    if (p.startsWith('/proxy/wl')) return wlProxy(env, req, url);
+    if (p === '/wl/unsub') return wlUnsub(env, url);
+    if (p === '/wl/status'){ return J({ admin: !!env.SHOPIFY_CLIENT_ID, mail: !!env.RESEND_KEY, last: await env.FRIENDS.get('wl:last'), err: await env.FRIENDS.get('wl:err'), keys: Object.keys(((await get(env, 'wl:idx')) || {}).keys || {}).length }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
+    /* /wl/touch: the app saved the customer's wishlist itself; refresh this customer in the alert index */
+    if (p === '/wl/touch' && req.method === 'POST'){ try { await wlIndex(env, me.cid, await wlGet(env, me.cid)); return J({ ok: 1 }); } catch(e){ return J({ error: String(e).slice(0, 120) }, 500); } }
     /* /notify/msg: a customer sent a message or Find request in the app */
     if (p === '/notify/msg' && req.method === 'POST'){ if (me.cid === SHOP_CID(env)) return J({ ok: 1 });
       const rk = 'nmsg:' + me.cid; if (await env.FRIENDS.get(rk)) return J({ ok: 1, later: 1 }); await env.FRIENDS.put(rk, '1', { expirationTtl: 120 });
@@ -136,5 +246,5 @@ export default {
       if (me.mail) await env.FRIENDS.delete('ask:' + await sha(me.mail)); return J({ ok: 1 }); }
     return J({ error: 'not found' }, 404);
   },
-  async scheduled(event, env, ctx){ ctx.waitUntil(runQueue(env)); }
+  async scheduled(event, env, ctx){ ctx.waitUntil(runQueue(env)); ctx.waitUntil(wlTick(env)); }
 };
