@@ -2741,6 +2741,23 @@ function siteMirror(){ const owned = {}; let tb = 0;
   ent.forEach(([k, o]) => { const z = k.length + JSON.stringify(o).length + 4; if (sa + z < 120000){ A[k] = o; sa += z; } else if (sb + z < 120000){ B[k] = o; sb += z; } });
   const at = new Date().toISOString().slice(0, 10); const mk = (key, val) => ({ ownerId: acct.cid, namespace: 'custom', key, type: 'json', value: JSON.stringify(val) });
   return [mk('collection', { owned: A, bought: {}, tb, updated: at, src: 'app' }), mk('collection_2', { owned: B })]; }
+/* One-list wishlist (on when config.json has wl1:true): the app's ♥ Wishlist is written to the same customer metafield the website heart uses (custom.store_wishlist).
+   Before writing, the latest website list is pulled in, so a heart added on the site a minute ago isn't lost. */
+let WL1 = false;
+function wishBase(k, s){ return String(s.n || '').replace(/\s*\((light novel|manga|novel)\)\s*$/i, '').trim(); }
+function wishItems(){ const out = []; Object.entries(shelf.series).forEach(([k, s]) => { (s.want || []).forEach(v => { const it = { s: wishBase(k, s), v: +v }; if (/-ln$/.test(k)) it.ln = 1; if (it.s && it.v) out.push(it); }); }); return out; }
+const wishSig = items => items.map(x => x.s.toLowerCase() + '|' + x.v + (x.ln ? 'L' : '')).sort().join(',');
+async function wishPush(){ if (!WL1 || !acct || !acct.cid) return; let now = wishItems(); if (wishSig(now) === (ls.get('mme-wlsig') || '')) return;
+  try { const d = await acctGql(`{customer{sw:metafield(namespace:"custom",key:"store_wishlist"){value}}}`); const v = d.customer && d.customer.sw && d.customer.sw.value; if (v){ storeWish = JSON.parse(v); applyStoreWish(); now = wishItems(); } } catch(e){}
+  const old = storeWish && Array.isArray(storeWish.items) ? storeWish.items : []; const k = it => String(it.s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + '|' + Math.round(+it.v) + (it.ln ? '|ln' : '');
+  const byK = {}; old.forEach(it => { if (it.s && +it.v) byK[k(it)] = it; });
+  const items = now.map(it => Object.assign({}, byK[k(it)] || {}, it, { at: (byK[k(it)] || {}).at || new Date().toISOString().slice(0, 10) })).concat(old.filter(it => !(it.s && +it.v))); /* keep non-series saves (boxes, merch) from the site */
+  const seenNow = new Set(now.map(k)); const rm = ((storeWish && storeWish.rm) || []).concat(old.filter(it => it.s && +it.v && !seenNow.has(k(it))).map(it => ({ s: it.s, v: it.v, ln: it.ln, p: it.p, at: new Date().toISOString().slice(0, 10) }))).slice(-200);
+  const val = { updated: new Date().toISOString(), items, rm, prefs: (storeWish && storeWish.prefs) || {} };
+  const r = await acctGql(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{field message}}}`, { m: [{ ownerId: acct.cid, namespace: 'custom', key: 'store_wishlist', type: 'json', value: JSON.stringify(val) }] });
+  if (r.metafieldsSet.userErrors && r.metafieldsSet.userErrors.length) return; storeWish = val; ls.set('mme-wlsig', wishSig(now));
+  const seen = new Set(ls.get('mme-swseen') || []); now.forEach(it => seen.add(handleize(it.s) + (it.ln ? '-ln' : '') + '|' + it.v)); ls.set('mme-swseen', [...seen]);
+  try { if (FRIENDS_API) await fapi('/wl/touch', {}); } catch(e){} }
 async function acctPush(){ if (!acct || !acct.cid) return; const b = await gzB64(JSON.stringify(shelfBody()));
   if (b.length > PARTS * CHUNK) throw new Error('shelf too big to save to your account');
   const mfs = []; for (let i = 0; i < PARTS; i++) mfs.push({ ownerId: acct.cid, namespace: 'mme', key: 'shelf' + i, type: 'json', value: JSON.stringify(b.slice(i * CHUNK, (i + 1) * CHUNK)) });
@@ -2748,7 +2765,7 @@ async function acctPush(){ if (!acct || !acct.cid) return; const b = await gzB64
   try { mfs.push(...siteMirror()); } catch(e){}
   const d = await acctGql(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{field message}}}`, { m: mfs });
   const er = d.metafieldsSet.userErrors; if (er && er.length) throw new Error(er[0].message);
-  acct.saved = Date.now(); ls.set('mme-acct', acct); ls.set('mme-dirty', 0); livePush(); }
+  acct.saved = Date.now(); ls.set('mme-acct', acct); ls.set('mme-dirty', 0); livePush(); try { await wishPush(); } catch(e){} }
 function acctQueue(){ if (!acct || !acct.at) return; ls.set('mme-dirty', 1); clearTimeout(acctT); acctT = setTimeout(acctSave, 2500); }
 async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true;
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
@@ -2958,7 +2975,7 @@ function renderAcct(){ const el = $('#acctBox'); if (!el) return; const hb = $('
   const i = $('#acctInBtn'); if (i) i.onclick = acctLogin; const s2 = $('#acctSyncBtn'); if (s2) s2.onclick = acctSync;
   const o = $('#acctOutBtn'); if (o) o.onclick = async () => { if (ls.get('mme-dirty')) { try { await acctPush(); } catch(e){} } const idt = acct && acct.idt; acctOut(false); if (idt) location.href = ACCT.logout + '?' + new URLSearchParams({ id_token_hint: idt, post_logout_redirect_uri: redirectUri() }); }; }
 let acctBooted = false;
-async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted = true; try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.acct) ACCT.client = j.acct; if (j && j.friends) FRIENDS_API = j.friends; } } catch(e){}
+async function acctBoot(){ if (window.claude || acctBooted) return; acctBooted = true; try { const c = await fetch('config.json', { cache: 'no-store' }); if (c.ok){ const j = await c.json(); if (j && j.acct) ACCT.client = j.acct; if (j && j.friends) FRIENDS_API = j.friends; if (j && j.wl1) WL1 = true; } } catch(e){}
   if (!ACCT.client){ renderAcct(); return; } await acctCallback(); renderAcct(); if (acct && acct.at) acctSync(); else liveFromHash();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && acct && acct.at && !ls.get('mme-dirty')) acctSync(); else if (document.visibilityState === 'hidden' && acct && ls.get('mme-dirty')){ clearTimeout(acctT); acctSave(); } }); }
 /* ---------- share card (Instagram story size): same look as the old My Collection card; colors follow the top genre ---------- */
