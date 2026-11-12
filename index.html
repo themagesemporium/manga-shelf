@@ -628,9 +628,18 @@ function edKeyFor(base, ln){ const q = normName(base) + (ln ? '|ln' : '');
   return (sk && shelfKeyFor(sk)) || Object.keys(shelf.series).find(k => normName(shelf.series[k].n) + (isLN(k, shelf.series[k]) ? '|ln' : '') === q) || sk || (handleize(base) + (ln ? '-ln' : '')); }
 function edNameFor(key, base, ln){ const e = SNAP && SNAP.s[key]; const n = (shelf.series[key] && shelf.series[key].n) || (e && e.n) || base; return n + (ln && !/light novel/i.test(n) ? ' (Light Novel)' : ''); }
 function edCount(s){ return Object.values((s && s.ed) || {}).reduce((a, o) => a + ((o && o.v) || []).length, 0); }
+/* editions that don't split evenly: total books, and the single volumes each book holds (normName of the series + '|' + type; LN series end in '|ln') */
+const ED_KNOWN = {
+  /* Fullmetal Edition: 18 hardcovers x 6 chapters; the 27 singles are 4 chapters each, so books overlap a volume (FE 1 = Vol 1-2, FE 2 = Vol 2-3) */
+  'fullmetalalchemist|Deluxe': { n: 18, r: b => [Math.ceil((6 * b - 5) / 4), Math.ceil(6 * b / 4)] },
+  /* The Faraway Paladin omnibus: 1-5 hold two volumes each, 6 holds three (Vol 11-13) */
+  'farawaypaladin|ln|Omnibus': { n: 6, r: b => b === 6 ? [11, 13] : [2 * b - 1, 2 * b] }
+};
+function edKnown(key, t){ const s = shelf.series[key]; const nm = (s && s.n) || (SNAP && SNAP.s[key] && SNAP.s[key].n) || ''; return ED_KNOWN[normName(nm) + (isLN(key, s || {}) ? '|ln' : '') + '|' + t] || null; }
 function edRange(key, t, n){ const s = shelf.series[key]; const c = s && s.ed && s.ed[t] && s.ed[t].c && s.ed[t].c[n];
-  const hit = SNAP && snapEntry(key); const L = hit && hit[1].x && hit[1].x[t]; const r = L && L.find(x => x[0] === n); const txt = c || (r && r[7]);
+  const hit = SNAP && snapEntry(key); const L = hit && hit[1].x && hit[1].x[t]; const r = L && L.find(x => x[0] === n); const K = edKnown(key, t); const txt = c || (!K && r && r[7]);
   if (txt){ const m = String(txt).match(/(\d+)\D+(\d+)/); if (m && +m[2] >= +m[1]) return [+m[1], +m[2]]; if (/^\d+$/.test(txt)) return [+txt, +txt]; }
+  if (K && n >= 1 && n <= K.n) return K.r(n);
   const per = s && s.ed && s.ed[t] && +s.ed[t].per; if (per) return [n * per - per + 1, n * per]; /* set by the customer: "each holds N volumes" */
   let z = t === '2-in-1' ? 2 : t === '3-in-1' ? 3 : 0;
   /* no range listed for this number (e.g. the shop has Skip Beat omnibus 1-11 but you own 16): use the span the shop's other volumes of this edition follow */
@@ -670,12 +679,14 @@ function edHTML(key){ const s = shelf.series[key]; if (!s || langOf(key)) return
     : `<button class="btn ghost sm" data-edform style="margin-top:6px">＋ Add an omnibus or special edition</button>`;
   if (!types.length) return `<div class="row2" style="margin-top:6px">${form}</div>`;
   const blocks = types.map(t => { const L = X[t] || []; const E = mine[t] || {}; const own = new Set(E.v || []), want = new Set(E.want || []), rd = new Set(E.r || []);
-    const n = Math.max(0, ...L.map(x => x[0]), ...own, ...want); let tiles = '';
+    const K = edKnown(key, t); const n = Math.max(0, K ? K.n : 0, ...L.map(x => x[0]), ...own, ...want); let tiles = '';
     for (let v = 1; v <= n; v++){ const r = L.find(x => x[0] === v); const rg = edRange(key, t, v); const stk = r && r[2] > 0 && !own.has(v);
       tiles += `<button class="vol${own.has(v) ? ' o' : ''}${stk ? ' s' : ''}${want.has(v) ? ' wt' : ''}${rd.has(v) ? ' rd' : ''}" data-ed="${esc(t)}|${v}" aria-pressed="${own.has(v)}" aria-label="${esc(t)} ${v}${rg ? `, holds volumes ${rg[0]} to ${rg[1]}` : ''}${own.has(v) ? ', owned' : ''}${rd.has(v) ? ', read' : ''}${stk ? ', in stock at the store' : ''}${want.has(v) ? ', on your wishlist' : ''}">${v}${rg ? `<small class="edr">${rg[0]}–${rg[1]}</small>` : ''}</button>`; }
     const buy = L.filter(x => x[2] > 0 && !own.has(x[0])).map(x => `<div class="prod">${x[4] ? `<img src="${esc(snapImg(x[4]))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : ''}<div class="t">${esc(t)} ${x[0]}${x[7] ? `<small>Holds Vol ${esc(x[7])}</small>` : ''}</div><span class="price">$${(+x[1] || 0).toFixed(2)}</span><button class="btn gold sm" data-cart="${esc(x[3])}">🛒 Add</button></div>`).join('');
     const r1 = edRange(key, t, 1); const perSel = `<label class="sub" style="display:flex;gap:6px;align-items:center;margin:4px 0 6px">Each ${esc(t)} holds <select data-edper="${esc(t)}" aria-label="Volumes in each ${esc(t)} book" style="width:auto;padding:2px 6px">${['', ...Array.from({ length: 30 }, (_, i) => i + 1)].map(v => `<option value="${v}"${String(E.per || '') === String(v) ? ' selected' : ''}>${v === '' ? (r1 ? 'Auto (' + (r1[1] - r1[0] + 1) + ')' : 'Not set') : v}</option>`).join('')}</select> volume${E.per === 1 ? '' : 's'}${r1 ? ` · ${esc(t)} 1 = Vol ${r1[0]}${r1[1] > r1[0] ? '–' + r1[1] : ''}` : ''}</label>`;
-    return `<div class="edblk"><h5>${esc(t)}<small>${own.size} owned${L.length ? ` · ${L.length} at the shop` : ''}</small></h5>${perSel}<div class="vols">${tiles}</div>${buy}</div>`; }).join('');
+    const cst = Object.keys(E.c || {}).map(Number).filter(b => b > 0).sort((a, b) => a - b);
+    const oneBook = `<details class="edone" style="margin:6px 0 2px"><summary class="sub" style="cursor:pointer">Book holds a different number of volumes?</summary><div class="row2" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px"><span class="sub">${esc(t)}</span><input data-edcb="${esc(t)}" type="number" min="1" inputmode="numeric" placeholder="#" aria-label="${esc(t)} number" style="width:64px"><span class="sub">holds Vol</span><input data-edca="${esc(t)}" type="number" min="1" inputmode="numeric" placeholder="from" aria-label="First volume it holds" style="width:70px"><span class="sub">to</span><input data-edcz="${esc(t)}" type="number" min="1" inputmode="numeric" placeholder="to" aria-label="Last volume it holds" style="width:70px"><button class="btn sm" data-edcsave="${esc(t)}">Save</button></div>${cst.length ? `<p class="sub" style="margin:6px 0 0">Your settings: ${cst.map(b => `${esc(t)} ${b} = Vol ${esc(String(E.c[b]))} <button class="btn ghost sm" data-edcdel="${esc(t)}|${b}" aria-label="Reset ${esc(t)} ${b}">✕</button>`).join(' · ')}</p>` : ''}</div></details>`;
+    return `<div class="edblk"><h5>${esc(t)}<small>${own.size} owned${L.length ? ` · ${L.length} at the shop` : ''}${K ? ` · ${K.n} in the series` : ''}</small></h5>${K ? '' : perSel}<div class="vols">${tiles}</div>${oneBook}${buy}</div>`; }).join('');
   return `<div class="sec"><h4>📚 Editions</h4><p class="sub" style="margin:0 0 6px">Tap to mark the ones you own (or ♥ them in Want mode). They count toward the volumes they hold, shown striped above.</p>${blocks}${form}</div>`; }
 document.addEventListener('change', e => { const t = e.target.closest('[data-edper]'); if (!t || !current) return; const s = shelf.series[current]; if (!s) return; s.ed = s.ed || {}; const E = s.ed[t.dataset.edper] = s.ed[t.dataset.edper] || { v: [] };
   if (t.value) E.per = +t.value; else delete E.per; s.t = Date.now(); save(); renderSeries(current); toast(t.value ? `Each ${t.dataset.edper} now counts as ${t.value} volume${t.value === '1' ? '' : 's'}` : 'Back to automatic'); });
@@ -2224,6 +2235,11 @@ function sheetClick(e){
     else { const undo = edAdd(key, s.n, et, [n]); toast(`Added ${et} Vol ${n}`, undo); }
     return renderSeries(key); }
   if (t.hasAttribute('data-edform')){ edForm = key; renderSeries(key); const f = $('#edN'); if (f) f.focus(); return; }
+  if (t.dataset.edcsave){ const et = t.dataset.edcsave; const box = t.closest('.edone'); const g = f => +((box.querySelector(`[data-${f}]`) || {}).value || 0);
+    const b = g('edcb'), a = g('edca'), z = g('edcz') || a; if (!(b > 0 && a > 0 && z >= a && z - a < 60)) return toast('Fill in the book number and the volumes it holds, e.g. 6 holds Vol 11 to 13');
+    const prev = JSON.parse(JSON.stringify(s)); s.ed = s.ed || {}; const T = s.ed[et] = s.ed[et] || { v: [] }; T.c = Object.assign({}, T.c, { [b]: a === z ? String(a) : a + '-' + z }); s.t = Date.now(); save();
+    toast(`${et} ${b} now counts as Vol ${a}${z > a ? '–' + z : ''}`, () => { shelf.series[key] = prev; save(); renderSeries(key); }); return renderSeries(key); }
+  if (t.dataset.edcdel){ const [et, b] = t.dataset.edcdel.split('|'); const T = s.ed && s.ed[et]; if (T && T.c){ delete T.c[b]; if (!Object.keys(T.c).length) delete T.c; s.t = Date.now(); save(); toast(`${et} ${b} back to automatic`); } return renderSeries(key); }
   if (t.hasAttribute('data-edsave')){ const et = $('#edT').value; const nums = parseVols($('#edN').value).filter(x => Number.isInteger(x) && x > 0); if (!nums.length) return toast('Type the edition numbers, e.g. 1-3'); const undo = edAdd(key, s.n, et, nums); edForm = null; toast(`Added ${et} Vol ${compactVols(nums)}`, undo); return renderSeries(key); }
   if (t.dataset.v && !tapMode){ detV = +t.dataset.v; return renderSeries(key); }
   { const rdEl = $('#readDate'); if (rdEl && rdEl.value) readDate = rdEl.value === dayKey() ? null : rdEl.value; }
