@@ -6,7 +6,8 @@ window._spRun = async (extraAl, opts) => { // opts.same(newSnap, oldSnap) -> tru
   const SP = window._SP = { st: 'load', series: 0, url: '', fin: false, err: [] };
   try {
     const cfg = await (await fetch('https://raw.githubusercontent.com/themagesemporium/manga-shelf/main/config.json?' + Date.now())).json();
-    window._SN = await (await fetch(cfg.snap)).json();
+    const snRaw = await (await fetch(cfg.snap)).text(); window._SN = JSON.parse(snRaw);
+    const SN0 = JSON.parse(snRaw); // untouched copy: the builder writes new aliases into _SN, so compare against this
     SP.st = 'build';
     (0, eval)(await (await fetch('https://raw.githubusercontent.com/themagesemporium/manga-shelf/main/tools/snap-builder.js?' + Date.now())).text());
     while (!window._SB.fin) await new Promise(z => setTimeout(z, 3000));
@@ -14,7 +15,7 @@ window._spRun = async (extraAl, opts) => { // opts.same(newSnap, oldSnap) -> tru
     const N = window._NEWSNAP; if (extraAl) N.al = Object.assign({}, N.al || {}, extraAl);
     SP.series = Object.keys(N.s).length;
     if (SP.series < 0.9 * Object.keys(_SN.s).length){ SP.err.push('new snapshot is much smaller than the old one; not uploaded'); SP.fin = true; return; }
-    if (opts && opts.same && opts.same(N, _SN)){ SP.same = true; SP.st = 'same'; SP.fin = true; return; }
+    if (opts && opts.same && opts.same(N, SN0)){ SP.same = true; SP.st = 'same'; SP.fin = true; return; }
     SP.st = 'upload';
     const body = JSON.stringify(N), fn = 'mme-snap-' + Date.now() + '.json';
     const st = await _api(`mutation($i:[StagedUploadInput!]!){stagedUploadsCreate(input:$i){stagedTargets{url resourceUrl parameters{name value}} userErrors{message}}}`, { i: [{ filename: fn, mimeType: 'application/json', resource: 'FILE', httpMethod: 'POST', fileSize: String(new Blob([body]).size) }] });
