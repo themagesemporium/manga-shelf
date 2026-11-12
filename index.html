@@ -1741,8 +1741,8 @@ $('#xbtn').onclick = closeSheet;
 })();
 document.addEventListener('keydown', e => { if (e.key==='Escape') closeSheet(); });
 let toastT;
-function toast(msg, undo){
-  $('#toastMsg').textContent = msg; const b = $('#toastBtn');
+function toast(msg, undo, label){
+  $('#toastMsg').textContent = msg; const b = $('#toastBtn'); b.textContent = label || 'Undo';
   b.classList.toggle('hidden', !undo); b.onclick = () => { undo && undo(); $('#toast').classList.remove('on'); };
   $('#toast').classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => $('#toast').classList.remove('on'), undo ? 5000 : 2600);
 }
@@ -3184,6 +3184,18 @@ document.addEventListener('click', e => { if (e.target.closest('[data-scanmode]'
 function netState(){ const off = !navigator.onLine; let b = $('#offbar'); if (off && !b){ b = document.createElement('div'); b.id = 'offbar'; b.className = 'offbar'; b.textContent = 'You’re offline. Everything still works and saves on this phone; it syncs when you’re back online.'; document.body.prepend(b); } else if (!off && b) b.remove(); }
 window.addEventListener('offline', netState); window.addEventListener('online', () => { netState(); if (acct && acct.at){ if (ls.get('mme-dirty')) acctSave(); else acctSync(); } });
 if (!window.claude && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+/* Pick up new app versions on phones that keep the app open for days (Nov 12 2026: a long message went out through the
+   pre-fix version). On start, remember a fingerprint of index.html; when the app comes back to the screen (checked at most
+   every 10 min), fetch it again. If it changed, reload right away when nothing is half-typed or unsaved, otherwise offer a button. */
+let verFp = null, verAt = 0, verNew = false;
+async function verGet(){ const r = await fetch('index.html', { cache: 'no-store' }); if (!r.ok) throw 0; const t = await r.text(); let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return t.length + ':' + h; }
+function verBusy(){ if (dirty || ls.get('mme-dirty')) return true; return [...document.querySelectorAll('textarea, input[type=text], input[type=search], input:not([type])')].some(x => x.value && x.value.trim() && x.offsetParent !== null); }
+async function verCheck(){ if (window.claude || location.protocol !== 'https:' || !navigator.onLine) return; if (Date.now() - verAt < 6e5 && !verNew) return; verAt = Date.now();
+  try { const fp = await verGet(); if (!verFp){ verFp = fp; return; } if (fp !== verFp) verNew = true; } catch(e){ return; }
+  if (!verNew) return; if (!verBusy()) return location.reload();
+  toast('A new version of the app is ready', () => location.reload(), 'Update'); }
+setTimeout(verCheck, 4000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') verCheck(); });
 // privacy-friendly visit counter (GoatCounter: no cookies, no personal data) on the hosted app only
 const GC = 'https://themagesemporium.goatcounter.com/count';
 // Tag every link into the shop so orders that start in the app show up as utm_source=mme-app in Shopify (order > Conversion summary, and Analytics > Sessions/Sales by referrer).
