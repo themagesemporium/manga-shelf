@@ -432,7 +432,7 @@ html:has(#sheet.on),html:has(#sheet.on) body,html:has(.vpop) body{overflow:hidde
   </nav>
 
   <section id="tab-shelf">
-    <button class="btn" data-scanmode style="width:100%;margin:0 0 10px;font-size:16px">📷 Scan a book: do I own it?</button>
+    <button class="btn" data-scanmode style="width:100%;margin:0 0 10px;font-size:16px">📷 Scan a book: do I own it? · review it</button>
     <div class="tools">
       <input id="q" type="search" placeholder="Search series, shelves or names" autocomplete="off">
       <select id="sort" aria-label="Sort">
@@ -3172,7 +3172,7 @@ let scanStream = null, scanReader = null, scanBusy = false;
 function isbn13(code){ code = String(code).replace(/[^0-9Xx]/g, ''); if (code.length === 10){ const x = '978' + code.slice(0, 9); let t = 0; for (let i = 0; i < 12; i++) t += (+x[i]) * (i % 2 ? 3 : 1); return x + ((10 - t % 10) % 10); } return code; }
 function shelfKeyFor(snapK){ return Object.keys(shelf.series).find(k => { if (k === snapK) return true; const h = snapEntry(k); return h && h[0] === snapK; }) || null; }
 async function openScan(){ await loadSnap().catch(() => {});
-  openSheet(`<h2>📷 Do I own it?</h2><p class="sub" style="margin:0 0 8px">Point the camera at the barcode on the back of the book.</p>
+  openSheet(`<h2>📷 Scan a book</h2><p class="sub" style="margin:0 0 8px">Point the camera at the barcode on the back. See if you own it, or open its page to rate and review it.</p>
     <div class="scanv" id="scanBox"><video id="scanVid" playsinline muted autoplay></video><i></i></div>
     <div id="scanRes"></div>
     <div class="tools" style="margin-top:8px"><input id="scanIsbn" inputmode="numeric" placeholder="…or type the ISBN" autocomplete="off"><button class="btn" id="scanGo">Check</button></div>
@@ -3211,9 +3211,10 @@ async function scanVerdict(raw){ const out = $('#scanRes'); if (!out) return; co
     else if (S){ cls = 'ser'; icon = '📚'; big = 'You collect this series'; sub = `But you only have up to Vol ${max}, so this skips ahead.`; }
     else { cls = 'new'; icon = '✨'; big = 'New series for you'; sub = `Nothing from ${nm} on your shelf yet.`; }
     html = `<div class="verdict ${cls}">${img ? `<img src="${img}" alt="">` : ''}<div style="font-size:30px">${icon}</div><div class="big">${big}</div><div><b>${esc(nm)} · Vol ${vol}</b></div><div style="font-size:14px;margin-top:4px">${esc(sub)}${want ? ' ♥ It’s on your wishlist.' : ''}${held ? ' 📦 The Mage’s Emporium is holding this one for you.' : ''}</div></div>
-      <div class="row2" style="justify-content:center;flex-wrap:wrap">${own.includes(vol) ? '' : `<button class="btn" id="scanAdd">＋ Add to my shelf</button>${want ? '' : `<button class="btn ghost" id="scanWant">♥ Add to wishlist</button>`}`}</div>` + again;
+      <div class="row2" style="justify-content:center;flex-wrap:wrap">${key ? `<button class="btn primary" id="scanOpen">📖 Open its page${own.includes(vol) ? ' · review' : ''}</button>` : ''}${own.includes(vol) ? '' : `<button class="btn" id="scanAdd">＋ Add to my shelf</button>${want ? '' : `<button class="btn ghost" id="scanWant">♥ Add to wishlist</button>`}`}</div>` + again;
     out.innerHTML = html;
-    const sAdd = $('#scanAdd'); if (sAdd) sAdd.onclick = () => { const k2 = key || sk; const prev = shelf.series[k2] ? shelf.series[k2].v : []; const undo = setVols(k2, prev.concat(vol), nm); if (shelf.series[k2].want) shelf.series[k2].want = shelf.series[k2].want.filter(x => x !== vol); save(); toast(`Added ${nm} Vol ${vol}`, undo); sAdd.outerHTML = '<span class="chip good">Added ✓</span>'; const w = $('#scanWant'); if (w) w.remove(); };
+    const sOp = $('#scanOpen'); if (sOp) sOp.onclick = () => { stopCam(); const k3 = key || shelfKeyFor(sk); if (!k3 || !shelf.series[k3]) return; openSeries(k3); detV = vol; renderSeries(k3); setTimeout(() => { const x = $('#pvRv'); if (x){ x.scrollIntoView({ block: 'center' }); if (own.includes(vol)) x.focus(); } }, 80); };
+    const sAdd = $('#scanAdd'); if (sAdd) sAdd.onclick = () => { const k2 = key || sk; const prev = shelf.series[k2] ? shelf.series[k2].v : []; const undo = setVols(k2, prev.concat(vol), nm); if (shelf.series[k2].want) shelf.series[k2].want = shelf.series[k2].want.filter(x => x !== vol); save(); toast(`Added ${nm} Vol ${vol}`, undo); sAdd.outerHTML = `<span class="chip good">Added ✓</span>${$('#scanOpen') ? '' : `<button class="btn primary" id="scanOpen2">📖 Open its page</button>`}`; const o2 = $('#scanOpen2'); if (o2) o2.onclick = () => { stopCam(); openSeries(k2); detV = vol; renderSeries(k2); }; const w = $('#scanWant'); if (w) w.remove(); };
     const sW = $('#scanWant'); if (sW) sW.onclick = () => { const k2 = key || sk; if (!shelf.series[k2]) shelf.series[k2] = { n: nm, v: [], t: Date.now() }; const T = shelf.series[k2]; T.want = [...new Set((T.want || []).concat(vol))].sort((a, c) => a - c); save(); toast(`♥ ${nm} Vol ${vol} on your wishlist`); sW.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; };
   } else {
     out.innerHTML = `<div class="verdict unk"><div style="font-size:30px">🔎</div><div class="big">Checking…</div><div>ISBN ${esc(code)}</div></div>` + again;
