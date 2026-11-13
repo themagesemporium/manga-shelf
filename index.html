@@ -595,7 +595,7 @@ function langMigrate(){ let n = 0; Object.keys(shelf.series).forEach(k => { if (
     delete shelf.series[k]; shelf.gone = Object.assign({}, shelf.gone, { [k]: Date.now() });
     Object.keys(shelf.rl || {}).forEach(d => { shelf.rl[d] = [...new Set(shelf.rl[d].map(t => t.startsWith(k + '|') ? to + t.slice(k.length) : t))]; }); n++; });
   if (n) save(); return n; }
-function isLN(key, s){ return /-ln$|-light-novel$/.test(key) || /light novel/i.test(s.n); }
+function isLN(key, s){ return /-ln$|-light-novel$/.test(key) || /light novel|\(novel\)/i.test(s.n); }   // '(Novel)' too: Villains Are Destined to Die (Novel) must not link to the manhwa (Marlena, Nov 13)
 function ints(s){ return s.v.filter(x => Number.isInteger(x) && x > 0); }
 function info(key){
   const s = shelf.series[key]; const cov = edCov(key); const own = cov.size ? [...new Set(ints(s).concat([...cov]))].sort((a,b)=>a-b) : ints(s); const set = new Set(own);
