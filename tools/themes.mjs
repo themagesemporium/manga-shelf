@@ -33,12 +33,12 @@ const OK = ['Isekai','Reincarnation','Villainess','School Life','Magical Girl','
 // every book listing with its series, type, themes, genres, audience and a bit of description
 const all = []; let cur = null;
 do {
-  const r = await window._api(`query($c:String){products(first:250,after:$c,query:"status:active AND (product_type:Manga OR product_type:'Light Novel' OR product_type:Manhwa OR product_type:'Graphic Novel')"){pageInfo{hasNextPage endCursor} nodes{id productType description se:metafield(namespace:"custom",key:"series"){value} th:metafield(namespace:"custom",key:"themes"){value} gs:metafield(namespace:"custom",key:"genres"){value} au:metafield(namespace:"custom",key:"audience"){value}}}}`, { c: cur });
+  const r = await window._api(`query($c:String){products(first:250,after:$c,query:"status:active AND (product_type:Manga OR product_type:'Light Novel' OR product_type:Manhwa OR product_type:'Graphic Novel')"){pageInfo{hasNextPage endCursor} nodes{id productType description variants(first:1){nodes{barcode}} se:metafield(namespace:"custom",key:"series"){value} th:metafield(namespace:"custom",key:"themes"){value} gs:metafield(namespace:"custom",key:"genres"){value} au:metafield(namespace:"custom",key:"audience"){value}}}}`, { c: cur });
   all.push(...r.data.products.nodes); cur = r.data.products.pageInfo.hasNextPage ? r.data.products.pageInfo.endCursor : null;
 } while (cur);
 const S = {};
 for (const p of all){ const n = p.se && p.se.value; if (!n) continue; const ln = p.productType === 'Light Novel' ? 1 : 0; const k = n + '|' + ln;
-  const s = S[k] = S[k] || { n, ln, ids: [], th: new Set(), g: '', a: '', d: '' }; s.ids.push(p.id);
+  const s = S[k] = S[k] || { n, ln, ids: [], th: new Set(), g: '', a: '', d: '', isbn: '' }; s.ids.push(p.id); const bc = String(((p.variants.nodes[0] || {}).barcode) || '').replace(/\D/g, ''); if (!s.isbn && /^97[89]\d{10}$/.test(bc)) s.isbn = bc;
   try { JSON.parse(p.th && p.th.value || '[]').forEach(x => s.th.add(x)); } catch(e){}
   if (!s.g && p.gs) s.g = JSON.parse(p.gs.value || '[]').join(', '); if (!s.a && p.au) s.a = p.au.value;
   const d = String(p.description || '').replace(/\s+/g, ' ').replace(/^.*?(published in English by[^.]*\.|in \d{4}\.)\s*/i, ''); if (d.length > s.d.length) s.d = d.slice(0, 260); }
@@ -46,6 +46,17 @@ const keys = Object.keys(S);
 out(`${all.length} listings, ${keys.length} series; ${keys.filter(k => S[k].th.size).length} have themes; ${Object.keys(data).length} reviewed in themes-data.json.`);
 if (MODE === 'export'){
   const todo = {}; keys.filter(k => !S[k].th.size && !(k in data)).sort().forEach(k => { const s = S[k]; todo[k] = { n: s.n, ln: s.ln, c: s.ids.length, g: s.g, a: s.a, d: s.d }; });
+  if (process.env.ENRICH){ // add a publisher description from Google Books (falls back to Open Library) for series with no shop description
+    let n = 0, got = 0;
+    for (const k of Object.keys(todo)){ const s = S[k], o = todo[k]; if (o.d || !s.isbn) continue; n++;
+      try { const r = await realFetch('https://www.googleapis.com/books/v1/volumes?q=isbn:' + s.isbn); if (r.status === 429){ await new Promise(z => setTimeout(z, 5000)); }
+        const j = r.ok ? await r.json() : {}; const v = j.items && j.items[0] && j.items[0].volumeInfo;
+        if (v){ o.d = String(v.description || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 400); o.cat = (v.categories || []).join('; '); if (o.d) got++; }
+        if (!o.d){ const w = await realFetch('https://openlibrary.org/isbn/' + s.isbn + '.json'); if (w.ok){ const b = await w.json(); const wk = b.works && b.works[0] && b.works[0].key; o.sub = (b.subjects || []).slice(0, 8).join('; ');
+          if (wk){ const ww = await realFetch('https://openlibrary.org' + wk + '.json'); if (ww.ok){ const x = await ww.json(); const d = x.description && (x.description.value || x.description); if (d){ o.d = String(d).replace(/\s+/g, ' ').slice(0, 400); got++; } if (!o.sub) o.sub = (x.subjects || []).slice(0, 8).join('; '); } } } }
+      } catch(e){} await new Promise(z => setTimeout(z, 250)); }
+    out(`Looked up ${n} series online; found descriptions for ${got}.`);
+  }
   save('todo.json', todo); out(`To classify: ${Object.keys(todo).length} series.`);
 } else {
   let w = 0, bad = []; const M = [];

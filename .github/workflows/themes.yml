@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       mode: { description: 'export or apply', default: 'export' }
+      enrich: { description: '1 = add Google Books / Open Library descriptions', default: '' }
 permissions:
   contents: write
 concurrency: themes
@@ -20,6 +21,7 @@ jobs:
           SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
           SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
           MODE: ${{ github.event.inputs.mode }}
+          ENRICH: ${{ github.event.inputs.enrich }}
         run: node tools/themes.mjs
       - name: Save the list to the themes-work branch (artifacts can't be downloaded from Claude's sessions)
         if: always()
