@@ -1,9 +1,0 @@
-{%- comment -%} One-list wishlist heart for a product (see tme-wishlist). {%- endcomment -%}
-{%- assign wl_series = product.metafields.custom.series.value -%}
-{%- assign wl_vol = product.metafields.custom.volume.value -%}
-{%- if wl_vol == blank -%}{%- assign wl_parts = product.title | downcase | split: 'vol ' -%}{%- if wl_parts.size > 1 -%}{%- assign wl_vol = wl_parts.last | split: ' ' | first | plus: 0 -%}{%- endif -%}{%- endif -%}
-{%- assign wl_type = product.type | downcase -%}
-<button type="button" class="tme-wish" data-tme-wish data-p="{{ product.id }}" data-h="{{ product.handle }}" data-t="{{ product.title | escape }}"{% if wl_series != blank and wl_vol and wl_vol != 0 %} data-s="{{ wl_series | escape }}" data-v="{{ wl_vol }}"{% if wl_type contains 'novel' %} data-ln="1"{% endif %}{% endif %} aria-pressed="false">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.4-9.4A5 5 0 0 1 12 6.3a5 5 0 0 1 9.4 4.8C19.5 15.9 12 20.5 12 20.5z"/></svg><span class="tme-wish-label">Add to Wishlist</span>
-</button>
-{%- unless customer -%}<p class="tme-wish-note" hidden>Saved on this device. <a href="{{ routes.account_login_url }}">Sign in</a> to keep it everywhere and get an email when it’s back in stock or on sale.</p>{%- endunless -%}
