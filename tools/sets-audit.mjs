@@ -52,9 +52,10 @@ for (const s of sets){ const v = s.variants.nodes[0]; if (!v) continue; const co
   const inSet = new Set(comps.map(p => p.id));
   const pick = k => { const c = L.filter(p => vol(p) === k && p.variants.nodes[0].inventoryQuantity > 0); if (!c.length) return null;
     return c.find(p => inSet.has(p.variants.nodes[0].id)) || c.find(p => !exlib(p)) || null; };
-  let R = 0; const chosen = []; while (R < 30){ const p = pick(R + 1); if (!p) break; chosen.push(p); R++; }
   const N = comps.length, complete = s.tags.includes('Complete Series');
-  if (R < 3){ plan.push({ id: s.id, title: s.title, act: s.status === 'ACTIVE' ? 'draft' : 'keep', why: `Vol ${R + 1} out of stock` }); continue; }
+  let R = 0; const chosen = []; while (R < 30){ const p = pick(R + 1); if (!p) break; chosen.push(p); R++; }
+  const need = complete ? Math.min(3, N) : 3; if (complete && R >= N && N < 3){ chosen.length = N; R = N; }
+  if (R < need){ plan.push({ id: s.id, title: s.title, act: s.status === 'ACTIVE' ? 'draft' : 'keep', why: `Vol ${R + 1} out of stock` }); continue; }
   let to = R; if (complete && R >= N) to = N; // a complete set never grows
   if (to === N && comps.every(p => chosen.some(c => c.variants.nodes[0].id === p.id))){ plan.push({ id: s.id, title: s.title, act: s.status === 'DRAFT' ? 'restore-same' : 'ok' }); continue; }
   if (to > N && s.status === 'ACTIVE' && !process.env.GROW){ // in stock as is but could grow: only report
