@@ -729,7 +729,7 @@ function collectorNumbers(){
   Object.keys(shelf.series).forEach(k => { const i = info(k), s = i.s, n = s.v.length + edCount(s), m = s.m || {}, g = (m.g || []).join('|');
     C.books += n; C.series++; C.readN += (s.r || []).length; if (i.own.length > C.run){ C.run = i.own.length; C.runK = k; } if (i.complete) C.done++; if (isLN(k, s)) C.lnv += n;
     const a = String(m.a || '').toLowerCase(); if (a in C) C[a] += n;
-    if (/BL|Yaoi/i.test(g)) C.bl += n; if (/Yuri/i.test(g)) C.yuri += n; if (/Horror/i.test(g)) C.horror += n; if (/Romance/i.test(g)) C.rom += n; if (/Isekai/i.test(g)) C.isekai += n;
+    if (/BL|Yaoi/i.test(g)) C.bl += n; if (/Yuri/i.test(g)) C.yuri += n; if (/Horror/i.test(g)) C.horror += n; if (/Romance/i.test(g)) C.rom += n; if (/Isekai/i.test(g) || /Isekai|Reincarnation/i.test(((SNAP && snapEntry(k) || [])[1] || {}).m ? String(snapEntry(k)[1].m.th || '') : '')) C.isekai += n; /* isekai is stored as a theme, not a genre (Marlena, Nov 14) */
     (m.g || []).forEach(x => gens.add(x)); if (s.t && (!C.since || s.t < C.since)) C.since = s.t; });
   C.ngen = gens.size; const o = shelf.orders || {}; if (o.first){ const f = new Date(o.first).getTime(); if (!C.since || f < C.since) C.since = f; }
   const cs = crownsData && crownsData.crown; if (cs){ const mine = { books: C.books, series: C.series, run: C.run, bl: C.bl, shojo: C.shojo, shonen: C.shonen, seinen: C.seinen, josei: C.josei, complete: C.done };
