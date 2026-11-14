@@ -47,14 +47,17 @@ out(`${all.length} listings, ${keys.length} series; ${keys.filter(k => S[k].th.s
 if (MODE === 'export'){
   const todo = {}; keys.filter(k => !S[k].th.size && !(k in data)).sort().forEach(k => { const s = S[k]; todo[k] = { n: s.n, ln: s.ln, c: s.ids.length, g: s.g, a: s.a, d: s.d }; });
   if (process.env.ENRICH){ // add a publisher description from Google Books (falls back to Open Library) for series with no shop description
-    let n = 0, got = 0;
-    for (const k of Object.keys(todo)){ const s = S[k], o = todo[k]; if (o.d || !s.isbn) continue; n++;
-      try { const r = await realFetch('https://www.googleapis.com/books/v1/volumes?q=isbn:' + s.isbn); if (r.status === 429){ await new Promise(z => setTimeout(z, 5000)); }
+    let n = 0, got = 0; const t0 = Date.now(), LIMIT = 50 * 60e3; const F = (u) => realFetch(u, { signal: AbortSignal.timeout(8000) });
+    const look = async (k) => { const s = S[k], o = todo[k]; n++;
+      try { const r = await F('https://www.googleapis.com/books/v1/volumes?q=isbn:' + s.isbn);
         const j = r.ok ? await r.json() : {}; const v = j.items && j.items[0] && j.items[0].volumeInfo;
         if (v){ o.d = String(v.description || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 400); o.cat = (v.categories || []).join('; '); if (o.d) got++; }
-        if (!o.d){ const w = await realFetch('https://openlibrary.org/isbn/' + s.isbn + '.json'); if (w.ok){ const b = await w.json(); const wk = b.works && b.works[0] && b.works[0].key; o.sub = (b.subjects || []).slice(0, 8).join('; ');
-          if (wk){ const ww = await realFetch('https://openlibrary.org' + wk + '.json'); if (ww.ok){ const x = await ww.json(); const d = x.description && (x.description.value || x.description); if (d){ o.d = String(d).replace(/\s+/g, ' ').slice(0, 400); got++; } if (!o.sub) o.sub = (x.subjects || []).slice(0, 8).join('; '); } } } }
-      } catch(e){} await new Promise(z => setTimeout(z, 250)); }
+        if (!o.d){ const w = await F('https://openlibrary.org/isbn/' + s.isbn + '.json'); if (w.ok){ const b = await w.json(); const wk = b.works && b.works[0] && b.works[0].key; o.sub = (b.subjects || []).slice(0, 8).join('; ');
+          if (wk){ const ww = await F('https://openlibrary.org' + wk + '.json'); if (ww.ok){ const x = await ww.json(); const d = x.description && (x.description.value || x.description); if (d){ o.d = String(d).replace(/\s+/g, ' ').slice(0, 400); got++; } if (!o.sub) o.sub = (x.subjects || []).slice(0, 8).join('; '); } } } }
+      } catch(e){} };
+    const Q = Object.keys(todo).filter(k => !todo[k].d && S[k].isbn);
+    const worker = async () => { while (Q.length && Date.now() - t0 < LIMIT){ await look(Q.shift()); if (n % 200 === 0) save('todo.json', todo); } };
+    await Promise.all([1,2,3,4,5,6].map(worker));
     out(`Looked up ${n} series online; found descriptions for ${got}.`);
   }
   save('todo.json', todo); out(`To classify: ${Object.keys(todo).length} series.`);
