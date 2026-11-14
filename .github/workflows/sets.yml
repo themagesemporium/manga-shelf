@@ -1,0 +1,39 @@
+name: Sets
+on:
+  workflow_dispatch:
+    inputs:
+      mode: { description: 'report or apply', default: 'report' }
+      grow: { description: '1 = also grow in-stock sets', default: '' }
+permissions:
+  contents: write
+concurrency: sets
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sets ${{ github.event.inputs.mode }}
+        env:
+          SHOPIFY_CLIENT_ID: ${{ secrets.SHOPIFY_CLIENT_ID }}
+          SHOPIFY_CLIENT_SECRET: ${{ secrets.SHOPIFY_CLIENT_SECRET }}
+          MODE: ${{ github.event.inputs.mode }}
+          GROW: ${{ github.event.inputs.grow }}
+        run: node tools/sets-audit.mjs
+      - name: Save the list to the sets-work branch (artifacts can't be downloaded from Claude's sessions)
+        if: always()
+        run: |
+          git config user.name "mage-nightly"; git config user.email "mage-nightly@users.noreply.github.com"
+          git fetch origin sets-work || true
+          cp -r sets-out /tmp/to
+          git checkout -B sets-work
+          git rm -rq --cached . ; rm -rf ./* ; cp /tmp/to/* . 2>/dev/null || true ; git add -A ; git commit -qm "sets ${{ github.event.inputs.mode }} output" || true ; git push -f origin sets-work || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sets-out
+          path: sets-out/
+          retention-days: 7
