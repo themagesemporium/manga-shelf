@@ -28,7 +28,7 @@ jobs:
           git fetch origin themes-work || true
           cp -r themes-out /tmp/to
           git checkout -B themes-work
-          git rm -rq --cached . ; rm -rf ./* ; cp /tmp/to/* . ; git add -A ; git commit -qm "themes ${{ github.event.inputs.mode }} output" ; git push -f origin themes-work
+          git rm -rq --cached . ; rm -rf ./* ; cp /tmp/to/* . 2>/dev/null || true ; git add -A ; git commit -qm "themes ${{ github.event.inputs.mode }} output" || true ; git push -f origin themes-work || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
