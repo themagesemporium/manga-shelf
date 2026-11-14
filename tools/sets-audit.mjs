@@ -27,6 +27,11 @@ window._api = async (query, variables) => {
 // in-stock run. Complete sets that lose a volume become plain "Vol 1-N Set" (Complete Series tag dropped).
 // Drafted sets whose Vol 1-3 are back -> restored at the current run. Runs never go past 30 books.
 const MODE = process.env.MODE || 'report';
+if (MODE === 'fix'){ // one-off: metafield writes prepared by Claude (tools/data/sets-fix.json {mf:[MetafieldsSetInput], dl:[MetafieldIdentifierInput]})
+  const F = JSON.parse(fs.readFileSync(ROOT + 'tools/data/sets-fix.json', 'utf8')); let n = 0;
+  for (let i = 0; i < F.mf.length; i += 25){ const r = await window._api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: F.mf.slice(i, i + 25) }); const e = r.data.metafieldsSet.userErrors; if (e.length) out('ERR ' + JSON.stringify(e).slice(0, 300)); else n += Math.min(25, F.mf.length - i); }
+  for (let i = 0; i < F.dl.length; i += 25){ const r = await window._api(`mutation($m:[MetafieldIdentifierInput!]!){metafieldsDelete(metafields:$m){userErrors{message}}}`, { m: F.dl.slice(i, i + 25) }); const e = r.data.metafieldsDelete.userErrors; if (e.length) out('ERR ' + JSON.stringify(e).slice(0, 300)); }
+  out(`Set ${n} metafields, unlinked ${F.dl.length}.`); process.exit(0); }
 const q = async (query, v) => { const r = await window._api(query, v); return r.data; };
 const SF = `id title status productType tags variants(first:1){nodes{id price sku inventoryQuantity}} se:metafield(namespace:"custom",key:"series"){value} vo:metafield(namespace:"custom",key:"volume"){value} ed:metafield(namespace:"custom",key:"edition"){value} bs:metafield(namespace:"custom",key:"bundle_set"){value}`;
 // all sets
