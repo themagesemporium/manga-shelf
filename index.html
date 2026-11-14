@@ -1382,7 +1382,7 @@ function renderList(){
   const ratio = k => { const i = I[k]; const den = Math.max(i.total, i.max, 1); return i.own.length / den; };
   keys.sort((a,b) => {
     if (sort==='az') return name(a).localeCompare(name(b));
-    if (sort==='big') return I[b].s.v.length - I[a].s.v.length || name(a).localeCompare(name(b));
+    if (sort==='big') return I[b].own.length - I[a].own.length || name(a).localeCompare(name(b));
     if (sort==='gaps') return I[b].gaps.length - I[a].gaps.length || name(a).localeCompare(name(b));
     if (sort==='new') return (shelf.series[b].t||0) - (shelf.series[a].t||0) || name(a).localeCompare(name(b));
     if (sort==='spice') return (serMeta(b).sp || 0) - (serMeta(a).sp || 0) || name(a).localeCompare(name(b));
@@ -1403,8 +1403,8 @@ function renderList(){
   const vmode = $('#view').value; const compact = vmode === 'compact'; $('#list').classList.toggle('compact', compact); $('#list').classList.toggle('shelfv', vmode === 'shelf');
   if (vmode === 'shelf'){ const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
     $('#list').innerHTML = keys.map(k => { const i = I[k]; const u = coverOf(k); const n = i.s.n;
-      return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}${langOf(k) ? ', ' + langOf(k) + ' edition' : ''}, ${i.s.v.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.s.v.length}</b>${langOf(k) ? `<i class="lg" title="${esc(langOf(k))} edition">${lflag(langOf(k))[0]} ${lflag(langOf(k))[1]}</i>` : ''}</button>`; }).join(''); return; }
-  if (compact){ $('#list').innerHTML = keys.map(k => { const i = I[k]; const nTxt = i.total ? `${i.own.length}/${i.total}` : `${i.s.v.length}`;
+      return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}${langOf(k) ? ', ' + langOf(k) + ' edition' : ''}, ${i.own.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.own.length}</b>${langOf(k) ? `<i class="lg" title="${esc(langOf(k))} edition">${lflag(langOf(k))[0]} ${lflag(langOf(k))[1]}</i>` : ''}</button>`; }).join(''); return; }
+  if (compact){ $('#list').innerHTML = keys.map(k => { const i = I[k]; const nTxt = i.total ? `${i.own.length}/${i.total}` : `${i.own.length}`;
     return `<button class="crow" data-k="${esc(k)}"><span class="nm">${FX.has(k) ? '⚠️ ' : ''}${langOf(k) ? lflag(langOf(k))[0] + ' ' : ''}${esc(i.s.n)}</span><span class="m">${nTxt}${i.gaps.length ? ` · ${i.gaps.length} gap${i.gaps.length>1?'s':''}` : ''}${i.complete ? ' · ✓' : ''}</span></button>`; }).join(''); return; }
   $('#list').innerHTML = keys.map(k => {
     const i = I[k]; const lang = langOf(k);
@@ -1420,7 +1420,7 @@ function renderList(){
     if (i.s.st) chips.push(`<span class="chip gold">${'★'.repeat(i.s.st)}</span>`);
     const lns = Object.values(i.s.ln||{}); const lo = lns.filter(l => l.d==='out').length, li = lns.length - lo;
     if (lo) chips.push(`<span class="chip acc">↗ ${lo} lent</span>`); if (li) chips.push(`<span class="chip">↙ ${li} borrowed</span>`);
-    const nTxt = i.total ? `${i.own.length} / ${i.total}` : `${i.s.v.length} ${i.s.v.length===1?'vol':'vols'}`;
+    const nTxt = i.total ? `${i.own.length} / ${i.total}` : `${i.own.length} ${i.own.length===1?'vol':'vols'}`;
     return `<button class="card" data-k="${esc(k)}">${coverHTML(k)}<div class="body"><div class="row"><h3>${esc(i.s.n)}</h3><span class="n">${nTxt}</span></div><div class="spines" aria-hidden="true">${spineHTML(i)}</div><div class="chips">${chips.join('')}</div></div></button>`;
   }).join('');
 }
