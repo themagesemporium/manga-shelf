@@ -340,7 +340,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 .sec{margin-top:18px}
 .sec h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.prod{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.prodopen{all:unset;display:flex;align-items:center;gap:inherit;flex:1;min-width:0;cursor:pointer}.prodopen u{color:var(--accent);text-decoration:none}.prod{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
 .prod:first-of-type{border-top:0}
 .prod img{width:38px;height:56px;object-fit:cover;border-radius:5px;background:var(--surface-2);flex:none}
 .prod .t{flex:1;min-width:0;font-size:14px}
@@ -1765,7 +1765,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 /* ---------- sheet + toast ---------- */
 function parkAcct(){ const hold = $('#acctHold'); ['#acctBox','#ioBox','#photoBox'].forEach(id => { const n = $('#sheetBody').querySelector(id); if (n && hold) hold.appendChild(n); }); }
 function openSheet(html){ try { stopCam(); } catch(e){} parkAcct(); $('#sheetBody').innerHTML = html; $('#scrim').classList.add('on'); $('#sheet').classList.add('on'); $('#sheet').scrollTop = 0; }
-function closeSheet(){ try { stopCam(); } catch(e){} parkAcct(); $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); current = null; }
+function closeSheet(){ try { stopCam(); } catch(e){} parkAcct(); { const was = current; current = null; if (was && shelf.series[was] && shelf.series[was].tmp){ dropStubs(null); renderAll(); } } $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); current = null; }
 document.addEventListener('click', e => { const r = e.target.closest('[data-vrk]'); if (!r) return; e.stopPropagation(); const k = r.dataset.vrk; if (shelf.series[k]) openSeries(k); }, true);
 $('#scrim').onclick = closeSheet;
 $('#xbtn').onclick = closeSheet;
@@ -1791,7 +1791,12 @@ function xpPing(){ clearTimeout(xpT); xpT = setTimeout(() => { if (!SNAP) return
       const el = document.createElement('div'); el.className = 'xppop' + (up ? ' up' : ''); el.setAttribute('role', 'status'); el.textContent = up ? `⭐ Level up! You're Level ${X.lv}` + (frameOf(X.lv) && frameOf(X.lv)[0] === X.lv ? ` · ${frameOf(X.lv)[1]} frame unlocked!` : '') : `+${d} XP`;
       document.body.appendChild(el); setTimeout(() => el.classList.add('go'), 20); setTimeout(() => el.remove(), up ? 4200 : 1900); try { renderLevel(); } catch(e){} }
     xpLast = { xp: X.xp, lv: X.lv }; } catch(e){} }, 400); }
-function save(){ xpPing();
+/* Open a volume's page (owned / read / date / wishlist / review…) from the scanner or a search result, even for a series that
+   isn't on the shelf yet: a temporary entry (tmp) holds it and is dropped when the sheet closes if nothing was set. */
+const stubEmpty = s => !(s.v || []).length && !(s.want || []).length && !(s.r || []).length && !Object.keys(s.vr || {}).length && !s.st && !s.rv && !s.ed && !Object.keys(s.cn || {}).length && !Object.keys(s.ln || {}).length && !(s.sell || []).length;
+function dropStubs(keep){ Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; if (!s || !s.tmp || k === keep) return; if (stubEmpty(s)) delete shelf.series[k]; else delete s.tmp; }); }
+function openVolPage(key, name, vol){ try { stopCam(); } catch(e){} if (!shelf.series[key]) shelf.series[key] = { n: name, v: [], t: Date.now(), tmp: 1 }; openSeries(key); detV = vol; renderSeries(key); }
+function save(){ xpPing(); dropStubs(current);
   try { renderAll(); if (current) renderSeries(current); } catch(e){ console.error(e); }
   if (mode === 'local'){ ls.set('mme-shelf', shelf); acctQueue(); return; }
   if (!docRef) return;
@@ -2335,7 +2340,7 @@ function sheetClick(e){
     s.want = tog(s.want, want && !own); if (!s.want) delete s.want; s.sell = tog(s.sell, sell && own); if (!s.sell) delete s.sell;
     const ln = Object.assign({}, s.ln); if (ld) ln[v] = { d: ld, w: who, at: (ln[v] && ln[v].d === ld && ln[v].w === who) ? ln[v].at : dayKey() }; else delete ln[v]; if (Object.keys(ln).length) s.ln = ln; else delete s.ln;
     const cn = Object.assign({}, s.cn); if (c || tx) cn[v] = Object.assign({}, c ? { c } : {}, tx ? { t: tx } : {}); else delete cn[v]; if (Object.keys(cn).length) s.cn = cn; else delete s.cn;
-    detV = null; if (!s.v.length && !(s.want||[]).length){ shelf.series[key] = s; }
+    detV = null; delete s.tmp; if (!s.v.length && !(s.want||[]).length){ shelf.series[key] = s; }
     save(); if (shelf.alert && want) syncAlerts(); if (shelf.share) shareReview(key);
     toast(`Vol ${v} saved`, () => { shelf.series[key] = prevS; shelf.log = prevLog; shelf.rl = prevRl; save(); }); }
   else if (t.dataset.editnote){ const o = (s.cn||{})[t.dataset.editnote] || {}; cnCond = o.c || ''; cnNote = o.t || ''; renderSeries(key); const el = $('#cnNote'); if (el) el.focus(); }
@@ -2407,10 +2412,11 @@ $('#sheetBody').addEventListener('click', e => { const t = e.target.closest('[da
 function prodRow(p, i){
   const key = (p.ser ? handleize(p.ser) : handleize(p.title)) + (p.type === 'Light Novel' ? '-ln' : '');
   const owned = shelf.series[key] && shelf.series[key].v.includes(p.vol);
-  return `<div class="prod"><img src="${esc(p.img)}" alt="" onerror="this.style.visibility='hidden'"><div class="t">${esc(p.title)}<small>${p.inv>0 ? `In stock · $${(p.price||0).toFixed(2)}` : 'Out of stock'}</small></div>${owned ? '<span class="chip good">On shelf</span>' : `<button class="btn sm" data-addp="${i}">Add</button>`}</div>`;
+  return `<div class="prod"><button class="prodopen" data-openp="${i}" aria-label="Open ${esc(p.title)}: mark read, review, wishlist and more"><img src="${esc(p.img)}" alt="" onerror="this.style.visibility='hidden'"><div class="t">${esc(p.title)}<small>${p.inv>0 ? `In stock · $${(p.price||0).toFixed(2)}` : 'Out of stock'} · <u>Read, review, more ›</u></small></div></button>${owned ? '<span class="chip good">On shelf</span>' : `<button class="btn sm" data-addp="${i}">Add</button>`}</div>`;
 }
 let found = [];
-function wireAdds(el){ el.onclick = e => { const t = e.target.closest('[data-addp]'); if (!t) return; addProduct(found[+t.dataset.addp]); t.outerHTML = '<span class="chip good">Added</span>'; }; }
+function prodKey(p){ const ln = p.type === 'Light Novel'; const sname = p.ser || p.title.replace(/\s+Vol(ume)?\.?\s*\d+.*$/i,''); const k = handleize(sname) + (ln ? '-ln' : ''); return [shelfKeyFor ? (shelfKeyFor(k) || k) : k, sname + (ln && !/light novel/i.test(sname) ? ' (Light Novel)' : ''), p.vol != null ? Math.round(p.vol) : 1]; }
+function wireAdds(el){ el.onclick = e => { const o = e.target.closest('[data-openp]'); if (o){ const [k, nm, v] = prodKey(found[+o.dataset.openp]); openVolPage(k, nm, v); return; } const t = e.target.closest('[data-addp]'); if (!t) return; addProduct(found[+t.dataset.addp]); t.outerHTML = '<span class="chip good">Added</span>'; }; }
 function addProduct(p){
   const ln = p.type === 'Light Novel';
   const sname = p.ser || p.title.replace(/\s+Vol(ume)?\.?\s*\d+.*$/i,'');
@@ -3194,8 +3200,9 @@ function edScanRow(out, code, b, again = ''){ const [sk, n, et] = b; const e = S
   const rg = edRange(key || sk, et, n) || (it[7] ? String(it[7]).split('-').map(Number) : null); const have = S ? new Set(info(key).own) : new Set(); const allIn = rg && S && Array.from({ length: rg[1] - rg[0] + 1 }, (_, j) => rg[0] + j).every(v => have.has(v));
   const [cls, icon, big, sub] = own ? ['own', '✅', 'You own this one', `It’s in your ${nm} editions.`] : allIn ? ['own', '📚', 'You have these volumes already', `You own Vol ${rg[0]}–${rg[1]} of ${nm}, just not this edition.`] : S ? ['gap', '🧩', 'You collect this series', rg ? `This ${et} holds Vol ${rg[0]}–${rg[1]}.` : `Add it to your ${nm} editions.`] : ['new', '✨', 'New series for you', `Nothing from ${nm} on your shelf yet.`];
   out.innerHTML = `<div class="verdict ${cls}">${img ? `<img src="${img}" alt="">` : ''}<div style="font-size:30px">${icon}</div><div class="big">${big}</div><div><b>${esc(nm)} · ${esc(et)} ${n}</b>${rg ? ` <small>(Vol ${rg[0]}–${rg[1]})</small>` : ''}</div><div style="font-size:14px;margin-top:4px">${esc(sub)}${want ? ' ♥ It’s on your wishlist.' : ''}</div></div>
-    <div class="row2" style="justify-content:center;flex-wrap:wrap">${own ? '' : `<button class="btn" id="edScanAdd">＋ Add to my shelf</button>${want ? '' : `<button class="btn ghost" id="edScanWant">♥ Add to wishlist</button>`}`}</div>` + again;
-  const k2 = key || sk; const a = $('#edScanAdd'); if (a) a.onclick = () => { const undo = edAdd(k2, nm, et, [n]); toast(`Added ${nm} ${et} Vol ${n}`, undo); a.outerHTML = '<span class="chip good">Added ✓</span>'; const w = $('#edScanWant'); if (w) w.remove(); };
+    <div class="row2" style="justify-content:center;flex-wrap:wrap"><button class="btn primary" id="edScanOpen">📖 Open its page</button>${own ? '' : `<button class="btn" id="edScanAdd">＋ Add to my shelf</button>${want ? '' : `<button class="btn ghost" id="edScanWant">♥ Add to wishlist</button>`}`}</div>` + again;
+  const k2 = key || sk; const eo = $('#edScanOpen'); if (eo) eo.onclick = () => { try { stopCam(); } catch(e){} if (!shelf.series[k2]) shelf.series[k2] = { n: nm, v: [], t: Date.now(), tmp: 1 }; openSeries(k2); };
+  const a = $('#edScanAdd'); if (a) a.onclick = () => { const undo = edAdd(k2, nm, et, [n]); toast(`Added ${nm} ${et} Vol ${n}`, undo); a.outerHTML = '<span class="chip good">Added ✓</span>'; const w = $('#edScanWant'); if (w) w.remove(); };
   const w = $('#edScanWant'); if (w) w.onclick = () => { edAdd(k2, nm, et, [n], { want: true }); toast(`♥ ${nm} ${et} Vol ${n} on your wishlist`); w.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; };
   const nx = $('#scanNext'); if (nx) nx.onclick = () => { $('#scanRes').innerHTML = ''; $('#scanIsbn').value = ''; startCam(); }; }
 async function scanVerdict(raw){ const out = $('#scanRes'); if (!out) return; const code = isbn13(raw); $('#scanBox').style.display = 'none';
@@ -3211,9 +3218,10 @@ async function scanVerdict(raw){ const out = $('#scanRes'); if (!out) return; co
     else if (S){ cls = 'ser'; icon = '📚'; big = 'You collect this series'; sub = `But you only have up to Vol ${max}, so this skips ahead.`; }
     else { cls = 'new'; icon = '✨'; big = 'New series for you'; sub = `Nothing from ${nm} on your shelf yet.`; }
     html = `<div class="verdict ${cls}">${img ? `<img src="${img}" alt="">` : ''}<div style="font-size:30px">${icon}</div><div class="big">${big}</div><div><b>${esc(nm)} · Vol ${vol}</b></div><div style="font-size:14px;margin-top:4px">${esc(sub)}${want ? ' ♥ It’s on your wishlist.' : ''}${held ? ' 📦 The Mage’s Emporium is holding this one for you.' : ''}</div></div>
-      <div class="row2" style="justify-content:center;flex-wrap:wrap">${key ? `<button class="btn primary" id="scanOpen">📖 Open its page${own.includes(vol) ? ' · review' : ''}</button>` : ''}${own.includes(vol) ? '' : `<button class="btn" id="scanAdd">＋ Add to my shelf</button>${want ? '' : `<button class="btn ghost" id="scanWant">♥ Add to wishlist</button>`}`}</div>` + again;
+      <div class="row2" style="justify-content:center;flex-wrap:wrap"><button class="btn primary" id="scanOpen">📖 Open its page${own.includes(vol) ? ' · review' : ''}</button>${S && (S.r || []).includes(vol) ? '<span class="chip good">Read ✓</span>' : '<button class="btn ghost" id="scanRead">✓ Mark read</button>'}${own.includes(vol) ? '' : `<button class="btn" id="scanAdd">＋ Add to my shelf</button>${want ? '' : `<button class="btn ghost" id="scanWant">♥ Add to wishlist</button>`}`}</div>` + again;
     out.innerHTML = html;
-    const sOp = $('#scanOpen'); if (sOp) sOp.onclick = () => { stopCam(); const k3 = key || shelfKeyFor(sk); if (!k3 || !shelf.series[k3]) return; openSeries(k3); detV = vol; renderSeries(k3); setTimeout(() => { const x = $('#pvRv'); if (x){ x.scrollIntoView({ block: 'center' }); if (own.includes(vol)) x.focus(); } }, 80); };
+    const sRd = $('#scanRead'); if (sRd) sRd.onclick = () => { const k2 = shelfKeyFor(sk) || sk; if (!shelf.series[k2]) shelf.series[k2] = { n: nm, v: [], t: Date.now() }; const T = shelf.series[k2]; delete T.tmp; const prev = T.r ? T.r.slice() : null; T.r = [...new Set((T.r || []).concat(vol))].sort((a, c) => a - c); logRead(1, k2, [vol]); save(); toast(`Read ${nm} Vol ${vol}`, () => { logRead(-1, k2, [vol]); const U = shelf.series[k2]; if (U){ if (prev) U.r = prev; else delete U.r; if (stubEmpty(U)) delete shelf.series[k2]; } save(); }); sRd.outerHTML = '<span class="chip good">Read ✓</span>'; };
+    const sOp = $('#scanOpen'); if (sOp) sOp.onclick = () => { const k3 = shelfKeyFor(sk) || key || sk; openVolPage(k3, nm, vol); setTimeout(() => { const x = $('#pvRv'); if (x){ x.scrollIntoView({ block: 'center' }); if (own.includes(vol)) x.focus(); } }, 80); };
     const sAdd = $('#scanAdd'); if (sAdd) sAdd.onclick = () => { const k2 = key || sk; const prev = shelf.series[k2] ? shelf.series[k2].v : []; const undo = setVols(k2, prev.concat(vol), nm); if (shelf.series[k2].want) shelf.series[k2].want = shelf.series[k2].want.filter(x => x !== vol); save(); toast(`Added ${nm} Vol ${vol}`, undo); sAdd.outerHTML = `<span class="chip good">Added ✓</span>${$('#scanOpen') ? '' : `<button class="btn primary" id="scanOpen2">📖 Open its page</button>`}`; const o2 = $('#scanOpen2'); if (o2) o2.onclick = () => { stopCam(); openSeries(k2); detV = vol; renderSeries(k2); }; const w = $('#scanWant'); if (w) w.remove(); };
     const sW = $('#scanWant'); if (sW) sW.onclick = () => { const k2 = key || sk; if (!shelf.series[k2]) shelf.series[k2] = { n: nm, v: [], t: Date.now() }; const T = shelf.series[k2]; T.want = [...new Set((T.want || []).concat(vol))].sort((a, c) => a - c); save(); toast(`♥ ${nm} Vol ${vol} on your wishlist`); sW.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; };
   } else {
