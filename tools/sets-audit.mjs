@@ -84,9 +84,11 @@ for (const p of plan){
   const tags = p.tags.filter(t => !(t === 'Complete Series' && p.to < p.from) && t !== 'outofstock');
   let r = await window._api(`mutation($p:ProductUpdateInput!){productUpdate(product:$p){userErrors{message}}}`, { p: { id: p.id, title, handle, redirectNewHandle: true, descriptionHtml: desc, seo, tags, status: 'ACTIVE' } }); if (E(r, p.title)) continue;
   const have = new Set(p.comp.map(c => c.vid)), want = new Set(p.keep.map(k => k.vid));
-  r = await window._api(`mutation($i:[ProductVariantRelationshipUpdateInput!]!){productVariantRelationshipBulkUpdate(input:$i){userErrors{message}}}`, { i: [{ parentProductVariantId: p.vid,
+  const sleep = ms => new Promise(z => setTimeout(z, ms)); await sleep(6000);
+  for (let t = 0; t < 6; t++){ r = await window._api(`mutation($i:[ProductVariantRelationshipUpdateInput!]!){productVariantRelationshipBulkUpdate(input:$i){userErrors{message}}}`, { i: [{ parentProductVariantId: p.vid,
     productVariantRelationshipsToRemove: p.comp.filter(c => !want.has(c.vid)).map(c => c.vid),
-    productVariantRelationshipsToCreate: p.keep.filter(k => !have.has(k.vid)).map(k => ({ id: k.vid, quantity: 1 })) }] }); if (E(r, p.title + ' components')) continue;
+    productVariantRelationshipsToCreate: p.keep.filter(k => !have.has(k.vid)).map(k => ({ id: k.vid, quantity: 1 })) }] }); if (!/being (modified|updated)|currently|try again/i.test(JSON.stringify(r))) break; await sleep(8000); }
+  if (E(r, p.title + ' components')) continue; await sleep(3000);
   const sum = p.keep.reduce((a, k) => a + k.price, 0);
   r = await window._api(`mutation($p:ID!,$v:[ProductVariantsBulkInput!]!){productVariantsBulkUpdate(productId:$p,variants:$v){userErrors{message}}}`, { p: p.id, v: [{ id: p.vid, price: (Math.round(sum * 0.9 * 100) / 100).toFixed(2), compareAtPrice: sum.toFixed(2) }] }); E(r, p.title + ' price');
   const M = [{ ownerId: p.id, namespace: 'custom', key: 'bundle_items', type: 'list.product_reference', value: JSON.stringify(p.keep.map(k => k.pid)) }].concat(p.keep.map(k => ({ ownerId: k.pid, namespace: 'custom', key: 'bundle_set', type: 'product_reference', value: p.id })));
