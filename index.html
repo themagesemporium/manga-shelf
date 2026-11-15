@@ -723,14 +723,17 @@ function parseVols(txt){
 }
 
 /* ---------- stats ---------- */
+/* all genres for a series: the shelf's cached genres plus the store snapshot's (main genre + genres list) */
+function genU(a, b){ return [...new Set([a, b].join(', ').split(/,\s*/).filter(Boolean))].join(', '); }
+function serGen(k, s){ const e = SNAP && snapEntry(k); const sm = e && e[1] && e[1].m; return [...new Set([...((s.m && s.m.g) || []), ...String((sm && sm.gen) || '').split(/,\s*/).filter(Boolean)])]; }
 function collectorNumbers(){
   const C = { books: 0, series: 0, run: 0, runK: null, bl: 0, yuri: 0, shojo: 0, shonen: 0, seinen: 0, josei: 0, horror: 0, rom: 0, isekai: 0, lnv: 0, done: 0, readN: 0, ngen: 0, crowns: [], since: null };
   const gens = new Set();
-  Object.keys(shelf.series).forEach(k => { const i = info(k), s = i.s, n = s.v.length + edCount(s), m = s.m || {}, g = (m.g || []).join('|');
+  Object.keys(shelf.series).forEach(k => { const i = info(k), s = i.s, n = s.v.length + edCount(s), m = s.m || {}, g = serGen(k, s).join('|'); /* listing genre + genres list + snapshot, so a yuri/BL series counts even when only the main genre says so (Megan, Nov 15) */
     C.books += n; C.series++; C.readN += (s.r || []).length; if (i.own.length > C.run){ C.run = i.own.length; C.runK = k; } if (i.complete) C.done++; if (isLN(k, s)) C.lnv += n;
     const a = String(m.a || '').toLowerCase(); if (a in C) C[a] += n;
     if (/BL|Yaoi/i.test(g)) C.bl += n; if (/Yuri/i.test(g)) C.yuri += n; if (/Horror/i.test(g)) C.horror += n; if (/Romance/i.test(g)) C.rom += n; if (/Isekai/i.test(g) || /Isekai|Reincarnation/i.test(((SNAP && snapEntry(k) || [])[1] || {}).m ? String(snapEntry(k)[1].m.th || '') : '')) C.isekai += n; /* isekai is stored as a theme, not a genre (Marlena, Nov 14) */
-    (m.g || []).forEach(x => gens.add(x)); if (s.t && (!C.since || s.t < C.since)) C.since = s.t; });
+    serGen(k, s).forEach(x => gens.add(x)); if (s.t && (!C.since || s.t < C.since)) C.since = s.t; });
   C.ngen = gens.size; const o = shelf.orders || {}; if (o.first){ const f = new Date(o.first).getTime(); if (!C.since || f < C.since) C.since = f; }
   const cs = crownsData && crownsData.crown; if (cs){ const mine = { books: C.books, series: C.series, run: C.run, bl: C.bl, shojo: C.shojo, shonen: C.shonen, seinen: C.seinen, josei: C.josei, complete: C.done };
     [['books','👑','Largest collection'],['series','🗺️','Most series'],['run','🏃','Longest series run'],['bl','💜','Most BL'],['shojo','🎀','Most shojo'],['shonen','🔥','Most shonen'],['seinen','🗡️','Most seinen'],['josei','🍷','Most josei'],['complete','⭐','Most complete series']]
@@ -1904,7 +1907,7 @@ async function buildSnap(btn, msg){
     const list = Object.entries(ids); let done = 0;
     for (let i = 0; i < list.length; i += 50){ const chunk = list.slice(i, i + 50);
       const d = await gql(`{nodes(ids:${JSON.stringify(chunk.map(x => x[1][0]))}){... on Product{id ${IFIELDS}}}}`);
-      d.nodes.forEach((q, j) => { if (!q) return; const k = chunk[j][0]; const m = { au: mval(q.au), gen: mval(q.gen) || mval(q.g1), th: mval(q.th), aud: mval(q.aud), age: mval(q.age), sp: mval(q.sp), cn: mval(q.cn), gr: mval(q.gr), an: mval(q.an), at: mval(q.at), ss: mval(q.ss), ov: mval(q.ov), os: mval(q.os), tk: mval(q.tk), pub: q.vendor || '' };
+      d.nodes.forEach((q, j) => { if (!q) return; const k = chunk[j][0]; const m = { au: mval(q.au), gen: genU(mval(q.gen), mval(q.g1)), th: mval(q.th), aud: mval(q.aud), age: mval(q.age), sp: mval(q.sp), cn: mval(q.cn), gr: mval(q.gr), an: mval(q.an), at: mval(q.at), ss: mval(q.ss), ov: mval(q.ov), os: mval(q.os), tk: mval(q.tk), pub: q.vendor || '' };
         Object.keys(m).forEach(f => { if (!m[f]) delete m[f]; }); if (Object.keys(m).length) S[k].m = m; });
       done += chunk.length; msg.textContent = `Reading series details… ${done.toLocaleString()} of ${list.length.toLocaleString()}`; }
     let cr = null; try { cr = await loadCrowns(); } catch(e){}
@@ -2019,7 +2022,7 @@ async function lookupSeries(key, force){
     try { const md = await gql(`{products(first:15, query:${JSON.stringify(q)}){nodes{${MFIELDS}}}}`);
       m0 = md.products.nodes.map(mapProd).find(p => targets.has(handleize(p.ser)) && (p.aud || p.gen.length || p.au)) || null; } catch(e){}
   }
-  if (m0){ const m = { a: m0.aud || '', g: m0.gen.length ? m0.gen : (m0.g1 ? [m0.g1] : []), au: m0.au || '', p: m0.pub || '' };
+  if (m0){ const m = { a: m0.aud || '', g: [...new Set([...m0.gen, ...(m0.g1 ? [m0.g1] : [])])], au: m0.au || '', p: m0.pub || '' };
     if (JSON.stringify(s.m||null) !== JSON.stringify(m)) { s.m = m; metaDirty = true; } }
   live.set(key, out); persistLive();
   return out;
@@ -2075,7 +2078,7 @@ async function loadInfo(key){
   const cand = L.items.slice().sort((a,b) => a.vol - b.vol).slice(0, 3);
   let best = null;
   try { for (const it of cand){ const d = await gql(`{p:productByIdentifier(identifier:{handle:${JSON.stringify(it.handle)}}){${IFIELDS}}}`); const q = d.p; if (!q) continue;
-      const o = { au: mval(q.au), gen: mval(q.gen) || mval(q.g1), th: mval(q.th), aud: mval(q.aud), age: mval(q.age), sp: mval(q.sp), cn: mval(q.cn), gr: mval(q.gr), an: mval(q.an), at: mval(q.at), ss: mval(q.ss), ov: mval(q.ov), os: mval(q.os), tk: mval(q.tk), pub: q.vendor || '' };
+      const o = { au: mval(q.au), gen: genU(mval(q.gen), mval(q.g1)), th: mval(q.th), aud: mval(q.aud), age: mval(q.age), sp: mval(q.sp), cn: mval(q.cn), gr: mval(q.gr), an: mval(q.an), at: mval(q.at), ss: mval(q.ss), ov: mval(q.ov), os: mval(q.os), tk: mval(q.tk), pub: q.vendor || '' };
       const score = Object.values(o).filter(Boolean).length; if (!best || score > best.score) best = Object.assign(o, { score }); if (score >= 8) break; } } catch(e){}
   sinfo.set(key, best || {});
   if (current === key) renderSeries(key);
