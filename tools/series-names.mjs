@@ -43,9 +43,9 @@ if (MODE === 'export'){
 }
 const R = JSON.parse(fs.readFileSync(ROOT + 'tools/data/series-renames.json', 'utf8')); const M = []; let pages = 0;
 for (const [old, t, nw] of R){ const L = G[old + '|' + t] || []; L.forEach(p => M.push({ ownerId: p.id, namespace: 'custom', key: 'series', type: 'single_line_text_field', value: nw }));
-  const c = await window._api(`query($q:String){collections(first:20,query:$q){nodes{id title handle ruleSet{appliedDisjunctively rules{column relation condition conditionObjectId}}}}}`, { q: 'title:' + JSON.stringify(old) });
+  const c = await window._api(`query($q:String){collections(first:20,query:$q){nodes{id title handle ruleSet{appliedDisjunctively rules{column relation condition conditionObject{... on CollectionRuleMetafieldCondition{metafieldDefinition{id}}}}}}}}`, { q: 'title:' + JSON.stringify(old) });
   for (const col of (c.data.collections.nodes || [])){ const rs = col.ruleSet; if (!rs || !rs.rules.some(r => r.condition === old)) continue;
-    const rules = rs.rules.map(r => ({ column: r.column, relation: r.relation, condition: r.condition === old ? nw : r.condition, ...(r.conditionObjectId ? { conditionObjectId: r.conditionObjectId } : {}) }));
+    const rules = rs.rules.map(r => ({ column: r.column, relation: r.relation, condition: r.condition === old ? nw : r.condition, ...(r.conditionObject && r.conditionObject.metafieldDefinition ? { conditionObjectId: r.conditionObject.metafieldDefinition.id } : {}) }));
     const h = 'series-' + nw.toLowerCase().replace(/['’]/g, '-').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + (/light novel/i.test(t) ? '-light-novel' : '');
     const u = await window._api(`mutation($c:CollectionInput!){collectionUpdate(input:$c){userErrors{message}}}`, { c: { id: col.id, title: col.title === old ? nw : col.title.replace(old, nw), handle: h, redirectNewHandle: true, ruleSet: { appliedDisjunctively: rs.appliedDisjunctively, rules } } });
     if (u.data.collectionUpdate.userErrors.length) out('page ERR ' + old + ': ' + JSON.stringify(u.data.collectionUpdate.userErrors)); else pages++; } }
