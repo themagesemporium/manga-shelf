@@ -41,6 +41,14 @@ if (MODE === 'export'){
     if (bad || susp) out.push([s, t, L.length, top[0], L.slice(0, 3).map(p => p.title)]); }
   out.sort((a, b) => b[2] - a[2]); save('todo.json', out); log(`${all.length} listings, ${Object.keys(G).length} series; ${out.length} names to check.`); process.exit(0);
 }
+if (MODE === 'meta'){ // tools/data/series-meta.json [[series, type, {series_volumes, series_status, product_type}], ...] -> every listing of that series+type
+  const D = JSON.parse(fs.readFileSync(ROOT + 'tools/data/series-meta.json', 'utf8')); const M = []; let pt = 0;
+  for (const [ser, t, f] of D){ const L = G[ser + '|' + t] || []; if (!L.length) out('no listings: ' + ser + ' | ' + t);
+    for (const p of L){ if (f.series_volumes) M.push({ ownerId: p.id, namespace: 'custom', key: 'series_volumes', type: 'number_integer', value: String(f.series_volumes) });
+      if (f.series_status) M.push({ ownerId: p.id, namespace: 'custom', key: 'series_status', type: 'single_line_text_field', value: f.series_status });
+      if (f.product_type){ const r = await window._api(`mutation($p:ProductUpdateInput!){productUpdate(product:$p){userErrors{message}}}`, { p: { id: p.id, productType: f.product_type } }); if (!r.data.productUpdate.userErrors.length) pt++; } } }
+  let w = 0; for (let i = 0; i < M.length; i += 25){ const r = await window._api(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: M.slice(i, i + 25) }); if (r.data.metafieldsSet.userErrors.length) out('ERR ' + JSON.stringify(r.data.metafieldsSet.userErrors).slice(0, 200)); else w += Math.min(25, M.length - i); }
+  out(`Series facts: ${w} fields on ${D.length} series; ${pt} product types changed.`); process.exit(0); }
 const R = JSON.parse(fs.readFileSync(ROOT + 'tools/data/series-renames.json', 'utf8')); const M = []; let pages = 0;
 for (const [old, t, nw] of R){ const L = G[old + '|' + t] || []; L.forEach(p => M.push({ ownerId: p.id, namespace: 'custom', key: 'series', type: 'single_line_text_field', value: nw }));
   const c = await window._api(`query($q:String){collections(first:20,query:$q){nodes{id title handle ruleSet{appliedDisjunctively rules{column relation condition conditionObject{... on CollectionRuleMetafieldCondition{metafieldDefinition{id}}}}}}}}`, { q: 'title:' + JSON.stringify(old) });
