@@ -2379,6 +2379,9 @@ function renderAdd(pre){
     <datalist id="tnl">${Object.values(shelf.series).map(s => `<option value="${esc(s.n)}">`).join('')}</datalist>
     <p class="note" id="tnHint" hidden style="margin:-4px 0 12px">We don’t recognize that title yet. Check the spelling, or <a href="#" id="tnScan">scan the ISBN barcode</a> on the back so we can match covers and prices. You can still add it as typed.</p>
     <label class="field"><span>Volumes</span><input id="tv" placeholder="e.g. 1-5, 7, 9"></label>
+    <label class="field"><span>ISBN (optional)</span><input id="tisbn" inputmode="numeric" placeholder="978… under the barcode" value="${esc(pre && pre.isbn || '')}"></label>
+    <label class="field" id="tisbnVolF" hidden><span>Which volume is that ISBN for?</span><input id="tisbnVol" inputmode="numeric" placeholder="Vol number" style="width:110px"></label>
+    <p class="sub" style="margin:-6px 0 12px">Adding the ISBN lets other readers scan this book and find it right away.</p>
     <label class="field"><span>Edition</span><select id="ted"><option value="">Regular single volumes</option>${ED_TYPES.map(t => `<option>${t}</option>`).join('')}</select></label>
     <button class="btn" id="tgo">Add to my shelf</button>
     <p class="sub" style="margin:10px 0 0">Shelves are checked daily for spelling and matched to the shop’s series for covers and info. Anything that needs a second look gets a ⚠️ on its series.</p>`;
@@ -2389,9 +2392,15 @@ function renderAdd(pre){
       h.hidden = known; };
     $('#tn').addEventListener('input', () => { clearTimeout(tnT); tnT = setTimeout(tnCheck, 500); }); $('#tn').addEventListener('change', tnCheck);
     $('#tnScan').onclick = e => { e.preventDefault(); const t = document.querySelector('[data-at="scan"]'); if (t) t.click(); };
+    const tvCheck = () => { const f = $('#tisbnVolF'); if (f) f.hidden = !(($('#tisbn').value || '').trim() && parseVols($('#tv').value).length > 1); };
+    $('#tv').addEventListener('input', tvCheck); $('#tisbn').addEventListener('input', tvCheck); if (pre && pre.isbn) setTimeout(() => { const v = $('#tn'); if (v && !v.value) v.focus(); }, 50);
     $('#tgo').onclick = () => {
       const name = $('#tn').value.trim(); const vols = parseVols($('#tv').value);
       if (!name || !vols.length) return toast('Add a series name and at least one volume');
+      const ibRaw = ($('#tisbn').value || '').trim(); const ib13 = ibRaw ? isbnTo13(ibRaw) : '';
+      if (ibRaw && !ib13) return toast('That ISBN doesn’t look right. It’s the 13 digits starting with 978 or 979 under the barcode.');
+      const ibVol = vols.length > 1 ? parseInt(($('#tisbnVol') || {}).value, 10) : vols[0];
+      if (ib13 && !(ibVol > 0)) return toast('Type which volume that ISBN is for');
       { const et = $('#ted').value; const p = edParseName(name);
         if (et || p){ const ln = /light novel|\bln\b/i.test(name); const base = p ? p.base : name.replace(/\(?\s*(light novel|ln)\s*\)?/ig, ' ').trim(); const type = et || p.type; const key = edKeyFor(base, ln);
           const r = p && !et ? edNums(p, vols) : { nums: vols.filter(x => Number.isInteger(x) && x > 0), c: null }; if (!r.nums.length) return toast('Add at least one number');
@@ -2400,6 +2409,8 @@ function renderAdd(pre){
       const key = existing || handleize(name);
       const prev = shelf.series[key] ? shelf.series[key].v : [];
       const undo = setVols(key, prev.concat(vols), name);
+      if (ib13){ const T = shelf.series[key]; if (T){ T.ib = Object.assign({}, T.ib || {}, { [ibVol]: ib13 }); T.t = Date.now(); save();
+        if (!snapBar.get(ib13)){ const t = `Added by hand in the app: ${name} Vol ${ibVol}, ISBN ${ib13}. Not in the shop yet.`; try { notifyShop(t); } catch(e){} } } }
       closeSheet(); toast(`Added ${vols.length} to ${name}`, undo);
     };
   }
@@ -2430,11 +2441,24 @@ function addProduct(p){
   const undo = setVols(key, prev.concat(vol), name);
   toast(`Added ${name} Vol ${vol}`, undo);
 }
+/* Community ISBNs (Katie's idea, Nov 15 2026): ISBNs other readers typed in for books the shop doesn't carry.
+   Built from customers' shelves (s.ib) by the nightly job into isbn-community.json: {isbn13: [series name, vol, readers]}. */
+let ISBNC = null, ISBNCat = 0;
+async function isbnCommunity(code){ if (!ISBNC || Date.now() - ISBNCat > 36e5){ try { ISBNC = await fetch('isbn-community.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}); ISBNCat = Date.now(); } catch(e){ ISBNC = ISBNC || {}; } } return ISBNC[code] || null; }
+function commRow(out, code, c, again = ''){ const [n, v0, cnt] = c; const v = v0 > 0 ? v0 : 1;
+  const k0 = Object.keys(shelf.series).find(k => shelf.series[k].n.toLowerCase() === String(n).toLowerCase()); const S = k0 ? shelf.series[k0] : null; const has = S && ints(S).includes(v); const want = S && (S.want || []).includes(v);
+  out.innerHTML = `<div class="verdict ${has ? 'own' : 'ser'}"><div style="font-size:30px">${has ? '✅' : '📗'}</div><div class="big">${has ? 'You own this one' : 'Found it!'}</div><div><b>${esc(n)}${v0 > 0 ? ' · Vol ' + v0 : ''}</b></div><div style="font-size:14px;margin-top:4px">The shop doesn’t carry this one yet, but ${cnt > 1 ? cnt + ' readers have' : 'another reader has'} added it to the app with this ISBN.</div></div>`
+    + (has ? '' : `<div class="row2" style="justify-content:center;flex-wrap:wrap"><button class="btn" id="cmAdd">＋ Add to my shelf</button>${want ? '' : '<button class="btn ghost" id="cmWant">♥ Add to wishlist</button>'}</div>`) + again;
+  const key = () => k0 || handleize(n);
+  const a = $('#cmAdd'); if (a) a.onclick = () => { const k = key(); const prev = shelf.series[k] ? shelf.series[k].v : []; const undo = setVols(k, prev.concat(v), n); const T = shelf.series[k]; T.ib = Object.assign({}, T.ib || {}, { [v]: code }); if (T.want) T.want = T.want.filter(x => x !== v); save(); toast(`Added ${n} Vol ${v}`, undo); a.parentNode.innerHTML = '<span class="chip good">Added ✓</span>'; };
+  const w = $('#cmWant'); if (w) w.onclick = () => { const k = key(); if (!shelf.series[k]) shelf.series[k] = { n, v: [], t: Date.now() }; const T = shelf.series[k]; T.want = [...new Set((T.want || []).concat(v))].sort((x, y) => x - y); save(); toast(`♥ ${n} Vol ${v} on your wishlist`); w.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; }; }
+function notFoundIsbn(code){ const c13 = isbn13(code); return `<p class="note">ISBN ${esc(code)} isn’t in the shop’s catalog yet. <a href="#" data-typeisbn="${esc(c13)}">Type it in</a> and we’ll remember the ISBN, so the next reader who scans it finds it.</p>`; }
+document.addEventListener('click', e => { const t = e.target.closest('[data-typeisbn]'); if (!t) return; e.preventDefault(); try { stopCam(); } catch(err){} openAdd('type', { isbn: t.dataset.typeisbn, name: t.dataset.tname || '' }); });
 async function lookupIsbn(code){
   const out = $('#scanOut'); if (!out) return;
   if (!/^\d{10,13}$/.test(code)) { out.innerHTML = `<p class="note">That doesn’t look like an ISBN. It’s the 13 digits starting with 978 or 979 under the barcode.</p>`; return; }
   if (!mcp){ await loadSnap(); const b = snapBar.get(code.length === 10 ? '978' + code.slice(0,9) + (() => { const x = '978' + code.slice(0,9); let t = 0; for (let i = 0; i < 12; i++) t += (+x[i]) * (i % 2 ? 3 : 1); return (10 - t % 10) % 10; })() : code);
-    if (!b){ out.innerHTML = `<p class="note">ISBN ${code} isn’t in the shop’s catalog yet. Add it with “Type it”.</p>`; return; }
+    if (!b){ const cm = await isbnCommunity(isbn13(code)); if (cm){ commRow(out, isbn13(code), cm); return; } out.innerHTML = notFoundIsbn(code); return; }
     if (b[2]){ edScanRow(out, code, b); return; }
     const e = SNAP.s[b[0]]; found = snapItems(e).filter(p => p.vol === b[1]).map(p => Object.assign(p, { type: e.ln ? 'Light Novel' : 'Manga' }));
     out.innerHTML = `<p class="sub">ISBN ${code}</p>` + found.slice(0,1).map(prodRow).join(''); wireAdds(out); return; }
@@ -2442,7 +2466,7 @@ async function lookupIsbn(code){
   try {
     const d = await gql(`{products(first:5, query:${JSON.stringify('barcode:' + code)}){nodes{${PFIELDS}}}}`);
     found = d.products.nodes.map(mapProd).sort((a,b) => (b.inv>0) - (a.inv>0));
-    if (!found.length){ out.innerHTML = `<p class="note">ISBN ${code} isn’t in the store’s catalog yet. Add it with “Type it”.</p>`; return; }
+    if (!found.length){ const cm = await isbnCommunity(isbn13(code)); if (cm){ commRow(out, isbn13(code), cm); return; } out.innerHTML = notFoundIsbn(code); return; }
     out.innerHTML = `<p class="sub">ISBN ${code}</p>` + found.slice(0,1).map(prodRow).join('');
     wireAdds(out);
   } catch(e){ out.innerHTML = `<p class="note">${esc(errText(e))}</p>`; }
@@ -3229,12 +3253,15 @@ async function scanVerdict(raw){ const out = $('#scanRes'); if (!out) return; co
     const sW = $('#scanWant'); if (sW) sW.onclick = () => { const k2 = key || sk; if (!shelf.series[k2]) shelf.series[k2] = { n: nm, v: [], t: Date.now() }; const T = shelf.series[k2]; T.want = [...new Set((T.want || []).concat(vol))].sort((a, c) => a - c); save(); toast(`♥ ${nm} Vol ${vol} on your wishlist`); sW.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; };
   } else {
     out.innerHTML = `<div class="verdict unk"><div style="font-size:30px">🔎</div><div class="big">Checking…</div><div>ISBN ${esc(code)}</div></div>` + again;
+    const cm = await isbnCommunity(code); if (cm) commRow(out, code, cm, again); else {
     let title = ''; if (navigator.onLine){ try { const j = await fetch('https://openlibrary.org/isbn/' + code + '.json').then(r => r.ok ? r.json() : null); title = j && j.title || ''; } catch(e){} }
     const words = normName(title); const k = title ? Object.keys(shelf.series).find(x => { const n = normName(shelf.series[x].n); return n.length >= 4 && words.startsWith(n); }) : null;
-    out.innerHTML = `<div class="verdict ${k ? 'ser' : 'unk'}"><div style="font-size:30px">${k ? '📚' : '🔎'}</div><div class="big">${k ? 'Might be one of yours' : 'Not in our catalog'}</div><div>${title ? `<b>${esc(title)}</b>` : `ISBN ${esc(code)}`}</div><div style="font-size:14px;margin-top:4px">${k ? `You have ${shelf.series[k].v.length} of ${esc(shelf.series[k].n)}: Vol ${compactVols(ints(shelf.series[k]))}. Is it this series? Check the volume number below.` : (navigator.onLine ? 'We couldn’t match this book to the shop’s list. You can still add it from the + button.' : 'You’re offline, so only books in the shop’s list can be checked.')}</div></div>` + (k ? `<div class="row2" style="justify-content:center;flex-wrap:wrap;align-items:center"><label style="font-size:14px">Vol <input id="scanVol" inputmode="numeric" style="width:64px" value="${esc(String(((title.match(/(?:#|\bvol(?:ume)?\.?\s*|\bbook\s*)(\d{1,3})\b/i) || title.match(/\b(\d{1,3})\s*$/) || [])[1]) || ''))}" aria-label="Volume number"></label><button class="btn" id="scanYes">Yes, add it to ${esc(shelf.series[k].n)}</button><button class="btn ghost" id="scanYesWant">♥ Wishlist it</button></div>` : '') + again;
+    out.innerHTML = `<div class="verdict ${k ? 'ser' : 'unk'}"><div style="font-size:30px">${k ? '📚' : '🔎'}</div><div class="big">${k ? 'Might be one of yours' : 'Not in our catalog'}</div><div>${title ? `<b>${esc(title)}</b>` : `ISBN ${esc(code)}`}</div><div style="font-size:14px;margin-top:4px">${k ? `You have ${shelf.series[k].v.length} of ${esc(shelf.series[k].n)}: Vol ${compactVols(ints(shelf.series[k]))}. Is it this series? Check the volume number below.` : (navigator.onLine ? 'We couldn’t match this book to the shop’s list. Type it in once and the next reader who scans it will find it.' : 'You’re offline, so only books in the shop’s list can be checked.')}</div></div>` + (k ? `<div class="row2" style="justify-content:center;flex-wrap:wrap;align-items:center"><label style="font-size:14px">Vol <input id="scanVol" inputmode="numeric" style="width:64px" value="${esc(String(((title.match(/(?:#|\bvol(?:ume)?\.?\s*|\bbook\s*)(\d{1,3})\b/i) || title.match(/\b(\d{1,3})\s*$/) || [])[1]) || ''))}" aria-label="Volume number"></label><button class="btn" id="scanYes">Yes, add it to ${esc(shelf.series[k].n)}</button><button class="btn ghost" id="scanYesWant">♥ Wishlist it</button></div>` : '') + again;
     if (k){ const vIn = () => parseInt(($('#scanVol') || {}).value, 10); const ok = () => { const v = vIn(); if (!(v > 0)){ toast('Type the volume number first'); return 0; } return v; };
       const yes = $('#scanYes'); if (yes) yes.onclick = () => { const v = ok(); if (!v) return; const S = shelf.series[k]; const undo = setVols(k, ints(S).concat(v), S.n); const T = shelf.series[k]; if (T.want) T.want = T.want.filter(x => x !== v); T.ib = Object.assign({}, T.ib || {}, { [v]: code }); const t = `Added from the app: ${T.n} Vol ${v}, ISBN ${code}. Not in the shop yet.`; shelf.fb = (shelf.fb || []).concat({ t, at: Date.now() }); try { notifyShop(t); } catch(e){} save(); toast(`Added ${T.n} Vol ${v}`, undo); yes.parentNode.innerHTML = `<span class="chip good">Added Vol ${v} ✓</span>`; };
-      const yw = $('#scanYesWant'); if (yw) yw.onclick = () => { const v = ok(); if (!v) return; const T = shelf.series[k]; if (ints(T).includes(v)) return toast('You already have that one'); T.want = [...new Set((T.want || []).concat(v))].sort((a, c) => a - c); save(); toast(`♥ ${T.n} Vol ${v} on your wishlist`); yw.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; }; } }
+      const yw = $('#scanYesWant'); if (yw) yw.onclick = () => { const v = ok(); if (!v) return; const T = shelf.series[k]; if (ints(T).includes(v)) return toast('You already have that one'); T.want = [...new Set((T.want || []).concat(v))].sort((a, c) => a - c); save(); toast(`♥ ${T.n} Vol ${v} on your wishlist`); yw.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; }; }
+    if (!k){ const v = out.querySelector('.verdict'); if (v){ const d = document.createElement('div'); d.className = 'row2'; d.style.justifyContent = 'center'; d.innerHTML = `<button class="btn" data-typeisbn="${esc(code)}" data-tname="${esc(title.replace(/[,:]?\s*(vol(ume)?\.?|#)\s*\d+.*$/i, '').trim())}">✏️ Type it in</button>`; v.after(d); } }
+    } }
   const nx = $('#scanNext'); if (nx) nx.onclick = () => { $('#scanRes').innerHTML = ''; $('#scanIsbn').value = ''; startCam(); }; }
 document.addEventListener('click', e => { if (e.target.closest('[data-scanmode]')) openScan(); });
 

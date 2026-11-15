@@ -43,6 +43,11 @@ else if (SP.url && !SP.err.length){
 // 2) Want List counts
 try { load('wantlist-build.js'); await window._wlRun(); const W = window._WL; out(`Want List: ${W.wishers} wishers, ${W.rows} rows in ${W.parts} parts.${W.err.length ? ' Errors: ' + JSON.stringify(W.err).slice(0, 300) : ''}`); if (W.err.length && !W.rows) failed = true; }
 catch (e){ failed = true; out('Want List failed:', String(e).slice(0, 300)); }
+// 2b) community ISBNs: books customers added by hand with an ISBN, so other customers' scans recognize them
+try { const IB = window._WLIB; if (IB){ const out2 = {}; for (const [isbn, m] of [...IB].sort((a, b) => a[0].localeCompare(b[0]))){ const best = [...m].sort((a, b) => b[1].size - a[1].size)[0]; const [n, v] = best[0].split(/\|(?=\d+$)/); out2[isbn] = [n, +v, best[1].size]; }
+    const path = ROOT + 'isbn-community.json', txt = JSON.stringify(out2) + '\n'; const old = fs.existsSync(path) ? fs.readFileSync(path, 'utf8') : '';
+    if (txt !== old){ fs.writeFileSync(path, txt); out(`Community ISBNs: ${Object.keys(out2).length} books (updated).`); } else out(`Community ISBNs: ${Object.keys(out2).length} books (no change).`); } }
+catch (e){ out('Community ISBNs failed:', String(e).slice(0, 300)); }
 // 3) customer spice & gentle-read ratings: fill or override a listing's rating when 3+ customers agree
 try { load('crowd-ratings.js'); const C = await window._crRun(); out(`Customer ratings: ${C.voters} customers rated, ${C.series} series with 3+ agreeing, ${C.set} listings updated (${C.conflicts.length} series had a shop rating changed).${C.err.length ? ' Errors: ' + JSON.stringify(C.err).slice(0, 300) : ''}`); }
 catch (e){ out('Customer ratings failed:', String(e).slice(0, 300)); }

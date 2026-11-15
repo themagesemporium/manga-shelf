@@ -23,10 +23,14 @@ jobs:
       - name: Point the app at the new snapshot
         if: always()
         run: |
+          git config user.name "mage-nightly"
+          git config user.email "mage-nightly@users.noreply.github.com"
           if ! git diff --quiet config.json; then
-            git config user.name "mage-nightly"
-            git config user.email "mage-nightly@users.noreply.github.com"
             git add config.json
             git commit -m "Nightly: new store snapshot"
-            git push
           fi
+          if [ -f isbn-community.json ] && { ! git ls-files --error-unmatch isbn-community.json >/dev/null 2>&1 || ! git diff --quiet isbn-community.json; }; then
+            git add isbn-community.json
+            git commit -m "Nightly: community ISBNs"
+          fi
+          git push || true

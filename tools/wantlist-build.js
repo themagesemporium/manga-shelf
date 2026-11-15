@@ -10,6 +10,11 @@ window._wlRun = async () => {
   const norm = s => String(s || '').toLowerCase().replace(/\s*\(light novel\)\s*/g, '').trim();
   const want = new Map(); // key -> {name, v, ln, who:Set}
   const add = (cid, name, v, ln) => { v = Math.round(+v); if (!name || !v) return; const k = norm(name) + '|' + v + '|' + (ln ? 1 : 0); let e = want.get(k); if (!e){ e = { name: String(name).replace(/\s*\(light novel\)\s*/i, '').trim(), v, ln: !!ln, who: new Set() }; want.set(k, e); } e.who.add(cid); };
+  // Community ISBNs (Katie's idea, Nov 15 2026): ISBNs customers typed in for books the shop doesn't carry (s.ib = {vol: isbn13}).
+  // Published by tools/nightly.mjs as isbn-community.json so the app's scanner can recognize them for everyone.
+  const IB = window._WLIB = new Map(); // isbn -> Map(name|vol -> Set(cid))
+  const addIsbn = (cid, s) => { if (!s || !s.ib || !s.n || /^\s*$/.test(s.n)) return; for (const [v, i] of Object.entries(s.ib)){ const isbn = String(i || '').replace(/[^0-9]/g, ''); const vol = Math.round(+v) || 0; if (!/^97[89]\d{10}$/.test(isbn)) continue;
+      let m = IB.get(isbn); if (!m){ m = new Map(); IB.set(isbn, m); } const k = String(s.n).trim() + '|' + vol; if (!m.has(k)) m.set(k, new Set()); m.get(k).add(cid); } };
   const MF = [...Array(8).keys()].map(i => `m${i}:metafield(namespace:"mme",key:"shelf${i}"){value}`).join(' ');
   let a = null;
   do {
@@ -21,7 +26,7 @@ window._wlRun = async () => {
       if (c.m0 && c.m0.value){
         WL.shelves++;
         let b = ''; for (let i = 0; i < 8; i++){ const m = c['m' + i]; if (!m || !m.value) break; const v = JSON.parse(m.value); if (!v) break; b += v; }
-        try { const sh = JSON.parse(await unGz(b)); Object.values(sh.series || {}).forEach(s => (s.want || []).forEach(v => add(cid, s.n, v, /light novel/i.test(s.n)))); } catch (e) { WL.err.push('shelf ' + cid); }
+        try { const sh = JSON.parse(await unGz(b)); Object.values(sh.series || {}).forEach(s => { (s.want || []).forEach(v => add(cid, s.n, v, /light novel/i.test(s.n))); addIsbn(cid, s); }); } catch (e) { WL.err.push('shelf ' + cid); }
       }
     }
     WL.cust += r.data.customers.nodes.length;
