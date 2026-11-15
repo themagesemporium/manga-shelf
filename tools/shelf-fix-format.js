@@ -35,7 +35,7 @@ window._sfRun = async (opt = {}) => {
         ['v', 'want', 'r', 'sell'].forEach(f => { if (!s[f] || !s[f].length) return; const keep = [], mv = []; s[f].forEach(x => (map.has(+x) ? mv : keep).push(x)); if (!mv.length) return; s[f] = keep; T[f] = [...new Set([...(T[f] || []), ...mv.map(x => map.get(+x))])].sort((p, q) => p - q); });
         if (s.vr){ Object.keys(s.vr).forEach(vol => { if (map.has(+vol)){ T.vr = T.vr || {}; if (T.vr[map.get(+vol)] == null) T.vr[map.get(+vol)] = s.vr[vol]; delete s.vr[vol]; } }); }
         Object.values(sh.rl || {}).forEach(L => L.forEach((t, i) => { const j = t.lastIndexOf('|'); if (t.slice(0, j) === fromKey && map.has(Math.round(+t.slice(j + 1)))) L[i] = toKey + '|' + map.get(Math.round(+t.slice(j + 1))); }));
-        if (!(s.v || []).length && !(s.want || []).length && !(s.r || []).length && !(s.sell || []).length && !s.ed){ delete S[fromKey]; }
+        if (!(s.v || []).length && !(s.want || []).length && !(s.r || []).length && !(s.sell || []).length && !s.ed){ ['st', 'rv', 'loc', 'cond'].forEach(f => { if (s[f] != null && T[f] == null) T[f] = s[f]; }); delete S[fromKey]; }
         changed.push(s.n + ' -> ' + toName + ' ' + pairs.map(p => p[0] === p[1] ? p[0] : p[0] + '>' + p[1]).join(','));
       };
       for (const key of Object.keys(S)){
