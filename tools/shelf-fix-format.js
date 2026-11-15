@@ -3,6 +3,7 @@
 // Rule A (format swap): a volume on a manga entry that the shop's manga series doesn't have, that is past the manga's last known volume,
 //   but that the shop's light novel series of the same name does have -> moved to the light novel entry (and the reverse).
 // Rule B (Ascendance of a Bookworm light novels numbered 1-33 straight through) -> Part 1 (1-3), Part 2 (4-7), Part 3 (8-12), Part 4 (13-21), Part 5 (22-33).
+// opt.allow: regex on the target series name; only those moves are made (review the dry run first).
 // Owned, wishlist, read and per-volume reviews move with the volume. Shelves are only written when the customer has been idle 10+ minutes.
 window._sfRun = async (opt = {}) => {
   const SF = window._SF = { shelves: 0, hits: [], wrote: [], busy: [], err: [], fin: false }; window._SFBAK = window._SFBAK || {};
@@ -29,6 +30,7 @@ window._sfRun = async (opt = {}) => {
       let sh; try { sh = JSON.parse(await unGz(b)); } catch (e) { SF.err.push('read ' + cid); continue; } SF.shelves++;
       const S = sh.series || {}; const changed = [];
       const moveVols = (fromKey, toKey, toName, pairs) => { // pairs: [[oldVol,newVol]]
+        if (opt.allow && !opt.allow.test(toName)) return;
         const s = S[fromKey]; const T = S[toKey] = S[toKey] || { n: toName, v: [] }; const map = new Map(pairs);
         ['v', 'want', 'r', 'sell'].forEach(f => { if (!s[f] || !s[f].length) return; const keep = [], mv = []; s[f].forEach(x => (map.has(+x) ? mv : keep).push(x)); if (!mv.length) return; s[f] = keep; T[f] = [...new Set([...(T[f] || []), ...mv.map(x => map.get(+x))])].sort((p, q) => p - q); });
         if (s.vr){ Object.keys(s.vr).forEach(vol => { if (map.has(+vol)){ T.vr = T.vr || {}; if (T.vr[map.get(+vol)] == null) T.vr[map.get(+vol)] = s.vr[vol]; delete s.vr[vol]; } }); }
