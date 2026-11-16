@@ -45,6 +45,7 @@ try { load('wantlist-build.js'); await window._wlRun(); const W = window._WL; ou
 catch (e){ failed = true; out('Want List failed:', String(e).slice(0, 300)); }
 // 2b) community ISBNs: books customers added by hand with an ISBN, so other customers' scans recognize them
 try { const IB = window._WLIB; if (IB){ const out2 = {}; for (const [isbn, m] of [...IB].sort((a, b) => a[0].localeCompare(b[0]))){ const best = [...m].sort((a, b) => b[1].size - a[1].size)[0]; const [n, v] = best[0].split(/\|(?=\d+$)/); out2[isbn] = [n, +v, best[1].size]; }
+    try { const seed = JSON.parse(fs.readFileSync(ROOT + 'isbn-seed.json', 'utf8')); for (const k of Object.keys(seed)) if (!out2[k]) out2[k] = seed[k]; } catch (e){} /* shop-added ISBNs (foreign editions etc.) */
     const path = ROOT + 'isbn-community.json', txt = JSON.stringify(out2) + '\n'; const old = fs.existsSync(path) ? fs.readFileSync(path, 'utf8') : '';
     if (txt !== old){ fs.writeFileSync(path, txt); out(`Community ISBNs: ${Object.keys(out2).length} books (updated).`); } else out(`Community ISBNs: ${Object.keys(out2).length} books (no change).`); } }
 catch (e){ out('Community ISBNs failed:', String(e).slice(0, 300)); }
