@@ -2378,7 +2378,8 @@ function renderAdd(pre){
     b.innerHTML = `<label class="field"><span>Series</span><input id="tn" list="tnl" placeholder="Series name" value="${esc(pre && pre.name || '')}"></label>
     <datalist id="tnl">${Object.values(shelf.series).map(s => `<option value="${esc(s.n)}">`).join('')}</datalist>
     <p class="note" id="tnHint" hidden style="margin:-4px 0 12px">We don’t recognize that title yet. Check the spelling, or <a href="#" id="tnScan">scan the ISBN barcode</a> on the back so we can match covers and prices. You can still add it as typed.</p>
-    <label class="field"><span>Volumes</span><input id="tv" placeholder="e.g. 1-5, 7, 9"></label>
+    <label class="field"><span>Volumes</span><input id="tv" placeholder="e.g. 1-5, 7, 9" value="${esc(pre && pre.vols || '')}"></label>
+    <p class="sub" style="margin:-6px 0 12px">One-shot or standalone story? Leave Volumes blank, or type its title (like <i>Mirror Moon</i>).</p>
     <label class="field"><span>ISBN (optional)</span><input id="tisbn" inputmode="numeric" placeholder="978… under the barcode" value="${esc(pre && pre.isbn || '')}"></label>
     <label class="field" id="tisbnVolF" hidden><span>Which volume is that ISBN for?</span><input id="tisbnVol" inputmode="numeric" placeholder="Vol number" style="width:110px"></label>
     <p class="sub" style="margin:-6px 0 12px">Adding the ISBN lets other readers scan this book and find it right away.</p>
@@ -2395,8 +2396,10 @@ function renderAdd(pre){
     const tvCheck = () => { const f = $('#tisbnVolF'); if (f) f.hidden = !(($('#tisbn').value || '').trim() && parseVols($('#tv').value).length > 1); };
     $('#tv').addEventListener('input', tvCheck); $('#tisbn').addEventListener('input', tvCheck); if (pre && pre.isbn) setTimeout(() => { const v = $('#tn'); if (v && !v.value) v.focus(); }, 50);
     $('#tgo').onclick = () => {
-      const name = $('#tn').value.trim(); const vols = parseVols($('#tv').value);
-      if (!name || !vols.length) return toast('Add a series name and at least one volume');
+      let name = $('#tn').value.trim(); const tvRaw = ($('#tv').value || '').trim(); let vols = parseVols(tvRaw);
+      if (!name) return toast('Add a series or book name');
+      // One-shots (Nov 16 2026): blank Volumes = a standalone book; words with no numbers = that story's title.
+      if (!vols.length){ if (tvRaw && !/\d/.test(tvRaw)) name = oneShotName(name, tvRaw); vols = [1]; }
       const ibRaw = ($('#tisbn').value || '').trim(); const ib13 = ibRaw ? isbnTo13(ibRaw) : '';
       if (ibRaw && !ib13) return toast('That ISBN doesn’t look right. It’s the 13 digits starting with 978 or 979 under the barcode.');
       const ibVol = vols.length > 1 ? parseInt(($('#tisbnVol') || {}).value, 10) : vols[0];
@@ -2452,13 +2455,42 @@ function commRow(out, code, c, again = ''){ const [n, v0, cnt] = c; const v = v0
   const key = () => k0 || handleize(n);
   const a = $('#cmAdd'); if (a) a.onclick = () => { const k = key(); const prev = shelf.series[k] ? shelf.series[k].v : []; const undo = setVols(k, prev.concat(v), n); const T = shelf.series[k]; T.ib = Object.assign({}, T.ib || {}, { [v]: code }); if (T.want) T.want = T.want.filter(x => x !== v); save(); toast(`Added ${n} Vol ${v}`, undo); a.parentNode.innerHTML = '<span class="chip good">Added ✓</span>'; };
   const w = $('#cmWant'); if (w) w.onclick = () => { const k = key(); if (!shelf.series[k]) shelf.series[k] = { n, v: [], t: Date.now() }; const T = shelf.series[k]; T.want = [...new Set((T.want || []).concat(v))].sort((x, y) => x - y); save(); toast(`♥ ${n} Vol ${v} on your wishlist`); w.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; }; }
+/* Book databases (Nov 16 2026): when a scanned ISBN isn't in the shop or the community list,
+   look it up on Open Library, then Google Books, so the reader sees the real title and cover and can add it in one tap. */
+function oneShotName(series, title){ const s = String(series).trim(), t = String(title).trim(); if (!t) return s; if (normName(s).includes(normName(t))) return s; return s.replace(/[:\s]+$/, '') + ': ' + t; }
+function splitTitleVol(full){ const m = String(full).match(/^(.*?)[,:\s(]*\b(?:vol(?:ume)?\.?|#|book)\s*(\d+(?:\.\d+)?)\)?\s*(?:[:\-–].*)?$/i);
+  if (m && m[1].trim().length >= 2) return { series: m[1].trim(), vol: +m[2] }; return { series: String(full).trim(), vol: 0 }; }
+const BOOKINFO = new Map();
+async function bookInfo(code){ code = isbn13(code); if (BOOKINFO.has(code)) return BOOKINFO.get(code); let info = null;
+  if (navigator.onLine){
+    try { const j = await fetch('https://openlibrary.org/api/books?' + new URLSearchParams({ bibkeys: 'ISBN:' + code, jscmd: 'data', format: 'json' })).then(r => r.ok ? r.json() : null); const d = j && j['ISBN:' + code];
+      if (d && d.title) info = { title: d.title, sub: d.subtitle || '', by: (d.authors || []).map(a => a.name).slice(0, 3).join(', '), pub: (d.publishers || []).map(x => x.name)[0] || '', cover: d.cover ? (d.cover.medium || d.cover.small || '') : '' }; } catch(e){}
+    if (!info || !info.cover){ try { const j = await fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:' + code).then(r => r.ok ? r.json() : null); const v = j && j.items && j.items[0] && j.items[0].volumeInfo;
+      if (v && v.title){ const cov = v.imageLinks ? String(v.imageLinks.thumbnail || v.imageLinks.smallThumbnail || '').replace(/^http:/, 'https:') : '';
+        if (!info) info = { title: v.title, sub: v.subtitle || '', by: (v.authors || []).slice(0, 3).join(', '), pub: v.publisher || '', cover: cov }; else if (!info.cover) info.cover = cov; } } catch(e){} } }
+  if (info){ const full = info.sub && !/^vol/i.test(info.sub) && !normName(info.title).includes(normName(info.sub)) ? info.title + ': ' + info.sub : info.title + (info.sub && /^vol/i.test(info.sub) ? ' ' + info.sub : '');
+    const sv = splitTitleVol(full); info.series = sv.series; info.vol = sv.vol; info.oneShot = !sv.vol; }
+  BOOKINFO.set(code, info); return info; }
+async function webBookRow(out, code, again = ''){ code = isbn13(code);
+  out.innerHTML = `<div class="verdict unk"><div style="font-size:30px">🔎</div><div class="big">Looking it up…</div><div>ISBN ${esc(code)}</div></div>`;
+  const info = await bookInfo(code);
+  if (!info){ out.innerHTML = notFoundIsbn(code) + again; return; }
+  const v = info.vol || 1, n = info.series;
+  const kIb = Object.keys(shelf.series).find(k => Object.values(shelf.series[k].ib || {}).includes(code)); const k0 = kIb || Object.keys(shelf.series).find(k => normName(shelf.series[k].n) === normName(n)); const S = k0 ? shelf.series[k0] : null; const has = S && ints(S).includes(v); const want = S && (S.want || []).includes(v);
+  out.innerHTML = `<div class="verdict ${has ? 'own' : 'ser'}">${info.cover ? `<img src="${esc(info.cover)}" alt="" onerror="this.remove()">` : '<div style="font-size:30px">📗</div>'}<div class="big">${has ? 'You own this one' : 'Found it!'}</div><div><b>${esc(n)}${info.vol ? ' · Vol ' + info.vol : ''}</b></div>${info.by || info.pub ? `<div style="font-size:13px;opacity:.8">${esc([info.by, info.pub].filter(Boolean).join(' · '))}</div>` : ''}<div style="font-size:14px;margin-top:4px">${info.oneShot ? 'A one-shot (standalone book). ' : ''}The shop doesn’t carry this one yet, so we found it in a public book database.</div></div>`
+    + (has ? '' : `<div class="row2" style="justify-content:center;flex-wrap:wrap"><button class="btn" id="wbAdd">＋ Add to my shelf</button>${want ? '' : '<button class="btn ghost" id="wbWant">♥ Add to wishlist</button>'}<button class="btn ghost" data-typeisbn="${esc(code)}" data-tname="${esc(n)}" data-tvols="${info.vol ? esc(String(info.vol)) : ''}">✏️ Edit first</button></div>`) + again;
+  const key = () => k0 || handleize(n);
+  const a = $('#wbAdd'); if (a) a.onclick = () => { const k = key(); const prev = shelf.series[k] ? shelf.series[k].v : []; const undo = setVols(k, prev.concat(v), n); const T = shelf.series[k]; T.ib = Object.assign({}, T.ib || {}, { [v]: code }); if (T.want) T.want = T.want.filter(x => x !== v); save();
+    try { notifyShop(`Added from a scan in the app: ${n}${info.vol ? ' Vol ' + v : ' (one-shot)'}, ISBN ${code}. Not in the shop yet.`); } catch(e){}
+    toast(`Added ${n}${info.vol ? ' Vol ' + v : ''}`, undo); a.parentNode.innerHTML = '<span class="chip good">Added ✓</span>'; };
+  const w = $('#wbWant'); if (w) w.onclick = () => { const k = key(); if (!shelf.series[k]) shelf.series[k] = { n, v: [], t: Date.now() }; const T = shelf.series[k]; T.want = [...new Set((T.want || []).concat(v))].sort((x, y) => x - y); T.ib = Object.assign({}, T.ib || {}, { [v]: code }); save(); toast(`♥ ${n} on your wishlist`); w.outerHTML = '<span class="chip good">On your wishlist ♥</span>'; }; }
 function notFoundIsbn(code){ const c13 = isbn13(code); return `<p class="note">ISBN ${esc(code)} isn’t in the shop’s catalog yet. <a href="#" data-typeisbn="${esc(c13)}">Type it in</a> and we’ll remember the ISBN, so the next reader who scans it finds it.</p>`; }
-document.addEventListener('click', e => { const t = e.target.closest('[data-typeisbn]'); if (!t) return; e.preventDefault(); try { stopCam(); } catch(err){} openAdd('type', { isbn: t.dataset.typeisbn, name: t.dataset.tname || '' }); });
+document.addEventListener('click', e => { const t = e.target.closest('[data-typeisbn]'); if (!t) return; e.preventDefault(); try { stopCam(); } catch(err){} openAdd('type', { isbn: t.dataset.typeisbn, name: t.dataset.tname || '', vols: t.dataset.tvols || '' }); });
 async function lookupIsbn(code){
   const out = $('#scanOut'); if (!out) return;
   if (!/^\d{10,13}$/.test(code)) { out.innerHTML = `<p class="note">That doesn’t look like an ISBN. It’s the 13 digits starting with 978 or 979 under the barcode.</p>`; return; }
   if (!mcp){ await loadSnap(); const b = snapBar.get(code.length === 10 ? '978' + code.slice(0,9) + (() => { const x = '978' + code.slice(0,9); let t = 0; for (let i = 0; i < 12; i++) t += (+x[i]) * (i % 2 ? 3 : 1); return (10 - t % 10) % 10; })() : code);
-    if (!b){ const cm = await isbnCommunity(isbn13(code)); if (cm){ commRow(out, isbn13(code), cm); return; } out.innerHTML = notFoundIsbn(code); return; }
+    if (!b){ const cm = await isbnCommunity(isbn13(code)); if (cm){ commRow(out, isbn13(code), cm); return; } await webBookRow(out, code); return; }
     if (b[2]){ edScanRow(out, code, b); return; }
     const e = SNAP.s[b[0]]; found = snapItems(e).filter(p => p.vol === b[1]).map(p => Object.assign(p, { type: e.ln ? 'Light Novel' : 'Manga' }));
     out.innerHTML = `<p class="sub">ISBN ${code}</p>` + found.slice(0,1).map(prodRow).join(''); wireAdds(out); return; }
@@ -2466,7 +2498,7 @@ async function lookupIsbn(code){
   try {
     const d = await gql(`{products(first:5, query:${JSON.stringify('barcode:' + code)}){nodes{${PFIELDS}}}}`);
     found = d.products.nodes.map(mapProd).sort((a,b) => (b.inv>0) - (a.inv>0));
-    if (!found.length){ const cm = await isbnCommunity(isbn13(code)); if (cm){ commRow(out, isbn13(code), cm); return; } out.innerHTML = notFoundIsbn(code); return; }
+    if (!found.length){ const cm = await isbnCommunity(isbn13(code)); if (cm){ commRow(out, isbn13(code), cm); return; } await webBookRow(out, code); return; }
     out.innerHTML = `<p class="sub">ISBN ${code}</p>` + found.slice(0,1).map(prodRow).join('');
     wireAdds(out);
   } catch(e){ out.innerHTML = `<p class="note">${esc(errText(e))}</p>`; }
@@ -3254,7 +3286,9 @@ async function scanVerdict(raw){ const out = $('#scanRes'); if (!out) return; co
   } else {
     out.innerHTML = `<div class="verdict unk"><div style="font-size:30px">🔎</div><div class="big">Checking…</div><div>ISBN ${esc(code)}</div></div>` + again;
     const cm = await isbnCommunity(code); if (cm) commRow(out, code, cm, again); else {
-    let title = ''; if (navigator.onLine){ try { const j = await fetch('https://openlibrary.org/isbn/' + code + '.json').then(r => r.ok ? r.json() : null); title = j && j.title || ''; } catch(e){} }
+    const wb = await bookInfo(code); const wk = wb ? Object.keys(shelf.series).find(x => { const n = normName(shelf.series[x].n); return n.length >= 4 && normName(wb.series).startsWith(n) && normName(wb.series) !== n; }) : null;
+    if (wb && !wk){ await webBookRow(out, code, again); const nx0 = $('#scanNext'); if (nx0) nx0.onclick = () => { $('#scanRes').innerHTML = ''; $('#scanIsbn').value = ''; startCam(); }; return; }
+    let title = wb ? wb.title : ''; if (!title && navigator.onLine){ try { const j = await fetch('https://openlibrary.org/isbn/' + code + '.json').then(r => r.ok ? r.json() : null); title = j && j.title || ''; } catch(e){} }
     const words = normName(title); const k = title ? Object.keys(shelf.series).find(x => { const n = normName(shelf.series[x].n); return n.length >= 4 && words.startsWith(n); }) : null;
     out.innerHTML = `<div class="verdict ${k ? 'ser' : 'unk'}"><div style="font-size:30px">${k ? '📚' : '🔎'}</div><div class="big">${k ? 'Might be one of yours' : 'Not in our catalog'}</div><div>${title ? `<b>${esc(title)}</b>` : `ISBN ${esc(code)}`}</div><div style="font-size:14px;margin-top:4px">${k ? `You have ${shelf.series[k].v.length} of ${esc(shelf.series[k].n)}: Vol ${compactVols(ints(shelf.series[k]))}. Is it this series? Check the volume number below.` : (navigator.onLine ? 'We couldn’t match this book to the shop’s list. Type it in once and the next reader who scans it will find it.' : 'You’re offline, so only books in the shop’s list can be checked.')}</div></div>` + (k ? `<div class="row2" style="justify-content:center;flex-wrap:wrap;align-items:center"><label style="font-size:14px">Vol <input id="scanVol" inputmode="numeric" style="width:64px" value="${esc(String(((title.match(/(?:#|\bvol(?:ume)?\.?\s*|\bbook\s*)(\d{1,3})\b/i) || title.match(/\b(\d{1,3})\s*$/) || [])[1]) || ''))}" aria-label="Volume number"></label><button class="btn" id="scanYes">Yes, add it to ${esc(shelf.series[k].n)}</button><button class="btn ghost" id="scanYesWant">♥ Wishlist it</button></div>` : '') + again;
     if (k){ const vIn = () => parseInt(($('#scanVol') || {}).value, 10); const ok = () => { const v = vIn(); if (!(v > 0)){ toast('Type the volume number first'); return 0; } return v; };
