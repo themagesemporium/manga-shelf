@@ -350,6 +350,7 @@ textarea.rv{width:100%;min-height:80px;border:1px solid var(--line);background:v
 .btn.gold{background:var(--gold);color:#fff}
 .btn.sm{padding:7px 11px;font-size:13px}
 .btn:disabled{opacity:.5}
+.vol.hv{font-size:.82em}
 .av.fr-arc{box-shadow:0 0 0 3px #7b5cff,0 0 10px 2px #c06bff;animation:arcglow 2.4s ease-in-out infinite}@keyframes arcglow{50%{box-shadow:0 0 0 3px #ff6bd5,0 0 14px 4px #7b5cff}}@media (prefers-reduced-motion:reduce){.av.fr-arc{animation:none}}
 .mnu{border:1px solid var(--line, rgba(0,0,0,.12));border-radius:14px;margin:0 0 8px;padding:0 12px;background:var(--surface, transparent)}.mnu>summary{cursor:pointer;font-weight:700;padding:12px 0;list-style:none;display:flex;justify-content:space-between;gap:8px}.mnu>summary::after{content:'▾';opacity:.6}.mnu[open]>summary::after{content:'▴'}.mnu>summary::-webkit-details-marker{display:none}.mnu>.st-sec{box-shadow:none;border:0;margin:0 0 10px;padding:0;background:transparent}.mnu>#ioBox>h3:first-child,.mnu>#photoBox>h3:first-child,.mnu>#acctBox>h3:first-child{display:none}
 html.cm #rank .bar,html.cm #rankNext,html.cm #lvlBox,html.cm #badges,html.cm .achhead,html.cm .achemo,html.cm [data-gochal],html.cm [data-sharechar],html.cm .xppop{display:none!important}
@@ -2197,8 +2198,12 @@ function renderSeries(key){
   const i = info(key); const lang = langOf(key);
   const stockBy = new Map(i.inStock.map(x => [x.vol, x]));
   const n = Math.max(i.span, i.max, 1);
-  let tiles = ''; for (let v=1; v<=n; v++) tiles += `<button class="vol${i.set.has(v)?' o':''}${i.cov.has(v)&&!s.v.includes(v)?' oe':''}${stockBy.has(v)?' s':''}${(s.r||[]).includes(v)?' rd':''}${loanOf(s,v)?(loanOf(s,v).d==='out'?' lo':' li'):''}${(s.want||[]).includes(v)?' wt':''}${(s.sell||[]).includes(v)?' sl':''}${(s.cn||{})[v]?' cn':''}" data-v="${v}" aria-pressed="${tapMode==='read' ? (s.r||[]).includes(v) : tapMode==='loan' ? !!loanOf(s,v) : tapMode==='want' ? (s.want||[]).includes(v) : tapMode==='sell' ? (s.sell||[]).includes(v) : i.set.has(v)}" aria-label="Volume ${v}${i.set.has(v)?', owned':''}${(s.r||[]).includes(v)?', read':''}${loanOf(s,v)?(loanOf(s,v).d==='out'?', lent to ':', borrowed from ')+esc(loanOf(s,v).w):''}${stockBy.has(v)?', in stock at the store':''}">${v}${volBadges(s, v, i.set.has(v), stockBy.has(v))}</button>`;
-  const odd = s.v.filter(x => !Number.isInteger(x) || x <= 0);
+  /* half volumes (7.5 etc.) sit in order among the singles (John C, Nov 16 2026) */
+  const half = [...new Set([].concat(s.v, s.want || [], s.r || []).filter(x => typeof x === 'number' && x > 0 && !Number.isInteger(x)))];
+  const seq = [...Array(n).keys()].map(x => x + 1).concat(half).sort((a, b) => a - b);
+  const own = v => i.set.has(v) || s.v.includes(v);
+  let tiles = ''; for (const v of seq) tiles += `<button class="vol${own(v)?' o':''}${Number.isInteger(v)?'':' hv'}${i.cov.has(v)&&!s.v.includes(v)?' oe':''}${stockBy.has(v)?' s':''}${(s.r||[]).includes(v)?' rd':''}${loanOf(s,v)?(loanOf(s,v).d==='out'?' lo':' li'):''}${(s.want||[]).includes(v)?' wt':''}${(s.sell||[]).includes(v)?' sl':''}${(s.cn||{})[v]?' cn':''}" data-v="${v}" aria-pressed="${tapMode==='read' ? (s.r||[]).includes(v) : tapMode==='loan' ? !!loanOf(s,v) : tapMode==='want' ? (s.want||[]).includes(v) : tapMode==='sell' ? (s.sell||[]).includes(v) : own(v)}" aria-label="Volume ${v}${own(v)?', owned':''}${(s.r||[]).includes(v)?', read':''}${loanOf(s,v)?(loanOf(s,v).d==='out'?', lent to ':', borrowed from ')+esc(loanOf(s,v).w):''}${stockBy.has(v)?', in stock at the store':''}">${v}${volBadges(s, v, own(v), stockBy.has(v))}</button>`;
+  const odd = s.v.filter(x => typeof x !== 'number' || x <= 0);
   const st = liveState[key];
   let store = '';
   if (lang) store = `<p class="note">${lang[0].toUpperCase()+lang.slice(1)} editions are imports — ask the shop about these.</p>`;
