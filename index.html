@@ -2121,8 +2121,8 @@ function cvHTML(key){ const s = shelf.series[key]; if (!s || langOf(key)) return
   const have = Object.entries(ib).sort((a, b) => a[0] - b[0]).map(([v, i]) => `<li>${v > 0 ? 'Vol ' + esc(v) : 'Book'}: ${esc(i)} <button class="iconbtn" data-cvdel="${esc(v)}" aria-label="Remove ISBN for ${v > 0 ? 'Vol ' + esc(v) : 'this book'}" style="width:28px;height:28px">✕</button></li>`).join('');
   const pv = cvPrev && cvPrev.key === key ? `<div style="display:flex;gap:10px;align-items:center;margin:8px 0">${cvPrev.url ? `<img src="${esc(cvPrev.url)}" alt="Cover found" style="width:64px;border-radius:4px">` : ''}<div style="flex:1"><p class="sub" style="margin:0 0 6px">${esc(cvPrev.msg)}</p>${cvPrev.url ? `<button class="btn sm" data-cvuse>Use this cover</button>` : ''}${cvPrev.isbn ? ` <button class="btn ghost sm" data-cvsave>Save ISBN${cvPrev.url ? ' only' : ''}</button>` : ''}</div></div>` : '';
   return `<details class="about" data-cvwrap${cvOpen ? ' open' : ''}><summary>🖼️ Add a cover or ISBN</summary>
-  <p class="sub" style="margin:0 0 6px">For a book we don't list yet, or a missing or wrong cover. Type the ISBN from the back of the book and we'll look up its cover.</p>
-  <div class="row2" style="gap:6px;flex-wrap:wrap"><input id="cvVol" inputmode="numeric" placeholder="Vol #" aria-label="Volume number (optional)" style="width:70px"><input id="cvIsbn" inputmode="numeric" placeholder="ISBN" aria-label="ISBN" style="flex:1;min-width:140px"><button class="btn sm" data-cvfind>Find cover</button></div>
+  <p class="sub" style="margin:0 0 6px">For a book we don't list yet, or a missing or wrong cover. Scan or type the ISBN from the back of the book and we'll look up its cover.</p>
+  <div class="row2" style="gap:6px;flex-wrap:wrap"><input id="cvVol" inputmode="numeric" placeholder="Vol #" aria-label="Volume number (optional)" style="width:70px"><input id="cvIsbn" inputmode="numeric" placeholder="ISBN" aria-label="ISBN" style="flex:1;min-width:140px"><button class="btn ghost sm" data-fscan="cvIsbn" data-fsgo="cv">📷 Scan</button><button class="btn sm" data-cvfind>Find cover</button></div>
   <div class="row2" style="gap:6px;margin-top:6px"><input id="cvUrl" placeholder="Or paste a picture link (https://…)" aria-label="Cover picture link" style="flex:1"><button class="btn ghost sm" data-cvurl>Preview</button></div>
   ${pv}${have ? `<ul style="margin:8px 0 0;padding-left:18px">${have}</ul>` : ''}${s.cvm ? `<p style="margin:6px 0 0"><button class="btn ghost sm" data-cvreset>Go back to the shop's cover</button></p>` : ''}</details>`; }
 const cvImgOk = u => new Promise(res => { const i = new Image(); const t = setTimeout(() => res(false), 8000); i.onload = () => { clearTimeout(t); res(i.naturalWidth > 20); }; i.onerror = () => { clearTimeout(t); res(false); }; i.src = u; });
@@ -2386,6 +2386,7 @@ function renderAdd(pre){
     <label class="field"><span>Volumes</span><input id="tv" placeholder="e.g. 1-5, 7, 9" value="${esc(pre && pre.vols || '')}"></label>
     <p class="sub" style="margin:-6px 0 12px">One-shot or standalone story? Leave Volumes blank, or type its title (like <i>Mirror Moon</i>).</p>
     <label class="field"><span>ISBN (optional)</span><input id="tisbn" inputmode="numeric" placeholder="978… under the barcode" value="${esc(pre && pre.isbn || '')}"></label>
+    <p style="margin:-6px 0 10px"><button type="button" class="btn ghost sm" data-fscan="tisbn">📷 Scan the barcode instead of typing</button></p>
     <label class="field" id="tisbnVolF" hidden><span>Which volume is that ISBN for?</span><input id="tisbnVol" inputmode="numeric" placeholder="Vol number" style="width:110px"></label>
     <p class="sub" style="margin:-6px 0 12px">Adding the ISBN lets other readers scan this book and find it right away.</p>
     <label class="field"><span>Edition</span><select id="ted"><option value="">Regular single volumes</option>${ED_TYPES.map(t => `<option>${t}</option>`).join('')}</select></label>
@@ -3237,6 +3238,28 @@ async function shareChar(){ track('share-char'); shelf.ach = shelf.ach || {}; sh
   $('#charSave').onclick = () => { if (!file) return; const mob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (mob && navigator.canShare && navigator.canShare({ files: [file] })){ navigator.share({ files: [file] }).catch(() => {}); return; }
     const u = URL.createObjectURL(file), a = document.createElement('a'); a.href = u; a.download = 'my-manga-character.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }; }
+/* scan an ISBN straight into a text field with the camera (the "add a cover or ISBN" box and the Type-it form), so nobody has to type 13 digits.
+   Handheld USB/Bluetooth scanners type the digits and press Enter, so Enter in an ISBN field also runs its lookup. */
+let fsStream = null, fsReader = null;
+function fsStop(){ try { fsReader && fsReader.reset(); } catch(e){} fsReader = null; if (fsStream){ fsStream.getTracks().forEach(t => t.stop()); fsStream = null; } const b = document.getElementById('fsBox'); if (b) b.remove(); }
+async function scanInto(inp, done){ fsStop(); if (!inp) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ toast('This device has no camera to scan with. Type the ISBN instead.'); return; }
+  const box = document.createElement('div'); box.id = 'fsBox'; box.style.margin = '8px 0';
+  box.innerHTML = '<div class="scanv"><video playsinline muted autoplay></video><i></i></div><p style="margin:6px 0 0"><button type="button" class="btn ghost sm" data-fsstop>Stop scanning</button></p>';
+  (inp.closest('.row2') || inp.closest('label') || inp).insertAdjacentElement('afterend', box); const vid = box.querySelector('video');
+  const got = raw => { const code = isbn13(raw); if (!/^97[89]\d{10}$/.test(code) || !fsStream) return false; fsStop(); inp.value = code; inp.dispatchEvent(new Event('input', { bubbles: true })); try { navigator.vibrate && navigator.vibrate(60); } catch(e){} track('scan-field'); if (done) done(code); return true; };
+  try { fsStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } }, audio: false }); vid.srcObject = fsStream; await vid.play().catch(() => {}); }
+  catch(e){ fsStop(); toast('The camera isn’t available. Allow camera access for this site, or type the ISBN.'); return; }
+  const det = ('BarcodeDetector' in window) ? new BarcodeDetector({ formats: ['ean_13', 'upc_a'] }) : null;
+  if (det){ const loop = async () => { if (!fsStream) return; try { const r = await det.detect(vid); const c = r.find(x => /^97[89]\d{10}$/.test(x.rawValue)); if (c && got(c.rawValue)) return; } catch(e){} requestAnimationFrame(loop); }; loop(); return; }
+  try { const ZX = await loadZX(); if (!fsStream) return; const hints = new Map(); hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [ZX.BarcodeFormat.EAN_13, ZX.BarcodeFormat.UPC_A]);
+    fsReader = new ZX.BrowserMultiFormatReader(hints, 250); fsReader.decodeFromStream(fsStream, vid, r => { if (r) got(r.getText()); }); }
+  catch(e){ fsStop(); toast('The barcode reader couldn’t load. Type the ISBN instead.'); } }
+document.addEventListener('click', e => { if (e.target.closest('[data-fsstop]')){ e.preventDefault(); fsStop(); return; }
+  const t = e.target.closest('[data-fscan]'); if (!t) return; e.preventDefault(); const inp = document.getElementById(t.dataset.fscan); const key = current;
+  scanInto(inp, () => { if (t.dataset.fsgo === 'cv' && key && current === key) cvFind(key); else toast('Got it: ISBN filled in'); }); });
+document.addEventListener('keydown', e => { if (e.key !== 'Enter' || !e.target || !e.target.id) return;
+  const go = { isbn: '#isbnGo', scanIsbn: '#scanGo', cvIsbn: '[data-cvfind]' }[e.target.id]; if (!go) return; const b = document.querySelector(go); if (b){ e.preventDefault(); b.click(); } });
 /* ---------- scan mode: point the camera at a barcode, get a big answer ---------- */
 let scanStream = null, scanReader = null, scanBusy = false;
 function isbn13(code){ code = String(code).replace(/[^0-9Xx]/g, ''); if (code.length === 10){ const x = '978' + code.slice(0, 9); let t = 0; for (let i = 0; i < 12; i++) t += (+x[i]) * (i % 2 ? 3 : 1); return x + ((10 - t % 10) % 10); } return code; }
@@ -3258,7 +3281,7 @@ async function startCam(){ stopCam(); const vid = $('#scanVid'); if (!vid) retur
     scanReader = new ZX.BrowserMultiFormatReader(hints, 250); scanReader.decodeFromStream(scanStream, vid, (r) => { if (r && !scanBusy) hit(r.getText()); }); }
   catch(e){ $('#scanRes').innerHTML = `<p class="note">The barcode reader couldn’t load${navigator.onLine ? '' : ' while offline'}. Type the ISBN below.</p>`; } }
 function hit(code){ if (scanBusy) return; scanBusy = true; track('scan'); try { navigator.vibrate && navigator.vibrate(60); } catch(e){} stopCam(); scanVerdict(code); }
-function stopCam(){ try { scanReader && scanReader.reset(); } catch(e){} scanReader = null; if (scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; } }
+function stopCam(){ try { fsStop(); } catch(e){} try { scanReader && scanReader.reset(); } catch(e){} scanReader = null; if (scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; } }
 function edScanRow(out, code, b, again = ''){ const [sk, n, et] = b; const e = SNAP.s[sk]; const it = ((e.x || {})[et] || []).find(x => x[0] === n) || []; const img = it[4] ? snapImg(it[4]) : ''; const nm = e.n + (e.ln ? ' (Light Novel)' : '');
   const key = shelfKeyFor(sk); const S = key ? shelf.series[key] : null; const E = (S && S.ed && S.ed[et]) || {}; const own = (E.v || []).includes(n), want = (E.want || []).includes(n);
   const rg = edRange(key || sk, et, n) || (it[7] ? String(it[7]).split('-').map(Number) : null); const have = S ? new Set(info(key).own) : new Set(); const allIn = rg && S && Array.from({ length: rg[1] - rg[0] + 1 }, (_, j) => rg[0] + j).every(v => have.has(v));
