@@ -958,6 +958,8 @@ function xpCalc(){ const P = []; const add = (k, label, n, each, cap) => { const
     Object.values(s.ed || {}).forEach(E => { rd += (E.r || []).length; }); want += (s.want || []).length;
     if (s.st) stars++; if (wordsN(s.rv) >= 20) revs++; Object.values(s.vr || {}).forEach(r => { if (r && r.st) stars++; if (r && wordsN(r.t) >= 20) revs++; });
     try { if (info(k).complete) done++; } catch(e){} });
+  /* Books read but not owned (library, borrowed, Kindle) live in shelf.other: their reads, stars and reviews earn XP too (Megan, Nov 20 2026: her Strange Pictures reviews got no points). */
+  Object.entries(shelf.other || {}).forEach(([k, o]) => { if (!o || shelf.series[k]) return; rd += (o.r || []).length; if (o.st) stars++; if (wordsN(o.rv) >= 20) revs++; Object.values(o.vr || {}).forEach(r => { if (r && r.st) stars++; if (r && wordsN(r.t) >= 20) revs++; }); });
   own = Object.values(EO).reduce((a, v) => a + v.length, 0) + edN;
   const L = shelf.log || {}; const days = Object.keys(L).filter(d => L[d] > 0).sort(); let weeks = 0, run = 0, prev = null;
   days.forEach(d => { const t = new Date(d + 'T12:00:00'); run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; if (run % 7 === 0) weeks++; prev = t; });
