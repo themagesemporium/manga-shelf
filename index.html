@@ -2215,6 +2215,7 @@ function renderSeries(key){
       : `<p class="sub">None of your missing volumes are in stock right now.</p>`;
     store += mcp ? `<div class="row2"><button class="btn ghost sm" data-refresh>Refresh stock</button></div>` : (SNAP ? `<p class="sub" style="margin:8px 0 0">Stock as of ${snapAge()}.</p>` : '');
   }
+  const pvDraft = (() => { const rv = $('#pvRv'), sb = $('#pvStars'); if (!rv || detV == null) return null; const t = rv.value, st = sb ? +sb.dataset.val || 0 : 0; return (t.trim() || st) ? { k: current, v: detV, t, st } : null; })();
   $('#sheetBody').innerHTML = `
     ${(() => { const x = SNAP && (() => { try { return fixMap().get(key); } catch(e){ return null; } })(); return x ? `<div class="fixwrap" style="margin:0 0 12px"><h4>⚠️ Please check this one</h4>${fixRowHTML(x)}</div>` : ''; })()}
     <div class="shead">${coverHTML(key)}<div><h2>${esc(s.n)}</h2>
@@ -2246,6 +2247,8 @@ function renderSeries(key){
     ${(() => { const R = Object.entries(s.vr || {}).filter(([v, r]) => r && (r.st || r.t)).sort((a, b) => a[0] - b[0]); return R.length ? `<h4 style="margin:14px 0 4px">Your volume reviews</h4>${R.map(([v, r]) => `<button class="srow" data-vrev="${esc(v)}" style="width:100%;text-align:left" aria-label="Edit your review of Vol ${esc(v)}"><span>Vol ${esc(v)}${r.st ? ' ' + '★'.repeat(r.st) : ''}<small>${r.t ? esc(String(r.t).slice(0, 90)) + (String(r.t).length > 90 ? '…' : '') : 'Stars only'}</small></span><span class="sub" style="margin:0">Edit ✎</span></button>`).join('')}` : ''; })()}</div>
     <div class="sec"><h4>Grab your missing volumes</h4>${store}</div>
     <div class="row2" style="margin-top:22px">${i.complete ? (s.fin && !(live.get(key)||{}).total ? `<button class="btn ghost" data-unfin>Not finished after all</button>` : '') : `<button class="btn ghost" data-more>Add volumes past ${n}</button>${!i.total && i.own.length && !i.gaps.length ? `<button class="btn ghost" data-fin>Series is finished at Vol ${i.max}</button>` : ''}`}${i.complete ? '' : `<button class="btn ghost" data-sheetnofind>${(shelf.noFind || {})[key] ? '↺ Show in Finds again' : '🚫 Not collecting the rest'}</button>`}<button class="btn ghost" data-remove>Remove series</button><button class="btn ghost" data-close>Close</button></div>`;
+  /* Keep a half-typed volume review (and stars) when the sheet re-renders under it, e.g. when series info finishes loading after the calendar opened the pop-up (Megan, Nov 20 2026: calendar reviews were lost). */
+  if (pvDraft && detV === pvDraft.v && current === pvDraft.k){ const rv = $('#pvRv'); if (rv && !rv.value) rv.value = pvDraft.t; const sb = $('#pvStars'); if (sb && pvDraft.st && !+sb.dataset.val){ sb.dataset.val = pvDraft.st; sb.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.pvstar <= pvDraft.st)); } }
 }
 $('#sheetBody').onclick = e => { try { sheetClick(e); } catch(err){ toast('Something went wrong: ' + (err && err.message || err)); } };
 function sheetClick(e){
@@ -2875,15 +2878,16 @@ async function wishPush(){ if (!WL1 || !acct || !acct.cid) return; let now = wis
   if (r.metafieldsSet.userErrors && r.metafieldsSet.userErrors.length) return; storeWish = val; ls.set('mme-wlsig', wishSig(now));
   const seen = new Set(ls.get('mme-swseen') || []); now.forEach(it => seen.add(handleize(it.s) + (it.ln ? '-ln' : '') + '|' + it.v)); ls.set('mme-swseen', [...seen]);
   try { if (FRIENDS_API) await fapi('/wl/touch', {}); } catch(e){} }
-async function acctPush(){ if (!acct || !acct.cid) return; const b = await gzB64(JSON.stringify(shelfBody()));
+async function acctPush(){ if (!acct || !acct.cid) return; const chg0 = acctChg; const b = await gzB64(JSON.stringify(shelfBody()));
   if (b.length > PARTS * CHUNK) throw new Error('shelf too big to save to your account');
   const mfs = []; for (let i = 0; i < PARTS; i++) mfs.push({ ownerId: acct.cid, namespace: 'mme', key: 'shelf' + i, type: 'json', value: JSON.stringify(b.slice(i * CHUNK, (i + 1) * CHUNK)) });
   try { mfs.push({ ownerId: acct.cid, namespace: 'mme', key: 'inbox', type: 'json', value: JSON.stringify(inboxData()) }); } catch(e){}
   try { mfs.push(...siteMirror()); } catch(e){}
   const d = await acctGql(`mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{field message}}}`, { m: mfs });
   const er = d.metafieldsSet.userErrors; if (er && er.length) throw new Error(er[0].message);
-  acct.saved = Date.now(); ls.set('mme-acct', acct); ls.set('mme-dirty', 0); livePush(); try { await wishPush(); } catch(e){} }
-function acctQueue(){ if (!acct || !acct.at) return; ls.set('mme-dirty', 1); clearTimeout(acctT); acctT = setTimeout(acctSave, 2500); }
+  acct.saved = Date.now(); ls.set('mme-acct', acct); if (acctChg === chg0) ls.set('mme-dirty', 0); else { clearTimeout(acctT); acctT = setTimeout(acctSave, 1500); } livePush(); try { await wishPush(); } catch(e){} }
+let acctChg = 0; /* bumped on every change; a push only clears mme-dirty if nothing changed while it was uploading (Nov 20 2026) */
+function acctQueue(){ if (!acct || !acct.at) return; acctChg++; ls.set('mme-dirty', 1); clearTimeout(acctT); acctT = setTimeout(acctSave, 2500); }
 async function acctSave(){ if (acctBusy){ acctQueue(); return; } acctBusy = true;
   try { await acctPush(); $('#sync').textContent = 'Saved to your account'; } catch(e){ $('#sync').textContent = 'Saved on this device · account sync paused'; acctMsg = 'Couldn’t save to your account: ' + e.message; }
   acctBusy = false; renderAcct(); }
