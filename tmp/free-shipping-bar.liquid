@@ -1,0 +1,131 @@
+{%- comment -%}
+  Cart page perks tracker (Claude; Oct 31 2026, rebuilt Nov 21 2026). Shows every perk the cart has earned and how close it is to the next.
+  - Free shipping: $35 of our own products after discounts (partner items tagged Shopify Collective ship separately).
+  - Free Lucky Pack: $60 of our own books (manga, light novels, our sets) before discounts; added by snippets/tme-lucky-gift.
+  - Sale days (rows carry data-from/data-to and are shown by the script below, Eastern time; localStorage tmeSaleNow fakes the clock for testing):
+    Black Friday weekend Nov 27-30: 15% off note. Small Business Saturday Nov 28: handmade goodie at $35 of our books.
+    Cyber Monday Nov 30: a mystery gift for every $50 spent. Gifts are added by snippets/tme-sale-gifts (same counting rules).
+{%- endcomment -%}
+{%- liquid
+  assign own = 0
+  assign books = 0
+  assign spent = 0
+  assign lp = all_products[section.settings.lucky_handle]
+  for item in cart.items
+    if item.product.tags contains 'Free Gift' or item.variant_id == 54972664217918
+      continue
+    endif
+    if lp != blank and item.product_id == lp.id
+      continue
+    endif
+    unless item.product.type == 'Share the Love Fund'
+      assign spent = spent | plus: item.original_line_price
+    endunless
+    if item.product.tags contains 'Shopify Collective'
+      continue
+    endif
+    assign own = own | plus: item.final_line_price
+    assign is_book = false
+    if item.product.type == 'Manga' or item.product.type == 'Light Novel'
+      assign is_book = true
+    endif
+    for col in item.product.collections
+      if col.handle == 'vol-1-bundle-deals' or col.handle == 'complete-series-sets'
+        assign is_book = true
+      endif
+    endfor
+    if is_book
+      assign books = books | plus: item.original_line_price
+    endif
+  endfor
+  assign goal = section.settings.threshold | times: 100
+  assign lgoal = section.settings.lucky_threshold | times: 100
+  assign lucky_on = false
+  if lp != blank and lp.available
+    assign lucky_on = true
+  endif
+  assign mg = spent | divided_by: 5000
+  assign mg_next = mg | plus: 1 | times: 5000 | minus: spent
+  assign mg_pct = spent | modulo: 5000 | divided_by: 50
+-%}
+{%- capture bar -%}<div style="height:6px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden;margin-top:4px"><div style="height:100%;width:PCT%;background:currentColor;opacity:.55"></div></div>{%- endcapture -%}
+{%- if cart.item_count > 0 and spent > 0 -%}
+  <div class="page-width" style="max-width:900px;margin:0 auto;padding:1rem 1.5rem 0" data-tme-fsb>
+    <div style="border:1px solid rgba(0,0,0,.12);border-radius:8px;padding:12px 16px">
+      <p style="margin:0 0 8px;text-align:center"><strong>Your perks</strong></p>
+      <ul style="list-style:none;margin:0;padding:0;display:grid;gap:10px">
+        <li hidden data-tme-row="bf" style="font-size:.95em">🏷️ <strong>15% off manga &amp; light novels</strong> is taken off automatically.</li>
+        <li>
+          {%- if own >= goal -%}
+            ✅ <strong>Free shipping</strong>
+          {%- else -%}
+            {%- assign pct = own | times: 100 | divided_by: goal -%}
+            🚚 <strong>{{ goal | minus: own | money }}</strong> more of our items for <strong>free shipping</strong>
+            {{ bar | replace: 'PCT', pct }}
+          {%- endif -%}
+        </li>
+        {%- if lucky_on -%}
+        <li>
+          {%- if books >= lgoal -%}
+            ✅ <strong>Free Lucky Pack</strong> 🍀 <span style="font-size:.85em;opacity:.8">(in your cart: a bookmark, stickers + a surprise)</span>
+          {%- else -%}
+            {%- assign pct = books | times: 100 | divided_by: lgoal -%}
+            🍀 <strong>{{ lgoal | minus: books | money }}</strong> more of our manga &amp; light novels for a <strong>free <a href="{{ lp.url }}">Lucky Pack</a></strong>
+            {{ bar | replace: 'PCT', pct }}
+          {%- endif -%}
+        </li>
+        {%- endif -%}
+        <li hidden data-tme-row="sbs">
+          {%- if books >= 3500 -%}
+            ✅ <strong>Free handmade goodie</strong> from our mages 🧙 <span style="font-size:.85em;opacity:.8">(Small Business Saturday)</span>
+          {%- else -%}
+            {%- assign pct = books | times: 100 | divided_by: 3500 -%}
+            🧙 <strong>{{ 3500 | minus: books | money }}</strong> more of our manga &amp; light novels for a <strong>free handmade goodie</strong> <span style="font-size:.85em;opacity:.8">(today only)</span>
+            {{ bar | replace: 'PCT', pct }}
+          {%- endif -%}
+        </li>
+        <li hidden data-tme-row="cm">
+          {%- if mg > 0 -%}✅ <strong>{{ mg }} free mystery gift{% if mg != 1 %}s{% endif %}</strong> 🎁 &middot; {% endif -%}
+          🎁 <strong>{{ mg_next | money }}</strong> more for {% if mg > 0 %}another{% else %}a <strong>free mystery gift</strong>{% endif %} <span style="font-size:.85em;opacity:.8">(one for every $50, today only)</span>
+          {{ bar | replace: 'PCT', mg_pct }}
+        </li>
+      </ul>
+      <p style="margin:10px 0 0;font-size:.85em;text-align:center"><a href="/pages/all-series">Find your next volume &rarr;</a></p>
+    </div>
+  </div>
+  <script>
+    (function(){
+      /* Show the sale-day rows only on their day (Eastern time). */
+      var t=Date.now(); try{ var o=Number(localStorage.getItem('tmeSaleNow')); if(o) t=o; }catch(e){}
+      var W={bf:[Date.UTC(2026,10,27,5),Date.UTC(2026,11,1,5)], sbs:[Date.UTC(2026,10,28,5),Date.UTC(2026,10,29,5)], cm:[Date.UTC(2026,10,30,5),Date.UTC(2026,11,1,5)]};
+      document.querySelectorAll('[data-tme-fsb] [data-tme-row]').forEach(function(li){ var w=W[li.getAttribute('data-tme-row')]; if(w && t>=w[0] && t<w[1]) li.hidden=false; });
+    })();
+    /* Cart quantity changes update the page without a reload; refresh this bar when the cart changes. */
+    (function(){
+      if(window.__tmeFsbWatch)return;window.__tmeFsbWatch=true;
+      var last=null;
+      function check(){fetch('/cart.js',{headers:{'Accept':'application/json'}}).then(function(r){return r.json();}).then(function(c){
+        var sig=c.item_count+':'+c.total_price+':'+c.items.map(function(i){return i.variant_id+'x'+i.quantity;}).join(',');
+        if(last!==null&&sig!==last){
+          fetch(window.location.pathname+'?section_id={{ section.id }}').then(function(r){return r.text();}).then(function(html){
+            var d=document.createElement('div');d.innerHTML=html;
+            var fresh=d.querySelector('[data-tme-fsb]'),cur=document.querySelector('[data-tme-fsb]');
+            if(fresh&&cur){cur.replaceWith(fresh);}
+            var t=Date.now(); try{ var o=Number(localStorage.getItem('tmeSaleNow')); if(o) t=o; }catch(e){}
+            var W={bf:[Date.UTC(2026,10,27,5),Date.UTC(2026,11,1,5)], sbs:[Date.UTC(2026,10,28,5),Date.UTC(2026,10,29,5)], cm:[Date.UTC(2026,10,30,5),Date.UTC(2026,11,1,5)]};
+            document.querySelectorAll('[data-tme-fsb] [data-tme-row]').forEach(function(li){ var w=W[li.getAttribute('data-tme-row')]; if(w && t>=w[0] && t<w[1]) li.hidden=false; });
+          });
+        }
+        last=sig;}).catch(function(){});}
+      check();setInterval(check,2500);
+    })();
+  </script>
+{%- endif -%}
+
+{% schema %}
+{"name":"Free shipping bar","settings":[
+  {"type":"number","id":"threshold","label":"Free shipping at ($)","default":35},
+  {"type":"number","id":"lucky_threshold","label":"Free Lucky Pack at ($, own manga/LN)","default":60},
+  {"type":"text","id":"lucky_handle","label":"Lucky Pack product handle","default":"mages-lucky-pack-bookmark-stickers-a-surprise"}
+]}
+{% endschema %}
