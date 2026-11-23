@@ -881,7 +881,7 @@ const BINGO_POOL = [
   ['A Vol 1', (m, v) => v === 1], ['Vol 10 or later', (m, v) => v >= 10], ['A light novel', m => m.ln], ['Has an anime', m => m.an],
   ['A one-shot', m => m.t === 1], ['Series of 20+ vols', m => m.t >= 20], ['Series of 3 or fewer', m => m.t > 1 && m.t <= 3], ['A Gentle Read', m => m.gr],
   ['Spice 3+ 🌶️', m => m.sp >= 3], ['A finished series', m => /complete/i.test(m.ss)], ['A final volume', (m, v) => m.t > 1 && v === m.t],
-  ['Started this month', (m, v, mk) => m.t0 && dayKey(new Date(m.t0)).slice(0, 7) === mk], ['Borrowed from a friend', (m, v, mk, key) => { const l = loanOf(shelf.series[key] || {}, v); return !!(l && l.d !== 'out'); }],
+  ['Started this month', (m, v, mk) => m.t0 && dayKey(new Date(m.t0)).slice(0, 7) === mk], ['Borrowed (library or friend)', (m, v, mk, key) => { const l = loanOf(shelf.series[key] || (shelf.other || {})[key] || {}, v); return !!(l && l.d !== 'out'); }],
   ['Read on a weekend', (m, v, mk, key, day) => [0, 6].includes(new Date(day + 'T12:00:00').getDay())], ['3 vols in one day', (m, v, mk, key, day, R) => (shelf.log || {})[day] >= 3]
 ];
 function monthChal(){
@@ -941,12 +941,12 @@ function openChal(){ const c = monthChal();
 /* Tap a Bingo square: list the volumes on your shelf that fit it, unread first (Megan, Nov 23 2026) */
 function bingoFits(i){ const c = monthChal(); const sq = c.sq[i]; if (!sq || !sq[1]) return; const [lbl, fn] = sq; const mk = c.mk, today = dayKey(new Date());
   const back = `<p style="margin:0 0 8px"><button class="btn sm ghost" data-gochal>‹ Back to Bingo</button></p>`;
-  const head = `<h2>🎱 ${esc(lbl)}</h2>${c.marks[i] ? '<p class="sub" style="margin-top:0">✅ This square is already marked this month.</p>' : ''}`;
+  const head = `<h2>🎱 ${esc(lbl)}</h2>${c.marks[i] ? '<p class="sub" style="margin-top:0">✅ This square is already marked this month.</p>' : ''}` + (/Borrowed/.test(lbl) ? '<p class="sub" style="margin-top:0">Mark a volume as borrowed (open the series, switch to “Loan”, pick “I borrowed it from” and type a friend or “Library”), then mark it as read to fill this square.</p>' : '');
   const tips = { 'Read on a weekend': 'Any volume counts: just mark it as read on a Saturday or Sunday.', '3 vols in one day': 'Any volumes count: read 3 in the same day and mark them as read.' };
   if (tips[lbl]){ openSheet(back + head + `<p>${tips[lbl]}</p>`); return; }
   const rows = [];
   Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; let m; try { m = serMeta(k); } catch(e){ return; } const rd = new Set((s.r || []).map(Number));
-    const fit = (Array.isArray(s.v) ? ints(s) : []).filter(v => { try { return !!fn(m, v, mk, k, today); } catch(e){ return false; } }).sort((x, y) => x - y); if (!fit.length) return;
+    const lnIn = Object.entries(s.ln || {}).filter(([v, l]) => l && l.d !== 'out').map(([v]) => +v).filter(v => v > 0); const fit = [...new Set((Array.isArray(s.v) ? ints(s) : []).concat(lnIn))].filter(v => { try { return !!fn(m, v, mk, k, today); } catch(e){ return false; } }).sort((x, y) => x - y); if (!fit.length) return;
     const un = fit.filter(v => !rd.has(v)); rows.push({ k, n: s.n, fit, un }); });
   rows.sort((a, b) => (b.un.length > 0) - (a.un.length > 0) || String(a.n).localeCompare(String(b.n)));
   const unN = rows.filter(r => r.un.length).length;
