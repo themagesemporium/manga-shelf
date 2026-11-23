@@ -924,6 +924,8 @@ function monthChal(){
   // remember wins (badges keep them after the month ends)
   let ch = false; const keep = (f, ok) => { if (!ok) return; const A = shelf.ach || (shelf.ach = {}); const a = A[f] || (A[f] = []); if (!a.includes(mk)){ a.push(mk); ch = true; } };
   keep('chm', doneN === list.length); keep('bgo', won.length > 0); keep('bgx', marked === 24);
+  // each finished challenge is remembered as 'YYYY-MM|title' so it earns XP every month (Megan, Nov 22 2026)
+  list.forEach(c => { if (!c.done) return; const A = shelf.ach || (shelf.ach = {}); const a = A.chc || (A.chc = []); const id = mk + '|' + c.t; if (!a.includes(id)){ a.push(id); ch = true; } });
   if (ch && !monthChal._saving){ monthChal._saving = true; setTimeout(() => { monthChal._saving = false; try { save(); } catch(e){} }, 0); }
   const left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
   return { mk, label, list, doneN, sq, marks, win, bingoLines: won.length, marked, left, readsN: reads.length };
@@ -934,7 +936,7 @@ function openChal(){ const c = monthChal();
   <h3 style="margin:4px 0 2px">🎱 Manga Bingo</h3><p class="sub" style="margin:0 0 6px">Read a volume that fits a square to mark it (each volume fills one square). Five in a row (across, down or diagonal) is a Bingo! ${c.bingoLines ? `<b>You have ${c.bingoLines} Bingo${c.bingoLines > 1 ? 's' : ''}! 🎉</b>` : `${c.marked} of 24 squares marked.`}</p>
   <div class="bingo">${c.sq.map(([l], i) => `<div class="${i === 12 ? 'free' : c.marks[i] ? 'on' : ''}${c.win.has(i) ? ' win' : ''}">${esc(l)}</div>`).join('')}</div>
   <p style="margin:10px 0 0;display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm gold" href="${STORE}/products/manga-reading-bingo-${['january','february','march','april','may','june','july','august','september','october','november','december'][new Date().getMonth()]}-printable-pdf-english-spanish" target="_blank" rel="noopener">🖨️ This month's printable Bingo card</a><a class="btn sm ghost" href="${STORE}/products/manga-reading-bingo-yearly-kit" target="_blank" rel="noopener">📦 Printed Yearly Kit</a></p>
-  ${c.readsN ? '' : '<p class="sub">No volumes marked as read this month yet.</p>'}<p class="sub" style="margin:8px 0 0">Finish all 3 challenges for 🗓️ Challenger, and get a line for 🎱 Bingo! (see Achievements).</p>`); }
+  ${c.readsN ? '' : '<p class="sub">No volumes marked as read this month yet.</p>'}<p class="sub" style="margin:8px 0 0">Every challenge you finish, every Bingo line and a full blackout earn XP each month. Finish all 3 challenges for 🗓️ Challenger, and get a line for 🎱 Bingo! (see Achievements).</p>`); }
 document.addEventListener('click', e => { if (e.target.closest('[data-gochal]')){ e.preventDefault(); track('challenges'); openChal(); } });
 function estPages(prefix){ const L = shelf.log || {}, R = shelf.rl || {}; let pg = 0; Object.keys(L).forEach(d => { if (prefix && !d.startsWith(prefix)) return; const items = R[d] || []; items.forEach(t => { const k = t.slice(0, t.lastIndexOf('|')); const s = shelf.series[k]; pg += s && isLN(k, s) ? 250 : 190; }); pg += Math.max(0, (L[d] || 0) - items.length) * 190; }); return pg; }
 /* ---------- Levels & XP (preview: Megan's account, or localStorage mme-xp = true, until she says go).
@@ -969,6 +971,11 @@ function xpCalc(){ const P = []; const add = (k, label, n, each, cap) => { const
   const fr = Object.keys(shelf.friends || {}).length;
   add('own', 'Books you’ve owned', own, 2); add('rd', 'Volumes read', rd, 5); add('st', 'Star ratings', stars, 3); add('rv', 'Reviews (20+ words)', revs, 15);
   add('done', 'Series completed', done, 50); add('want', 'Wishlist adds', want, 1, 200); add('day', 'Reading days', days.length, 5); add('wk', '7-day reading streaks', weeks, 25);
+  /* Monthly challenges and Bingo pay XP every month, with the achievements as a bonus on top (Megan, Nov 22 2026).
+     Months finished before per-challenge tracking existed (in ach.chm with no ach.chc entries) count as all 3. */
+  { const A = shelf.ach || {}; const chc = A.chc || []; const withC = new Set(chc.map(x => String(x).slice(0, 7)));
+    const chN = chc.length + (A.chm || []).filter(m => !withC.has(m)).length * 3;
+    add('chc', 'Monthly challenges finished', chN, 15); add('bgm', 'Months with a Bingo line', (A.bgo || []).length, 25); add('bgk', 'Bingo blackout months', (A.bgx || []).length, 75); }
   add('ach', 'Achievements', ach, 25); add('fix', 'Fixes and corrections', fixes, 10); add('msg', 'Days you messaged the shop', msgDays, 5); add('fr', 'Friends', fr, 10, 200); { const V = shelf.visit || {}; add('vis', 'Days you opened the app', V.n || 0, 5); add('vwk', '7-day login streaks', V.wk || 0, 25); } add('ux', 'Spice & gentle ratings', Object.values(shelf.series).filter(s => s.ux && (s.ux.sp != null || s.ux.gr != null)).length, 3); add('rb', 'Recommended books bought', Object.keys(shelf.recBuy || {}).length, 25);
   /* Level achievements (Megan, Nov 9: give their XP back): worked out in one go from the XP above, so the level is stable (same result every time) and nobody loses a level. */
   const base = P.reduce((a, x) => a + x[3], 0); let nL = 0; for (let i = 0; i < 6; i++){ const lv = lvOf(base + nL * 25), n = [5, 10, 20, 40, 50].filter(t => lv >= t).length; if (n === nL) break; nL = n; } add('achl', 'Level achievements', nL, 25);
