@@ -1,6 +1,7 @@
 {%- comment -%} Product page extras (Nov 2026): "Readers say" (series collection metafield custom.readers_say, written from the Packing Desk)
   and "Is this right for my reader?" (asks the shop's book helper through /apps/mme/ai/kid; answers from this listing's age rating, content notes and spice level). {%- endcomment -%}
 {%- if product.type == 'Manga' or product.type == 'Light Novel' -%}{%- unless product.tags contains 'Shopify Collective' or product.tags contains 'Mystery Box' -%}
+  {%- render 'tme-xmas-by' -%}
   {%- assign rs = nil -%}
   {%- for c in product.collections -%}{%- if c.handle contains 'series-' and c.metafields.custom.readers_say -%}{%- assign rs = c.metafields.custom.readers_say.value -%}{%- break -%}{%- endif -%}{%- endfor -%}
   {%- if rs and rs.text != blank -%}
