@@ -3673,7 +3673,7 @@ function dispPaintBg(cls, lv, frame, ax, ay){ const c = $('#dispBg'); if (!c) re
   const N = RT >= 5 ? 22 : RT >= 2 ? 12 : 0; for (let i = 0; i < N; i++) star(((i * 397 + 71) % 1000) / 1000 * W, ((i * 613 + 211) % 1000) / 1000 * H, 7 + (i % 4) * 4);
   x.restore(); }
 function dispRadar(cv, sc, top, glow){ if (!cv) return; const dpr = Math.min(2, devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight; if (!W || !H) return; cv.width = W * dpr; cv.height = H * dpr;
-  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); const cx = W / 2, cy = H / 2 + 4, R = Math.min(W * .32, H * .34), n = 8, F = '"Figtree",system-ui,sans-serif', E = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); const cx = W / 2, cy = H / 2 - 2, R = Math.min(W * .3, H * .3), n = 8, F = '"Figtree",system-ui,sans-serif', E = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
   const pt = (i, v) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + Math.cos(a) * R * v, cy + Math.sin(a) * R * v]; };
   [.25, .5, .75, 1].forEach(v => { x.beginPath(); for (let i = 0; i <= n; i++){ const [px, py] = pt(i % n, v); i ? x.lineTo(px, py) : x.moveTo(px, py); } x.strokeStyle = 'rgba(255,255,255,.25)'; x.lineWidth = 1.5; x.stroke(); });
   for (let i = 0; i < n; i++){ const [px, py] = pt(i, 1); x.beginPath(); x.moveTo(cx, cy); x.lineTo(px, py); x.strokeStyle = 'rgba(255,255,255,.15)'; x.stroke(); }
