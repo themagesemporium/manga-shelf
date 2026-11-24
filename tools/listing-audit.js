@@ -53,7 +53,7 @@ window._laRun = async (opt = {}) => {
       const gen = (g(p, 'genre') || '') + ' ' + (g(p, 'genres') || '');
       const need = { author: 1, genre: 1, age_rating: 1, series_volumes: 1, series_status: 1, has_anime: 1, language: 1,
         spice_level: /romance|yaoi|bl\b|boys|yuri|girls' love|josei|smut/i.test(gen),
-        content_notes: /older teen|mature|adult/i.test(age) }[k];
+        content_notes: /mature|adult/i.test(age) && !/older teen/i.test(age) }[k]; // Older Teen books often have nothing to note, so only Mature/Adult must have notes (Nov 24 2026)
       if (need) prob.push(k + (s ? '' : ' (no sibling has it)'));
     }
     if (!g(p, 'original_publication_year')) prob.push('original_publication_year');
