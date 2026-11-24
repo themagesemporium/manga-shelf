@@ -50,7 +50,7 @@
       + (root.dataset.mode === 'gift' ? `<p class="tme-ai-total">All ${r.picks.length} together: ${money(tot)}. Free shipping on $35+.</p>` : ''); };
   async function ask(feat, body){ out.innerHTML = '<div class="tme-ai-load">✨ Looking through our shelves… (about 10 seconds)</div>';
     try { const res = await fetch('/apps/mme/ai/' + feat, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }); const j = await res.json().catch(() => ({}));
-      if (!res.ok){ out.innerHTML = `<p class="tme-ai-err">${esc(j.error || 'Something went wrong. Please try again.')}</p>`; return; } show(j); try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e){} }
+      if (!res.ok || j.error){ out.innerHTML = `<p class="tme-ai-err">${esc(j.error || 'Something went wrong. Please try again.')}</p>`; return; } show(j); try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e){} }
     catch(e){ out.innerHTML = '<p class="tme-ai-err">We couldn’t reach the book helper. Please try again.</p>'; } }
   out.addEventListener('click', async e => { const b = e.target.closest('[data-ai-add]'); if (!b) return; b.disabled = true; b.textContent = 'Adding…';
     try { const r = await fetch('/cart/add.js', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ items: [{ id: +b.dataset.aiAdd, quantity: 1 }] }) }); if (!r.ok) throw 0;

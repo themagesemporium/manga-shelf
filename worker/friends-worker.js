@@ -212,7 +212,7 @@ async function aiCall(env, feat, { model = AI_FAST, system, messages, max_tokens
 const aiJSON = t => { const s = String(t || ''); const a = s.search(/[\[{]/); if (a < 0) return null; const close = s[a] === '[' ? ']' : '}'; const b = s.lastIndexOf(close); try { return JSON.parse(s.slice(a, b + 1)); } catch(e){ return null; } };
 
 /* ---- catalog of in-stock books (own Manga + Light Novels + sets), rebuilt about hourly by the cron ---- */
-const CAT_Q = `query($a:String){products(first:100,after:$a,query:"status:active AND inventory_total:>0 AND published_status:published AND (product_type:Manga OR product_type:'Light Novel') AND -tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{legacyResourceId title handle productType tags priceRangeV2{minVariantPrice{amount}} variants(first:1){nodes{legacyResourceId}} featuredMedia{preview{image{url(transform:{maxWidth:300})}}}
+const CAT_Q = `query($a:String){products(first:100,after:$a,query:"status:active AND inventory_total:>0 AND published_status:published AND (product_type:Manga OR product_type:'Light Novel') AND -tag:'Shopify Collective' AND -tag:'Mystery Box'"){pageInfo{hasNextPage endCursor} nodes{legacyResourceId title handle productType tags priceRangeV2{minVariantPrice{amount}} variants(first:1){nodes{legacyResourceId}} featuredMedia{preview{image{url(transform:{maxWidth:300})}}}
   se:metafield(namespace:"custom",key:"series"){value} vo:metafield(namespace:"custom",key:"volume"){value} ag:metafield(namespace:"custom",key:"age_rating"){value} g1:metafield(namespace:"custom",key:"genre"){value} gs:metafield(namespace:"custom",key:"genres"){value} th:metafield(namespace:"custom",key:"themes"){value}
   sp:metafield(namespace:"custom",key:"spice_level"){value} gr:metafield(namespace:"custom",key:"gentle_read"){value} ss:metafield(namespace:"custom",key:"series_status"){value} au:metafield(namespace:"custom",key:"author"){value} an:metafield(namespace:"custom",key:"has_anime"){value} cn:metafield(namespace:"custom",key:"content_notes"){value} sv:metafield(namespace:"custom",key:"series_volumes"){value}}}}`;
 const lst = v => { if (!v) return ''; try { const a = JSON.parse(v); return Array.isArray(a) ? a.join(', ') : String(v); } catch(e){ return String(v); } };
@@ -287,7 +287,7 @@ async function aiRoute(env, req, p, whoKey, me){ let b = {}; if (req.method === 
 async function aiProxy(env, req, url){ const cid = await proxyCid(env, url); if (cid === null) return new Response('{"error":"forbidden"}', { status: 403, headers: { 'content-type': 'application/json' } });
   const feat = url.pathname.split('/').pop(); if (feat !== 'gift' && feat !== 'search') return new Response('{"error":"not found"}', { status: 404, headers: { 'content-type': 'application/json' } });
   const whoKey = cid ? 'c' + cid : 'ip' + (await sha(req.headers.get('cf-connecting-ip') || 'x')).slice(0, 16);
-  const r = await aiRoute(env, req, '/ai/' + feat, whoKey, null); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }); }
+  const r = await aiRoute(env, req, '/ai/' + feat, whoKey, null); return new Response(r.body, { status: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }); } // always 200: Shopify swaps error statuses for its own error page
 /* hourly copy of the spend summary to the shop metafield mme_app.ai_usage (the Packing Desk reads it) */
 async function aiFlush(env){ if (!env.SHOPIFY_CLIENT_ID) return; const last = +(await env.FRIENDS.get('ai:flushat') || 0); if (Date.now() - last < 55 * 60e3) return;
   const months = {}; let log = []; const now = new Date(); for (let i = 0; i < 6; i++){ const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 15)); const mk = d.toISOString().slice(0, 7); const M = await get(env, 'ai:m:' + mk); if (M){ months[mk] = { spent: M.spent, calls: M.calls, f: M.f, d: M.d }; log = log.concat(M.log || []); } }
@@ -311,6 +311,7 @@ export default {
       return J({ sent: n }); }
     if (p.startsWith('/proxy/wl')) return wlProxy(env, req, url);
     if (p.startsWith('/proxy/ai/')) return aiProxy(env, req, url);
+    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), flushed: await env.FRIENDS.get('ai:flushat') }); }
     if (p === '/wl/unsub') return wlUnsub(env, url);
     if (p === '/wl/status'){ return J({ admin: !!env.SHOPIFY_CLIENT_ID, mail: !!env.RESEND_KEY, last: await env.FRIENDS.get('wl:last'), err: await env.FRIENDS.get('wl:err'), keys: Object.keys(((await get(env, 'wl:idx')) || {}).keys || {}).length }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
