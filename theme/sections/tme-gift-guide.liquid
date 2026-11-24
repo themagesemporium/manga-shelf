@@ -21,13 +21,13 @@
 {%- else -%}
   <h2 class="tme-gg-h">🎄 Ready-made gift ideas</h2>
   {%- assign sets = collections['vol-1-bundle-deals'].products -%}
-  {%- capture setcards -%}{%- assign n = 0 -%}{%- for p in sets -%}{%- if p.available and n < 8 -%}{%- assign n = n | plus: 1 -%}{%- render 'tme-gg-card', p: p -%}{%- endif -%}{%- endfor -%}{%- endcapture -%}
+  {%- capture setcards -%}{%- assign n = 0 -%}{%- for p in sets -%}{%- assign ar = p.metafields.custom.age_rating.value | default: '' | downcase -%}{%- if p.available and n < 8 -%}{%- unless ar contains 'mature' or p.tags contains 'Mature' -%}{%- assign n = n | plus: 1 -%}{%- render 'tme-gg-card', p: p -%}{%- endunless -%}{%- endif -%}{%- endfor -%}{%- endcapture -%}
   {%- if setcards != blank -%}
   <div class="tme-gg-shelf"><div class="tme-gg-sh"><h3>📦 Start a whole series</h3><a href="/collections/vol-1-bundle-deals">See all sets →</a></div>
     <p class="tme-gg-sub">Vol 1 and the next few volumes together, 10% off the single prices. The easiest gift for someone new to a series.</p>
     <div class="tme-gg-row">{{ setcards }}</div></div>
   {%- endif -%}
-  {%- capture onecards -%}{%- assign n = 0 -%}{%- for p in collections['one-shots'].products -%}{%- if p.available and p.price <= 1500 and n < 8 -%}{%- assign n = n | plus: 1 -%}{%- render 'tme-gg-card', p: p -%}{%- endif -%}{%- endfor -%}{%- endcapture -%}
+  {%- capture onecards -%}{%- assign n = 0 -%}{%- for p in collections['one-shots'].products -%}{%- assign ar = p.metafields.custom.age_rating.value | default: '' | downcase -%}{%- if p.available and p.price <= 1500 and n < 8 -%}{%- unless ar contains 'mature' or p.tags contains 'Mature' or p.title contains 'Yaoi' -%}{%- assign n = n | plus: 1 -%}{%- render 'tme-gg-card', p: p -%}{%- endunless -%}{%- endif -%}{%- endfor -%}{%- endcapture -%}
   {%- if onecards != blank -%}
   <div class="tme-gg-shelf"><div class="tme-gg-sh"><h3>🧦 Stand-alone stories under $15</h3><a href="/collections/one-shots">See all stand-alones →</a></div>
     <p class="tme-gg-sub">One book, a whole story. Great stocking stuffers, with no “what volume are they on?” guessing.</p>
@@ -46,7 +46,7 @@
 <style>
   .tme-gg{max-width:1000px;margin:0 auto 18px}.tme-gg-h{margin:10px 0 6px}
   .tme-gg-quick{background:#fff7e0;border:1px solid #f0da93;border-radius:12px;padding:10px 14px;margin:0 0 16px}.tme-gg-qh{margin:0 0 8px;font-weight:700}
-  .tme-gg-qb{display:flex;flex-wrap:wrap;gap:6px}.tme-gg-qb button{border:1px solid rgba(0,0,0,.2);background:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-size:14px;cursor:pointer}.tme-gg-qb button:hover,.tme-gg-qb button:focus-visible{border-color:#f0662b;outline:none;box-shadow:0 0 0 2px rgba(240,102,43,.25)}
+  .tme-gg-qb{display:flex;flex-wrap:wrap;gap:6px}.tme-gg-qb button{border:1px solid rgba(0,0,0,.2);background:#fff !important;color:#222 !important;text-shadow:none;border-radius:999px;padding:7px 12px;font:inherit;font-size:14px;line-height:1.3;cursor:pointer;text-transform:none;letter-spacing:normal;min-height:0;width:auto}.tme-gg-qb button:hover,.tme-gg-qb button:focus-visible{border-color:#f0662b;outline:none;box-shadow:0 0 0 2px rgba(240,102,43,.25)}
   .tme-gg-shelf{margin:0 0 20px}.tme-gg-sh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}.tme-gg-sh h3{margin:0}.tme-gg-sh a{font-size:14px}.tme-gg-sub{margin:4px 0 10px;opacity:.85;font-size:14px}
   .tme-gg-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,170px);gap:12px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity}
   .tme-gg-card{scroll-snap-align:start;background:#fff;border-radius:10px;padding:8px;box-shadow:0 1px 4px rgba(0,0,0,.12);display:flex;flex-direction:column;gap:4px;font-size:13px;color:inherit;text-decoration:none}
@@ -57,7 +57,7 @@
   .tme-gg-list{background:#fff;border:2px solid #f0662b;border-radius:14px;padding:12px 14px;margin:0 0 16px}.tme-gg-list h2{margin:0 0 4px}.tme-gg-list .tme-gg-sub{margin:0 0 10px}
   .tme-gg-lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
   .tme-gg-li{background:#fafafa;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px;font-size:13px}.tme-gg-li img{width:100%;aspect-ratio:2/3;object-fit:contain;background:#f0f0f0;border-radius:6px}.tme-gg-li a{color:inherit;text-decoration:none;font-weight:700}.tme-gg-li button{width:100%}
-  .tme-gg-out{margin:10px 0 0;font-size:14px}.tme-gg-out li{margin:2px 0}.tme-gg-tot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 0;font-weight:600}
+  .tme-gg-out{margin:10px 0 0;font-size:14px}.tme-gg-out summary{cursor:pointer;font-weight:600}.tme-gg-out li{margin:2px 0}.tme-gg-tot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 0;font-weight:600}
 </style>
 {%- if part == 'top' -%}
 <script>
