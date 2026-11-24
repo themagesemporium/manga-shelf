@@ -6,7 +6,7 @@
 {%- if part == 'top' -%}
   <div class="tme-gg-list" data-gg-list hidden></div>
   <div class="tme-gg-quick">
-    <p class="tme-gg-qh">Quick start: tap one and we’ll pick books right away</p>
+    <p class="tme-gg-qh">Quick start: tap one and we’ll pick books right away, or answer the questions below</p>
     <div class="tme-gg-qb">
       <button type="button" data-gg-preset='{"who":"teen","chips":["Action & fights","Fantasy & magic"],"budget":40,"newbie":true}'>🧑 Teen who’s new to manga</button>
       <button type="button" data-gg-preset='{"who":"kid","chips":["Funny","Animals"],"budget":30,"newbie":true}'>🧒 Kid under 10</button>
@@ -64,6 +64,7 @@
 (() => { const root = document.getElementById('tme-gg-{{ section.id }}'); if (!root) return;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const money = c => '$' + (c / 100).toFixed(2);
+  { const q = root.querySelector('.tme-gg-quick'), f = document.querySelector('[data-ai-gift]'); if (q && f) f.before(q); } // sit under the finder's heading, above its questions
   root.querySelectorAll('[data-gg-preset]').forEach(b => b.onclick = () => { let p = {}; try { p = JSON.parse(b.dataset.ggPreset); } catch(e){}
     document.dispatchEvent(new CustomEvent('tme-gift-preset', { detail: p })); });
   // Shared gift list from the app: ?gl=<base64url JSON {n: name, h: [product handles], x: [[series, "vols"]]}>
