@@ -403,7 +403,37 @@ async function aiNewForYou(env){ if (!env.SHOPIFY_CLIENT_ID || !env.ANTHROPIC_AP
     out.forEach(o => { sent[o.cid] = [...new Set((sent[o.cid] || []).concat(o.picks.map(p => p.pid)))].slice(-80); }); await put(env, 'ai:nfysent', sent); }
   const sid = (await adm(env, '{shop{id}}')).shop.id; await adm(env, `mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: sid, namespace: 'mme_app', key: 'new_for_you', type: 'json', value: JSON.stringify({ at: new Date().toISOString(), list: out }) }] }); }
 
-async function aiTick(env){ const hr = new Date().getUTCHours(); const fixHour = (hr === 8 && !(await env.FRIENDS.get('ai:fix:' + ymd()))) || (hr === 9 && !(await env.FRIENDS.get('ai:nfy:' + ymd()))); try { if (!fixHour) await catTick(env); } catch(e){ await env.FRIENDS.put('ai:err', 'catalog ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } try { await aiFlush(env); } catch(e){} try { await aiFixer(env); } catch(e){ await env.FRIENDS.put('ai:err', 'fixer ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } try { await aiNewForYou(env); } catch(e){ await env.FRIENDS.put('ai:err', 'new-for-you ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } try { await aiBoxes(env); } catch(e){ await env.FRIENDS.put('ai:err', 'boxes ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } }
+/* Series blurbs (Nov 2026): listings whose description is only the one-line intro get tagged "zz needs-blurb" (by Claude, and daily by aiBlurbTag for
+   new listings). Each cron tick takes up to 4 series: copy a sibling's blurb if one exists, else Sonnet writes a 2-3 sentence spoiler-free premise
+   (or SKIPs if it doesn't reliably know the series; those get "zz blurb-skip" for Megan). The blurb goes in after <p class="book-intro">. */
+const BLURB_TAG = 'zz needs-blurb', BLURB_SKIP = 'zz blurb-skip';
+const introOnly = h => String(h || '').replace(/<p class="book-intro">[\s\S]*?<\/p>/, '').replace(/<p>\s*Condition:[\s\S]*?<\/p>/i, '').replace(/<[^>]+>/g, '').trim().length < 60;
+const blurbOf = h => { const m = String(h || '').replace(/<p class="book-intro">[\s\S]*?<\/p>/, '').match(/<p>(?!\s*Condition:)([\s\S]{60,1200}?)<\/p>/i); return m ? m[1].trim() : ''; };
+const withBlurb = (h, b) => { h = String(h || ''); const p = `<p>${b}</p>`; return /<p class="book-intro">[\s\S]*?<\/p>/.test(h) ? h.replace(/(<p class="book-intro">[\s\S]*?<\/p>)/, `$1${p}`) : p + h; };
+async function aiBlurbs(env){ if (!env.SHOPIFY_CLIENT_ID || !env.ANTHROPIC_API_KEY) return; const cfg = await aiCfg(env); if (cfg.off) return;
+  const F = `id title productType tags descriptionHtml s:metafield(namespace:"custom",key:"series"){value} au:metafield(namespace:"custom",key:"author"){value} g:metafield(namespace:"custom",key:"genre"){value} ag:metafield(namespace:"custom",key:"age_rating"){value} yr:metafield(namespace:"custom",key:"original_publication_year"){value} vendor`;
+  const d = await adm(env, `{products(first:40,query:"tag:'${BLURB_TAG}'"){nodes{${F}}}}`); const ps = d.products.nodes; if (!ps.length) return;
+  const S = {}; for (const p of ps){ const k = ((p.s && p.s.value) || p.title.replace(/\s+(Vol|Volume)\b.*$/i, '')) + '|' + p.productType; (S[k] = S[k] || []).push(p); }
+  const st = (await get(env, 'ai:blurb')) || { done: 0, copied: 0, wrote: 0, skipped: 0, skip: [] }; let n = 0;
+  for (const [k, list] of Object.entries(S)){ if (n >= 4) break; n++; const [series, type] = k.split('|');
+    let blurb = '';
+    const sib = (await adm(env, `query($q:String!){products(first:40,query:$q){nodes{title productType descriptionHtml s:metafield(namespace:"custom",key:"series"){value}}}}`, { q: `metafields.custom.series:${JSON.stringify(series)}` })).products.nodes.filter(x => x.productType === type && x.s && x.s.value === series);
+    for (const x of sib){ const b = blurbOf(x.descriptionHtml); if (b){ blurb = b; break; } }
+    let how = 'copied';
+    if (!blurb){ const p0 = list[0]; how = 'wrote';
+      const T = await aiCall(env, 'blurb', { model: AI_SMART, max_tokens: 400, system: `You write short product blurbs for a used manga shop. Write the premise of the WHOLE SERIES in 2 or 3 plain sentences (40 to 70 words): who the main character is, the setup, and the feel of the story. No spoilers beyond the first volume, no hype words ("must-read", "masterpiece", "epic"), no em dashes, no quotes, no prices, no volume numbers. Only write it if you reliably know this exact series as published in English; if you are not sure, or the title could be a different work, reply SKIP. Reply with JSON only: {"blurb":"..."} or {"skip":true}.`, messages: [{ role: 'user', content: JSON.stringify({ series, format: type === 'Light Novel' ? 'light novel' : 'manga', example_title: p0.title, author: p0.au && p0.au.value, genre: p0.g && p0.g.value, age_rating: p0.ag && p0.ag.value, publisher: p0.vendor, year: p0.yr && p0.yr.value }) }] });
+      const R = aiJSON(T) || {}; blurb = !R.skip && typeof R.blurb === 'string' ? R.blurb.replace(/[<>]/g, '').replace(/\s*[—–]\s*/g, ', ').trim().slice(0, 700) : ''; }
+    if (blurb){ for (const p of list){ const upd = introOnly(p.descriptionHtml) ? withBlurb(p.descriptionHtml, blurb) : p.descriptionHtml;
+        await adm(env, `mutation($p:ProductUpdateInput!){productUpdate(product:$p){userErrors{message}}}`, { p: { id: p.id, descriptionHtml: upd } });
+        await adm(env, `mutation($id:ID!,$t:[String!]!){tagsRemove(id:$id,tags:$t){userErrors{message}}}`, { id: p.id, t: [BLURB_TAG] }); st.done++; }
+      st[how]++; }
+    else { for (const p of list){ await adm(env, `mutation($id:ID!){a:tagsRemove(id:$id,tags:["${BLURB_TAG}"]){userErrors{message}} b:tagsAdd(id:$id,tags:["${BLURB_SKIP}"]){userErrors{message}}}`, { id: p.id }); } st.skipped++; st.skip = st.skip.concat([series]).slice(-200); } }
+  st.at = new Date().toISOString(); await put(env, 'ai:blurb', st); }
+async function aiBlurbTag(env){ if (!env.SHOPIFY_CLIENT_ID) return; if (new Date().getUTCHours() !== 10) return; const day = ymd(); if (await env.FRIENDS.get('ai:btag:' + day)) return; await env.FRIENDS.put('ai:btag:' + day, '1', { expirationTtl: 3 * 86400 });
+  const since = new Date(Date.now() - 3 * 864e5).toISOString().slice(0, 10);
+  const d = await adm(env, `{products(first:150,query:"created_at:>${since} AND (product_type:Manga OR product_type:'Light Novel') AND -tag:'Shopify Collective' AND -tag:Bundle AND -tag:'${BLURB_SKIP}'"){nodes{id descriptionHtml}}}`);
+  for (const p of d.products.nodes) if (introOnly(p.descriptionHtml)) await adm(env, `mutation($id:ID!){tagsAdd(id:$id,tags:["${BLURB_TAG}"]){userErrors{message}}}`, { id: p.id }); }
+async function aiTick(env){ const hr = new Date().getUTCHours(); const fixHour = (hr === 8 && !(await env.FRIENDS.get('ai:fix:' + ymd()))) || (hr === 9 && !(await env.FRIENDS.get('ai:nfy:' + ymd()))); try { if (!fixHour) await catTick(env); } catch(e){ await env.FRIENDS.put('ai:err', 'catalog ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } try { await aiFlush(env); } catch(e){} try { await aiFixer(env); } catch(e){ await env.FRIENDS.put('ai:err', 'fixer ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } try { await aiNewForYou(env); } catch(e){ await env.FRIENDS.put('ai:err', 'new-for-you ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } try { await aiBoxes(env); } catch(e){ await env.FRIENDS.put('ai:err', 'boxes ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } try { if (!fixHour){ await aiBlurbTag(env); await aiBlurbs(env); } } catch(e){ await env.FRIENDS.put('ai:err', 'blurbs ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } }
 
 export default {
   async fetch(req, env){
@@ -419,7 +449,7 @@ export default {
       return J({ sent: n }); }
     if (p.startsWith('/proxy/wl')) return wlProxy(env, req, url);
     if (p.startsWith('/proxy/ai/')) return aiProxy(env, req, url);
-    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), built: ((await get(env, 'ai:catb')) || []).length, catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), last: await get(env, 'ai:last'), flushed: await env.FRIENDS.get('ai:flushat') }); }
+    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), built: ((await get(env, 'ai:catb')) || []).length, catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), last: await get(env, 'ai:last'), flushed: await env.FRIENDS.get('ai:flushat'), blurbs: await get(env, 'ai:blurb') }); }
     if (p === '/wl/unsub') return wlUnsub(env, url);
     if (p === '/wl/status'){ return J({ admin: !!env.SHOPIFY_CLIENT_ID, mail: !!env.RESEND_KEY, last: await env.FRIENDS.get('wl:last'), err: await env.FRIENDS.get('wl:err'), keys: Object.keys(((await get(env, 'wl:idx')) || {}).keys || {}).length }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
