@@ -2752,6 +2752,7 @@ function renderLists(){
         <p class="sub" style="margin:0 0 6px">The shop's website emails you the moment a wishlisted book comes into stock. Tap a volume, then tap <b>Add to Wishlist</b> on its page (sign in to your shop account first).</p>
         ${W.filter(x => x.p && x.p.handle).slice(0,30).map(x => `<a class="chip" style="display:inline-block;margin:0 6px 6px 0;text-decoration:none" href="${STORE}/products/${encodeURIComponent(x.p.handle)}" target="_blank" rel="noopener">${esc(x.n)} ${x.v}${x.p.inv > 0 ? ' · in stock' : ''}</a>`).join('') || '<p class="sub" style="margin:0">None of these are listed at the shop yet. Check back as the shop adds them.</p>'}<p style="margin:6px 0 0"><a class="btn ghost sm" href="${STORE}/apps/wishlist" target="_blank" rel="noopener">♥ Open my shop wishlist</a></p></div>
       <div class="st-sec" style="background:var(--surface-2);box-shadow:none;margin:12px 0 0"><h3 style="font-size:15px">🎁 Your gift list</h3><p class="sub" style="margin:0 0 8px">Send family a link. It opens at the shop with exactly the volumes you're missing that are on the shelves, ready to add to their cart, so nobody buys a book you already have.</p>
+        <label class="sub" style="display:flex;gap:8px;align-items:flex-start;margin:0 0 8px"><input type="checkbox" data-gifttaste ${(shelf.contact || {}).giftTaste ? 'checked' : ''} style="margin-top:3px"> <span>Also share my 5 favorite series, so the shop's gift finder can suggest things I'd like that aren't on my list</span></label>
         <div class="row2"><button class="btn gold sm" data-giftlink>🎁 Share my gift list link</button><button class="btn ghost sm" data-copy="gift">Copy as text</button></div></div>`
     : `<p class="sub" style="margin:0">Open a series, switch to “Want ♥”, and tap the volumes you want. Or tap “Want all missing”.</p>`}</div>
 `;
@@ -2774,9 +2775,12 @@ function renderLists(){
   el._gift = giftTxt; el._sell = sellTxt;
   el._giftUrl = (() => { const h = [], x = []; grp(W).forEach(([k, a]) => { const miss = []; a.forEach(it => it.p && it.p.handle ? h.push(it.p.handle) : miss.push(it.v)); if (miss.length) x.push([a[0].n, compactVols(miss)]); });
     const nm = (((shelf.contact || {}).name || '').trim().split(/\s+/)[0] || '').slice(0, 30);
-    const b = new TextEncoder().encode(JSON.stringify({ n: nm, h: h.slice(0, 40), x: x.slice(0, 30) })); let bin = ''; b.forEach(c => bin += String.fromCharCode(c));
+    // Opt-in: a few favorite series (by stars, then by how many they own) so gift-givers can get suggestions beyond the list. Nothing else from the shelf goes in the link.
+    const fav = (shelf.contact || {}).giftTaste ? Object.entries(shelf.series).filter(([k, s]) => s && s.n && !langOf(k)).map(([k, s]) => s).sort((a, b) => (b.st || 0) - (a.st || 0) || (b.v || []).length - (a.v || []).length).slice(0, 5).map(s => s.n.slice(0, 60)) : [];
+    const b = new TextEncoder().encode(JSON.stringify(Object.assign({ n: nm, h: h.slice(0, 40), x: x.slice(0, 30) }, fav.length ? { l: fav } : {}))); let bin = ''; b.forEach(c => bin += String.fromCharCode(c));
     return `${STORE}/pages/gift-finder?gl=` + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); })();
 }
+document.addEventListener('change', e => { if (e.target.matches && e.target.matches('[data-gifttaste]')){ shelf.contact = Object.assign({}, shelf.contact); if (e.target.checked) shelf.contact.giftTaste = true; else delete shelf.contact.giftTaste; save(); renderLists(); return; } });
 document.addEventListener('change', e => { if (e.target.id === 'alertOn'){ if (e.target.checked){ const em = ($('#alertEmail').value || '').trim(); if (!/^\S+@\S+\.\S+$/.test(em)){ e.target.checked = false; toast('Type your email, then tap Save'); return; } shelf.contact = Object.assign({}, shelf.contact, { email: em }); shelf.alert = true; } else delete shelf.alert; save(); syncAlerts(); return; }
   const c = e.target.closest('[data-cond]'); if (c){ const k = c.dataset.cond; if (shelf.series[k]){ if (c.value === 'low' || c.value === 'hc') shelf.series[k].cond = c.value; else delete shelf.series[k].cond; save(); renderLists(); } } });
 document.addEventListener('click', e => { if (!e.target.closest('[data-wantgaps]')) return; const prev = JSON.parse(JSON.stringify(shelf.series)); let n = 0;

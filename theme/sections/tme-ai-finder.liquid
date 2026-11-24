@@ -62,7 +62,7 @@
       if (p.who){ const r = g.querySelector(`[name=who][value="${p.who}"]`); if (r) r.checked = true; }
       g.querySelectorAll('[name=chip]').forEach(c => c.checked = (p.chips || []).includes(c.value));
       g.likes.value = p.likes || ''; if (p.budget){ bud.value = p.budget; bl.textContent = '$' + bud.value; } g.newbie.checked = p.newbie !== false;
-      try { g.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(x){} g.requestSubmit ? g.requestSubmit() : g.onsubmit(new Event('submit')); }); }
+      try { g.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(x){} if (p.nosubmit){ const r = g.querySelector('[name=who]:checked') || g.querySelector('[name=who]'); try { r.focus({ preventScroll: true }); } catch(x){} return; } g.requestSubmit ? g.requestSubmit() : g.onsubmit(new Event('submit')); }); }
   const v = root.querySelector('[data-ai-vibe]'); if (v){ const go = q => { v.q.value = q; ask('search', { q }); }; v.onsubmit = e => { e.preventDefault(); const q = v.q.value.trim(); if (q) go(q); };
     root.querySelectorAll('[data-ai-ex]').forEach(b => b.onclick = () => go(b.dataset.aiEx)); const pre = new URLSearchParams(location.search).get('vibe'); if (pre) go(pre); }
 })();
