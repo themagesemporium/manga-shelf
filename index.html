@@ -2751,7 +2751,8 @@ function renderLists(){
       <div class="st-sec" style="background:var(--surface-2);box-shadow:none;margin:12px 0 0"><h3 style="font-size:15px">🔔 Back-in-stock emails</h3>
         <p class="sub" style="margin:0 0 6px">The shop's website emails you the moment a wishlisted book comes into stock. Tap a volume, then tap <b>Add to Wishlist</b> on its page (sign in to your shop account first).</p>
         ${W.filter(x => x.p && x.p.handle).slice(0,30).map(x => `<a class="chip" style="display:inline-block;margin:0 6px 6px 0;text-decoration:none" href="${STORE}/products/${encodeURIComponent(x.p.handle)}" target="_blank" rel="noopener">${esc(x.n)} ${x.v}${x.p.inv > 0 ? ' · in stock' : ''}</a>`).join('') || '<p class="sub" style="margin:0">None of these are listed at the shop yet. Check back as the shop adds them.</p>'}<p style="margin:6px 0 0"><a class="btn ghost sm" href="${STORE}/apps/wishlist" target="_blank" rel="noopener">♥ Open my shop wishlist</a></p></div>
-      <div class="row2"><button class="btn ghost sm" data-copy="gift">Copy gift list</button></div><p class="sub" style="margin:4px 0 0">Send it to family so they know exactly what to buy.</p>`
+      <div class="st-sec" style="background:var(--surface-2);box-shadow:none;margin:12px 0 0"><h3 style="font-size:15px">🎁 Your gift list</h3><p class="sub" style="margin:0 0 8px">Send family a link. It opens at the shop with exactly the volumes you're missing that are on the shelves, ready to add to their cart, so nobody buys a book you already have.</p>
+        <div class="row2"><button class="btn gold sm" data-giftlink>🎁 Share my gift list link</button><button class="btn ghost sm" data-copy="gift">Copy as text</button></div></div>`
     : `<p class="sub" style="margin:0">Open a series, switch to “Want ♥”, and tap the volumes you want. Or tap “Want all missing”.</p>`}</div>
 `;
   const sellHTML = `<div class="st-sec"><h3>$ Sell / clear-out list <span class="sub" style="font-weight:400">(${S.length})</span></h3>
@@ -2771,6 +2772,10 @@ function renderLists(){
   el.innerHTML = listView === 'holds' && holds ? holdsHTML() : listView === 'want' ? wantHTML : listView === 'sell' ? sellHTML : listView === 'friends' ? friendsHTML() : loanStatsHTML();
   document.querySelectorAll('#listNav [data-ln]').forEach(b => b.setAttribute('aria-pressed', b.dataset.ln === listView));
   el._gift = giftTxt; el._sell = sellTxt;
+  el._giftUrl = (() => { const h = [], x = []; grp(W).forEach(([k, a]) => { const miss = []; a.forEach(it => it.p && it.p.handle ? h.push(it.p.handle) : miss.push(it.v)); if (miss.length) x.push([a[0].n, compactVols(miss)]); });
+    const nm = (((shelf.contact || {}).name || '').trim().split(/\s+/)[0] || '').slice(0, 30);
+    const b = new TextEncoder().encode(JSON.stringify({ n: nm, h: h.slice(0, 40), x: x.slice(0, 30) })); let bin = ''; b.forEach(c => bin += String.fromCharCode(c));
+    return `${STORE}/pages/gift-finder?gl=` + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); })();
 }
 document.addEventListener('change', e => { if (e.target.id === 'alertOn'){ if (e.target.checked){ const em = ($('#alertEmail').value || '').trim(); if (!/^\S+@\S+\.\S+$/.test(em)){ e.target.checked = false; toast('Type your email, then tap Save'); return; } shelf.contact = Object.assign({}, shelf.contact, { email: em }); shelf.alert = true; } else delete shelf.alert; save(); syncAlerts(); return; }
   const c = e.target.closest('[data-cond]'); if (c){ const k = c.dataset.cond; if (shelf.series[k]){ if (c.value === 'low' || c.value === 'hc') shelf.series[k].cond = c.value; else delete shelf.series[k].cond; save(); renderLists(); } } });
@@ -2778,6 +2783,9 @@ document.addEventListener('click', e => { if (!e.target.closest('[data-wantgaps]
   Object.keys(shelf.series).forEach(k => { if (langOf(k)) return; const i = info(k); const w = new Set(i.s.want || []); const add = i.gaps.filter(v => !w.has(v)); if (add.length){ i.s.want = [...w, ...add].sort((a, b) => a - b); n += add.length; } });
   save(); renderLists(); toast(`♥ Added ${n} missing ${n === 1 ? 'volume' : 'volumes'} to your wishlist`, () => { shelf.series = prev; save(); renderLists(); }); });
 document.addEventListener('click', async e => {
+  const gl = e.target.closest('[data-giftlink]'); if (gl){ const url = $('#lists')._giftUrl; const text = 'My manga gift list: these are the volumes I still need, and the ones on the shelf at The Mage’s Emporium can go right in your cart.';
+    if (navigator.share){ try { await navigator.share({ title: 'My manga gift list', text, url }); return; } catch(err){ if (err.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(text + '\n' + url); toast('Gift list link copied'); } catch(err){ openSheet(`<h2>Your gift list link</h2><textarea class="rv" readonly>${esc(text + '\n' + url)}</textarea><button class="btn ghost" data-close>Close</button>`); } return; }
   const c = e.target.closest('[data-copy]'); if (c){ const t = $('#lists')['_' + c.dataset.copy]; try { await navigator.clipboard.writeText(t); toast('Copied'); } catch(err){ openSheet(`<h2>Copy this</h2><textarea class="rv" readonly>${esc(t)}</textarea><button class="btn ghost" data-close>Close</button>`); } return; }
   const ln = e.target.closest('[data-ln]'); if (ln){ listView = ln.dataset.ln; renderLists(); if (listView === 'friends') liveLoad(); return; }
   const rt = e.target.closest('[data-ret]'); if (rt){ const [k, v] = rt.dataset.ret.split('|'); const s = shelf.series[k]; if (s && s.ln){ const prev = JSON.parse(JSON.stringify(s.ln)); delete s.ln[v]; if (!Object.keys(s.ln).length) delete s.ln; save(); toast(`Vol ${v} is back`, () => { s.ln = prev; save(); }); } return; }

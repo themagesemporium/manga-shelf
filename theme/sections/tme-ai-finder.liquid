@@ -56,7 +56,13 @@
     try { const r = await fetch('/cart/add.js', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ items: [{ id: +b.dataset.aiAdd, quantity: 1 }] }) }); if (!r.ok) throw 0;
       b.outerHTML = '<a class="button" href="/cart">✓ Added · View cart</a>'; try { document.dispatchEvent(new CustomEvent('cart:refresh')); } catch(e){} } catch(err){ b.disabled = false; b.textContent = 'Sold out, sorry!'; } });
   const g = root.querySelector('[data-ai-gift]'); if (g){ const bud = g.querySelector('[name=budget]'), bl = root.querySelector('[data-ai-budget]'); bud.oninput = () => bl.textContent = '$' + bud.value;
-    g.onsubmit = e => { e.preventDefault(); const f = new FormData(g); ask('gift', { who: f.get('who'), likes: f.get('likes') || '', chips: f.getAll('chip'), budget: +f.get('budget'), newbie: !!f.get('newbie') }); }; }
+    g.onsubmit = e => { e.preventDefault(); const f = new FormData(g); ask('gift', { who: f.get('who'), likes: f.get('likes') || '', chips: f.getAll('chip'), budget: +f.get('budget'), newbie: !!f.get('newbie') }); };
+    // Quick-start buttons from the gift guide section fill in the form, then run it.
+    document.addEventListener('tme-gift-preset', e => { const p = e.detail || {};
+      if (p.who){ const r = g.querySelector(`[name=who][value="${p.who}"]`); if (r) r.checked = true; }
+      g.querySelectorAll('[name=chip]').forEach(c => c.checked = (p.chips || []).includes(c.value));
+      g.likes.value = p.likes || ''; if (p.budget){ bud.value = p.budget; bl.textContent = '$' + bud.value; } g.newbie.checked = p.newbie !== false;
+      try { g.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(x){} g.requestSubmit ? g.requestSubmit() : g.onsubmit(new Event('submit')); }); }
   const v = root.querySelector('[data-ai-vibe]'); if (v){ const go = q => { v.q.value = q; ask('search', { q }); }; v.onsubmit = e => { e.preventDefault(); const q = v.q.value.trim(); if (q) go(q); };
     root.querySelectorAll('[data-ai-ex]').forEach(b => b.onclick = () => go(b.dataset.aiEx)); const pre = new URLSearchParams(location.search).get('vibe'); if (pre) go(pre); }
 })();

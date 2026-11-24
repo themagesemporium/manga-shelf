@@ -1,0 +1,2 @@
+{%- comment -%} One product card for the gift guide shelves. {%- endcomment -%}
+<a class="tme-gg-card" href="{{ p.url }}">{%- if p.featured_image -%}<img src="{{ p.featured_image | image_url: width: 300 }}" alt="{{ p.featured_image.alt | default: p.title | escape }}" loading="lazy" width="150" height="225">{%- endif -%}<b>{{ p.title | escape }}</b><span>{{ p.price | money }}{%- if p.compare_at_price > p.price -%}<s>{{ p.compare_at_price | money }}</s>{%- endif -%}</span></a>
