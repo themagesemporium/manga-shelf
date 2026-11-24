@@ -200,7 +200,7 @@ async function aiCall(env, feat, { model = AI_FAST, system, messages, max_tokens
   const cfg = await aiCfg(env); const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || { spent: 0, calls: 0, f: {}, d: {} };
   if (cfg.off) throw new AiErr('paused', 'The book helper is taking a break. Please try again later!');
   if (M.spent >= cfg.budget) throw new AiErr('budget', 'The book helper is resting until next month. Please try again later!');
-  const r = await fetch(AI_API, { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model, max_tokens, system, messages }) });
+  const r = await fetch(AI_API, { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model, max_tokens: max_tokens + 3000, system, messages, output_config: { effort: 'low' } }) }); // room for adaptive thinking, which counts toward max_tokens
   const j = await r.json().catch(() => ({}));
   if (!r.ok){ await env.FRIENDS.put('ai:err', (r.status + ' ' + JSON.stringify(j).slice(0, 400)), { expirationTtl: 7 * 86400 }); throw new AiErr('api', 'The book helper hit a snag. Please try again in a minute.'); }
   const u = j.usage || {}; const P = AI_PRICE[model] || [2, 10]; const inTok = (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) * 1.25 + (u.cache_read_input_tokens || 0) * 0.1;
@@ -208,7 +208,9 @@ async function aiCall(env, feat, { model = AI_FAST, system, messages, max_tokens
   const day = ymd(); M.spent = +(M.spent + cost).toFixed(6); M.calls++; const F = M.f[feat] || [0, 0]; M.f[feat] = [F[0] + 1, +(F[1] + cost).toFixed(6)]; M.d[day] = +((M.d[day] || 0) + cost).toFixed(6);
   M.log = (M.log || []).concat([[Date.now(), feat, model === AI_FAST ? 'H' : 'S', u.input_tokens || 0, u.output_tokens || 0, +cost.toFixed(5)]]).slice(-60);
   await put(env, 'ai:m:' + mk, M);
-  return (j.content || []).filter(c => c.type === 'text').map(c => c.text).join(''); }
+  const out = (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
+  await env.FRIENDS.put('ai:last', JSON.stringify({ feat, at: Date.now(), stop: j.stop_reason, types: (j.content || []).map(c => c.type), usage: u, text: out.slice(0, 600) }), { expirationTtl: 86400 });
+  if (!out.trim()) throw new AiErr('api', 'The book helper hit a snag. Please try again in a minute.'); return out; }
 const aiJSON = t => { const s = String(t || ''); const a = s.search(/[\[{]/); if (a < 0) return null; const close = s[a] === '[' ? ']' : '}'; const b = s.lastIndexOf(close); try { return JSON.parse(s.slice(a, b + 1)); } catch(e){ return null; } };
 
 /* ---- catalog of in-stock books (own Manga + Light Novels + sets), rebuilt about hourly by the cron ---- */
@@ -345,7 +347,7 @@ export default {
       return J({ sent: n }); }
     if (p.startsWith('/proxy/wl')) return wlProxy(env, req, url);
     if (p.startsWith('/proxy/ai/')) return aiProxy(env, req, url);
-    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), built: ((await get(env, 'ai:catb')) || []).length, catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), flushed: await env.FRIENDS.get('ai:flushat') }); }
+    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), built: ((await get(env, 'ai:catb')) || []).length, catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), last: await get(env, 'ai:last'), flushed: await env.FRIENDS.get('ai:flushat') }); }
     if (p === '/wl/unsub') return wlUnsub(env, url);
     if (p === '/wl/status'){ return J({ admin: !!env.SHOPIFY_CLIENT_ID, mail: !!env.RESEND_KEY, last: await env.FRIENDS.get('wl:last'), err: await env.FRIENDS.get('wl:err'), keys: Object.keys(((await get(env, 'wl:idx')) || {}).keys || {}).length }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
