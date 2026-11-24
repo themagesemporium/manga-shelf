@@ -3581,6 +3581,86 @@ document.addEventListener('input', e => { if (e.target.id !== 'fq') return; cons
 document.addEventListener('change', async e => { if (e.target.id !== 'fFile' || !e.target.files[0]) return; try { friendAdd(JSON.parse(await e.target.files[0].text())); } catch(err){ toast('Couldn’t read that file'); } });
 function startLocal(msg){ if (!window.claude) setTimeout(acctBoot, 0); mode = 'local'; docRef = null; const s = ls.get('mme-shelf'); if (s && s.series) shelf = s; $('#sync').textContent = msg; renderAll(); renderFinds(); maybeSync(); }
 if (window.claude){ document.querySelectorAll('.helpLink').forEach(a => a.href = 'https://themagesemporium.com/pages/how-to-use-my-manga-emporium'); document.querySelectorAll('.privLink').forEach(a => a.href = 'https://app.themagesemporium.com/privacy.html'); }
+/* ---------- 📺 Display mode (Megan, Nov 24 2026): app.themagesemporium.com/?display turns the app into a full-screen character board
+   for a spare tablet, TV browser or wall screen. Read-only: it shows the signed-in reader's level, class, stats, achievements and reading,
+   follows their skin, and refreshes itself (store sync every 5 min, redraw every minute). Tap ✕ (top right) to go back to the app. ---------- */
+const dispOn = (() => { try { const q = new URLSearchParams(location.search); if (q.has('display')){ ls.set('mme-disp', 1); return true; }
+  if (ls.get('mme-disp-ret') && !q.has('code')){ ls.set('mme-disp-ret', null); history.replaceState(null, '', location.pathname + '?display'); return true; } } catch(e){} return false; })();
+let dispT = null;
+function dispStart(){
+  document.documentElement.classList.add('disp');
+  const st = document.createElement('style'); st.textContent = `
+html.disp body{padding:0!important;overflow:hidden}
+html.disp body>*:not(#dispView):not(script):not(style){display:none!important}
+#dispView{position:fixed;inset:0;overflow:auto;background-color:var(--bg);background-image:var(--bgimg);background-size:100% 100%;color:var(--ink);padding:clamp(12px,2.2vw,28px);box-sizing:border-box;display:flex;flex-direction:column;gap:clamp(10px,1.6vw,18px);font:clamp(14px,1.35vw,18px)/1.4 Figtree,system-ui,sans-serif}
+#dispView *{box-sizing:border-box}
+.dv-top{display:flex;align-items:center;gap:clamp(12px,2vw,24px);background:linear-gradient(135deg,var(--rank1),var(--rank2));color:#fff;border-radius:22px;padding:clamp(14px,2vw,24px);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.dv-av .av{width:clamp(84px,11vw,150px)!important;height:clamp(84px,11vw,150px)!important;font-size:clamp(34px,5vw,64px)!important}
+.dv-who{flex:1;min-width:0}
+.dv-name{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.6vw,52px);line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dv-cls{font-family:var(--display);font-weight:700;font-size:clamp(17px,2vw,28px);opacity:.95;margin-top:2px}
+.dv-xp{margin-top:10px}.dv-bar{height:clamp(10px,1.2vw,16px);border-radius:99px;background:rgba(255,255,255,.25);overflow:hidden}.dv-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ffe36b,#ffb11b)}
+.dv-xp small{display:block;margin-top:5px;opacity:.92;font-size:.92em}
+.dv-clock{text-align:right;font-family:var(--display);font-weight:700;font-size:clamp(28px,3.6vw,54px);line-height:1}.dv-clock small{display:block;font-size:.38em;font-weight:600;opacity:.9;margin-top:4px}
+.dv-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr));gap:clamp(8px,1.2vw,14px)}
+.dv-tile{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:clamp(10px,1.4vw,16px);text-align:center;box-shadow:0 3px 0 var(--line)}
+.dv-tile b{display:block;font-family:var(--display);font-size:clamp(26px,3.2vw,46px);line-height:1.1;color:var(--accent)}
+.dv-tile span{color:var(--muted);font-size:.9em}
+.dv-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:clamp(10px,1.6vw,18px);align-items:start}
+.dv-card{background:var(--surface);border:2px solid var(--line);border-radius:20px;padding:clamp(12px,1.6vw,20px);box-shadow:0 3px 0 var(--line);min-width:0}
+.dv-card h3{font-family:var(--display);font-size:clamp(17px,1.8vw,24px);margin:0 0 10px}
+.dv-sheet{background:linear-gradient(135deg,var(--rank1),var(--rank2));color:#fff;border-radius:14px;padding:10px 14px}.dv-sheet>div{font-size:clamp(13px,1.25vw,17px)!important}
+.dv-badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:8px}
+.dv-badge{display:flex;align-items:center;gap:8px;background:var(--gold-soft);border-radius:12px;padding:6px 10px;font-weight:600;font-size:.92em;min-width:0}.dv-badge i{font-style:normal;font-size:1.5em}.dv-badge span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dv-goal{margin-top:12px}.dv-goal .dv-bar{background:var(--surface-2)}.dv-goal .dv-bar i{background:linear-gradient(90deg,var(--accent),var(--gold))}
+.dv-x{position:fixed;top:8px;right:10px;z-index:5;border:0;border-radius:99px;background:rgba(0,0,0,.35);color:#fff;width:34px;height:34px;font-size:17px;cursor:pointer;opacity:.35}.dv-x:hover{opacity:1}
+.dv-msg{margin:auto;text-align:center;max-width:520px;background:var(--surface);border-radius:22px;padding:28px;box-shadow:0 6px 18px rgba(0,0,0,.12)}.dv-msg h2{font-family:var(--display);margin:0 0 8px}
+.dv-foot{text-align:center;color:var(--muted);font-size:.8em}
+@media (max-width:640px){.dv-clock{display:none}}`;
+  document.head.appendChild(st);
+  const v = document.createElement('div'); v.id = 'dispView'; v.setAttribute('aria-live', 'polite'); document.body.appendChild(v);
+  v.addEventListener('click', e => { if (e.target.closest('[data-dvx]')){ ls.set('mme-disp', null); location.href = location.pathname; }
+    if (e.target.closest('[data-dvlogin]')){ ls.set('mme-disp-ret', 1); try { acctLogin(); } catch(err){ toast('Couldn’t start the login'); } } });
+  dispRender(); clearInterval(dispT); dispT = setInterval(dispRender, 60e3);
+  /* Keep it current on an always-on screen: pull the shelf from the store account every 5 minutes (the app also syncs when the tab comes back into view). */
+  setInterval(() => { try { if (acct && acct.at && !ls.get('mme-dirty') && document.visibilityState === 'visible') acctSync(); } catch(e){} }, 5 * 60e3);
+  try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {}); }); } catch(e){}
+}
+function dispRender(){ const v = $('#dispView'); if (!v) return;
+  const now = new Date(), clock = `<div class="dv-clock">${now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}<small>${now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</small></div>`;
+  const X = '<button class="dv-x" data-dvx title="Back to the app" aria-label="Leave display mode">✕</button>';
+  const keys = Object.keys((shelf && shelf.series) || {});
+  if (!keys.length){ const signedIn = !!(acct && acct.at);
+    v.innerHTML = X + `<div class="dv-msg"><h2>📺 Display mode</h2><p>${signedIn ? 'Loading your shelf…' : 'Log in to your Mage’s Emporium account to show your character, level and reading stats here. This screen then keeps itself up to date.'}</p>${signedIn ? '' : '<button class="btn" data-dvlogin style="width:auto">Log in</button>'}</div>`; return; }
+  let C = {}; try { C = collectorNumbers(); } catch(e){}
+  const name = (shelf.card && shelf.card.name) || (acct && acct.name) || 'My';
+  const stk = (() => { try { return streaks(); } catch(e){ return { cur: 0, best: 0 }; } })();
+  const yr = String(now.getFullYear()), yrRead = Object.keys(shelf.log || {}).filter(d => d.startsWith(yr)).reduce((a, d) => a + shelf.log[d], 0);
+  const mk = dayKey(now).slice(0, 7), moRead = Object.keys(shelf.log || {}).filter(d => d.startsWith(mk)).reduce((a, d) => a + shelf.log[d], 0);
+  const gl = shelf.goal && shelf.goal[yr];
+  const earned = (BADGES || []).filter(b => b[2] >= b[3]), total = (BADGES || []).filter(b => !b[4]).length + (BADGES || []).filter(b => b[4] && b[2] >= b[3]).length;
+  const xp = xpOn(); let top = '', sheet = '';
+  if (xp){ const P = xpCalc(), S = statCalc(), cls = myClass(S), a = xpNeed(P.lv), b = xpNeed(P.lv + 1);
+    let r0 = 0; while (r0 + 1 < RANKS.length && (C.books || 0) >= RANKS[r0 + 1][0]) r0++; const rank = rankName(r0, cls), nx = RANKS[r0 + 1];
+    top = `<div class="dv-cls">${esc(cls)} · Level ${P.lv} · ${esc(rank)} rank</div>
+      <div class="dv-xp"><div class="dv-bar"><i style="width:${Math.max(2, Math.round((P.xp - a) / Math.max(1, b - a) * 100))}%"></i></div>
+      <small>⭐ ${P.xp.toLocaleString()} XP · ${(b - P.xp).toLocaleString()} to Level ${P.lv + 1}${nx ? ` · 📚 ${(nx[0] - (C.books || 0)).toLocaleString()} more books to ${esc(rankName(r0 + 1, cls))}` : ''}</small></div>`;
+    sheet = `<div class="dv-card"><h3>🎲 Character stats</h3><div class="dv-sheet">${sheetHTML(S.sc, cls)}</div></div>`;
+    v.dataset.lv = P.lv;
+  } else top = `<div class="dv-cls">📚 ${(C.books || 0).toLocaleString()} books in the collection</div>`;
+  let av = ''; try { av = avHTML(myAv(), name, true, xp ? myFrameLv(+v.dataset.lv || 1) : 0); } catch(e){}
+  const tile = (n, l) => `<div class="dv-tile"><b>${typeof n === 'number' ? n.toLocaleString() : esc(String(n))}</b><span>${esc(l)}</span></div>`;
+  const tiles = [tile(C.books || 0, 'Books owned'), tile(keys.length, 'Series'), tile(C.readN || 0, 'Volumes read'), tile(C.done || 0, 'Series complete'),
+    tile(stk.cur || 0, `Day reading streak${stk.best > stk.cur ? ` (best ${stk.best})` : ''}`), tile(moRead, `Read in ${now.toLocaleDateString([], { month: 'long' })}`)];
+  if (!cmOn()) tiles.push(tile(`${earned.length}/${total}`, 'Achievements'));
+  const goal = gl ? `<div class="dv-goal"><b>🎯 ${yr} goal:</b> ${yrRead.toLocaleString()} of ${Number(gl).toLocaleString()} read<div class="dv-bar"><i style="width:${Math.min(100, Math.round(yrRead / gl * 100))}%"></i></div></div>` : `<p style="margin:10px 0 0"><b>${yrRead.toLocaleString()}</b> volumes read in ${yr}</p>`;
+  const badges = cmOn() ? '' : `<div class="dv-card"><h3>🏆 Achievements</h3><div class="dv-badges">${earned.slice(-12).reverse().map(b => { const m = String(b[0]).match(/^(\S+)\s+(.*)$/) || [0, '🏅', b[0]]; return `<div class="dv-badge" title="${esc(b[1])}"><i>${esc(m[1])}</i><span>${esc(m[2])}</span></div>`; }).join('') || '<p style="grid-column:1/-1;margin:0">Your first achievement is on its way!</p>'}</div>${goal}</div>`;
+  v.innerHTML = X + `<div class="dv-top"><div class="dv-av">${av}</div><div class="dv-who"><div class="dv-name">${esc(name === 'My' ? 'My shelf' : name)}</div>${top}</div>${clock}</div>
+    <div class="dv-tiles">${tiles.join('')}</div>
+    <div class="dv-row">${sheet}${badges || `<div class="dv-card"><h3>📖 Reading</h3>${goal}</div>`}</div>
+    <div class="dv-foot">My Manga Emporium · updated ${now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>`;
+}
+if (dispOn){ dispStart(); const _ra = renderAll; renderAll = function(){ const r = _ra.apply(this, arguments); setTimeout(() => { try { dispRender(); } catch(e){} }, 300); return r; }; }
 netState();
 renderAcct();
 cartChip();
