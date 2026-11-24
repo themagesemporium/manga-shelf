@@ -1,0 +1,69 @@
+{%- comment -%} AI book finder (Nov 2026). mode "gift" = Gift Finder quiz, mode "vibe" = describe-what-you-want search.
+  Calls /apps/mme/ai/<gift|search> (Shopify app proxy -> the mme-friends worker, which holds the API key and only recommends in-stock books). {%- endcomment -%}
+{%- assign mode = section.settings.mode | default: 'vibe' -%}
+<div class="tme-ai" id="tme-ai-{{ section.id }}" data-mode="{{ mode }}">
+  {%- if mode == 'gift' -%}
+    <h1 class="tme-ai-h">{{ section.settings.heading | default: '🎁 Manga Gift Finder' }}</h1>
+    <p class="tme-ai-sub">Not sure what to get the manga fan in your life? Answer three quick questions and we’ll pick books from our shelves that fit.</p>
+    <form class="tme-ai-form" data-ai-gift>
+      <fieldset><legend>1. Who is it for?</legend><div class="tme-ai-chips">
+        <label><input type="radio" name="who" value="kid"><span>Kid (under 10)</span></label><label><input type="radio" name="who" value="tween"><span>Tween (10–12)</span></label><label><input type="radio" name="who" value="teen" checked><span>Teen (13–15)</span></label><label><input type="radio" name="who" value="older"><span>Older teen (16–17)</span></label><label><input type="radio" name="who" value="adult"><span>Adult</span></label></div></fieldset>
+      <fieldset><legend>2. What do they like? <small>(tap any, or type your own)</small></legend><div class="tme-ai-chips">
+        {%- assign likes = 'Romance,Fantasy & magic,Action & fights,Funny,Cozy & wholesome,Spooky,Mystery,Sports,Video games,Anime they watch,Animals,School life' | split: ',' -%}
+        {%- for l in likes -%}<label><input type="checkbox" name="chip" value="{{ l }}"><span>{{ l }}</span></label>{%- endfor -%}</div>
+        <input class="tme-ai-in" name="likes" maxlength="300" placeholder="e.g. loves Demon Slayer, cats, and anything with dragons"></fieldset>
+      <fieldset><legend>3. Budget</legend><div class="tme-ai-row"><input type="range" name="budget" min="10" max="150" step="5" value="40"><b data-ai-budget>$40</b></div>
+        <label class="tme-ai-check"><input type="checkbox" name="newbie" checked> They’re new to manga (start them on Vol 1 or a set)</label></fieldset>
+      <button class="button tme-ai-go" type="submit">✨ Find gifts</button>
+    </form>
+  {%- else -%}
+    <h2 class="tme-ai-h">{{ section.settings.heading | default: '✨ Describe what you’re in the mood for' }}</h2>
+    <form class="tme-ai-form tme-ai-vibe" data-ai-vibe><input class="tme-ai-in" name="q" maxlength="400" required placeholder="e.g. cozy fantasy with found family, finished series, no spice"><button class="button tme-ai-go" type="submit">Find books</button></form>
+    <div class="tme-ai-ex">{%- assign ex = 'Enemies to lovers with magic|A finished series under $40|Spooky but not too scary|Like Spy x Family|Wholesome slice of life' | split: '|' -%}{%- for e in ex -%}<button type="button" data-ai-ex="{{ e }}">{{ e }}</button>{%- endfor -%}</div>
+  {%- endif -%}
+  <div class="tme-ai-out" data-ai-out aria-live="polite"></div>
+</div>
+<style>
+  .tme-ai{max-width:1000px;margin:0 auto 24px}.tme-ai-sub{margin:4px 0 14px;opacity:.85}
+  .tme-ai-form fieldset{border:1px solid rgba(0,0,0,.12);border-radius:12px;padding:10px 14px;margin:0 0 12px}.tme-ai-form legend{font-weight:700;padding:0 4px}.tme-ai-form legend small{font-weight:400;opacity:.7}
+  .tme-ai-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.tme-ai-chips label{cursor:pointer}.tme-ai-chips input{position:absolute;opacity:0;pointer-events:none}
+  .tme-ai-chips span{display:inline-block;padding:6px 12px;border-radius:999px;border:1px solid rgba(0,0,0,.2);background:#fff;font-size:14px}.tme-ai-chips input:checked+span{background:#f0662b;border-color:#f0662b;color:#fff}.tme-ai-chips input:focus-visible+span{outline:2px solid #f0662b;outline-offset:2px}
+  .tme-ai-in{width:100%;padding:10px 12px;border:1px solid rgba(0,0,0,.25);border-radius:8px;font:inherit;box-sizing:border-box}
+  .tme-ai-vibe{display:flex;gap:8px;flex-wrap:wrap}.tme-ai-vibe .tme-ai-in{flex:1 1 240px;width:auto}
+  .tme-ai-row{display:flex;gap:12px;align-items:center}.tme-ai-row input{flex:1}.tme-ai-check{display:block;margin-top:8px}
+  .tme-ai-ex{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.tme-ai-ex button{border:1px dashed rgba(0,0,0,.3);background:transparent;border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}
+  .tme-ai-out{margin-top:14px}.tme-ai-intro{font-weight:600;margin:0 0 10px}
+  .tme-ai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+  .tme-ai-card{background:#fff;border-radius:10px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.12);display:flex;flex-direction:column;gap:4px;font-size:14px}
+  .tme-ai-card img{width:100%;aspect-ratio:2/3;object-fit:contain;background:#f6f6f6;border-radius:6px}.tme-ai-card a{color:inherit;text-decoration:none;font-weight:700}
+  .tme-ai-card p{margin:2px 0;opacity:.85;font-size:13px;flex:1}.tme-ai-card .tme-ai-pr{font-weight:700}.tme-ai-card button{margin-top:4px;width:100%}
+  .tme-ai-load{padding:18px;text-align:center;opacity:.8}.tme-ai-err{background:#fde6d6;border-radius:8px;padding:10px 12px}
+  .tme-ai-total{margin:12px 0 0;font-weight:600}
+</style>
+<script>
+(() => { const root = document.getElementById('tme-ai-{{ section.id }}'); if (!root) return; const out = root.querySelector('[data-ai-out]');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const money = n => '$' + (+n).toFixed(2);
+  const show = (r) => { if (!r.picks || !r.picks.length){ out.innerHTML = '<p class="tme-ai-err">We couldn’t find a good match on our shelves right now. Try different words, or <a href="/pages/contact">ask us</a> and we’ll help!</p>'; return; }
+    const tot = r.picks.reduce((a, b) => a + (+b.price || 0), 0);
+    out.innerHTML = (r.intro ? `<p class="tme-ai-intro">${esc(r.intro)}</p>` : '') + '<div class="tme-ai-grid">' + r.picks.map(b => `<div class="tme-ai-card"><a href="/products/${encodeURIComponent(b.handle)}">${b.img ? `<img src="${esc(b.img)}" alt="${esc(b.title)}" loading="lazy">` : ''}${esc(b.title)}</a><span class="tme-ai-pr">${money(b.price)}${b.set ? ' · set, 10% off' : ''}</span><p>${esc(b.why)}</p><button class="button button--secondary" type="button" data-ai-add="${esc(b.vid)}">Add to cart</button></div>`).join('') + '</div>'
+      + (root.dataset.mode === 'gift' ? `<p class="tme-ai-total">All ${r.picks.length} together: ${money(tot)}. Free shipping on $35+.</p>` : ''); };
+  async function ask(feat, body){ out.innerHTML = '<div class="tme-ai-load">✨ Looking through our shelves… (about 10 seconds)</div>';
+    try { const res = await fetch('/apps/mme/ai/' + feat, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }); const j = await res.json().catch(() => ({}));
+      if (!res.ok){ out.innerHTML = `<p class="tme-ai-err">${esc(j.error || 'Something went wrong. Please try again.')}</p>`; return; } show(j); try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e){} }
+    catch(e){ out.innerHTML = '<p class="tme-ai-err">We couldn’t reach the book helper. Please try again.</p>'; } }
+  out.addEventListener('click', async e => { const b = e.target.closest('[data-ai-add]'); if (!b) return; b.disabled = true; b.textContent = 'Adding…';
+    try { const r = await fetch('/cart/add.js', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ items: [{ id: +b.dataset.aiAdd, quantity: 1 }] }) }); if (!r.ok) throw 0;
+      b.outerHTML = '<a class="button" href="/cart">✓ Added · View cart</a>'; try { document.dispatchEvent(new CustomEvent('cart:refresh')); } catch(e){} } catch(err){ b.disabled = false; b.textContent = 'Sold out, sorry!'; } });
+  const g = root.querySelector('[data-ai-gift]'); if (g){ const bud = g.querySelector('[name=budget]'), bl = root.querySelector('[data-ai-budget]'); bud.oninput = () => bl.textContent = '$' + bud.value;
+    g.onsubmit = e => { e.preventDefault(); const f = new FormData(g); ask('gift', { who: f.get('who'), likes: f.get('likes') || '', chips: f.getAll('chip'), budget: +f.get('budget'), newbie: !!f.get('newbie') }); }; }
+  const v = root.querySelector('[data-ai-vibe]'); if (v){ const go = q => { v.q.value = q; ask('search', { q }); }; v.onsubmit = e => { e.preventDefault(); const q = v.q.value.trim(); if (q) go(q); };
+    root.querySelectorAll('[data-ai-ex]').forEach(b => b.onclick = () => go(b.dataset.aiEx)); const pre = new URLSearchParams(location.search).get('vibe'); if (pre) go(pre); }
+})();
+</script>
+{% schema %}
+{ "name": "AI book finder", "settings": [
+  { "type": "select", "id": "mode", "label": "Mode", "options": [{ "value": "vibe", "label": "Describe it (search)" }, { "value": "gift", "label": "Gift Finder quiz" }], "default": "vibe" },
+  { "type": "text", "id": "heading", "label": "Heading" } ],
+  "presets": [{ "name": "AI book finder" }] }
+{% endschema %}

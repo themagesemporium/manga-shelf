@@ -177,6 +177,126 @@ async function wlSeed(env){ if (await env.FRIENDS.get('wl:seeded')) return 1; co
   await put(env, 'wl:ps', PS); if (done){ await env.FRIENDS.put('wl:seeded', new Date().toISOString()); await env.FRIENDS.delete('wl:seedcur'); } else await env.FRIENDS.put('wl:seedcur', a); return done ? 1 : 0; }
 async function wlTick(env){ try { if (!env.SHOPIFY_CLIENT_ID) return { skip: 'no admin' }; if (new Date().getUTCMinutes() < 10) await wlLoadIndex(env); if (!(await env.FRIENDS.get('wl:seeded'))){ await wlSeed(env); await env.FRIENDS.put('wl:last', new Date().toISOString()); return { seeding: 1 }; } return await wlScan(env); } catch(e){ await env.FRIENDS.put('wl:err', String(e).slice(0, 500), { expirationTtl: 7 * 86400 }); return { error: String(e) }; } }
 
+/* ---------- AI features (Nov 2026): shelf scan, librarian, gift finder, vibe search, monthly wrap ----------
+   Secret: env.ANTHROPIC_API_KEY (Megan adds it in Cloudflare → the worker → Settings → Variables and Secrets).
+   Spending guard: shop metafield mme_app.ai_cfg {budget, off} (set from the Packing Desk); defaults budget 200.
+   KV: ai:cat (in-stock catalog, built by the cron in chunks: ai:catb + ai:catcur)   ai:m:<YYYY-MM> {spent, calls, f:{feature:[n,cost]}, d:{day:cost}}
+       ai:tot (spent since tracking began)  ai:log [last 60 calls]   ai:rl:<feature>:<who>:<day> (daily per-person limit)   ai:cfg (cached ai_cfg)
+   The cron copies a summary to the shop metafield mme_app.ai_usage, which the Packing Desk reads. */
+const AI_API = 'https://api.anthropic.com/v1/messages';
+const AI_FAST = 'claude-haiku-5-5', AI_SMART = 'claude-sonnet-5-5';
+const AI_PRICE = { 'claude-haiku-5-5': [0.10, 0.50], 'claude-sonnet-5-5': [2, 10] }; // $ per million tokens (input, output)
+const AI_LIMIT = { scan: 6, lib: 30, wrap: 4, gift: 20, search: 40 }; // per person (or per visitor IP) per day
+const AGES = ['all ages', 'teen', 'older teen', 'mature'];
+const ageIx = a => { a = String(a || '').toLowerCase(); return a.includes('mature') ? 3 : a.includes('older') ? 2 : a.includes('teen') ? 1 : a.includes('all') ? 0 : 1; };
+const ymd = () => new Date(Date.now() - 5 * 36e5).toISOString().slice(0, 10); // Eastern-ish day
+async function aiCfg(env){ let c = await get(env, 'ai:cfg'); if (c) return c; c = { budget: 200, off: false };
+  try { const d = await adm(env, '{shop{metafield(namespace:"mme_app",key:"ai_cfg"){value}}}'); const v = d.shop.metafield && JSON.parse(d.shop.metafield.value); if (v){ if (+v.budget > 0) c.budget = +v.budget; c.off = !!v.off; } } catch(e){}
+  await env.FRIENDS.put('ai:cfg', JSON.stringify(c), { expirationTtl: 600 }); return c; }
+async function aiLimit(env, feat, who){ const k = `ai:rl:${feat}:${who}:${ymd()}`; const n = +(await env.FRIENDS.get(k) || 0); if (n >= (AI_LIMIT[feat] || 20)) return false; await env.FRIENDS.put(k, String(n + 1), { expirationTtl: 2 * 86400 }); return true; }
+class AiErr extends Error { constructor(code, msg){ super(msg); this.code = code; } }
+async function aiCall(env, feat, { model = AI_FAST, system, messages, max_tokens = 1200 }){
+  if (!env.ANTHROPIC_API_KEY) throw new AiErr('setup', 'The book helper isn’t switched on yet.');
+  const cfg = await aiCfg(env); const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || { spent: 0, calls: 0, f: {}, d: {} };
+  if (cfg.off) throw new AiErr('paused', 'The book helper is taking a break. Please try again later!');
+  if (M.spent >= cfg.budget) throw new AiErr('budget', 'The book helper is resting until next month. Please try again later!');
+  const r = await fetch(AI_API, { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model, max_tokens, system, messages }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok){ await env.FRIENDS.put('ai:err', (r.status + ' ' + JSON.stringify(j).slice(0, 400)), { expirationTtl: 7 * 86400 }); throw new AiErr('api', 'The book helper hit a snag. Please try again in a minute.'); }
+  const u = j.usage || {}; const P = AI_PRICE[model] || [2, 10]; const inTok = (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) * 1.25 + (u.cache_read_input_tokens || 0) * 0.1;
+  const cost = (inTok * P[0] + (u.output_tokens || 0) * P[1]) / 1e6;
+  const day = ymd(); M.spent = +(M.spent + cost).toFixed(6); M.calls++; const F = M.f[feat] || [0, 0]; M.f[feat] = [F[0] + 1, +(F[1] + cost).toFixed(6)]; M.d[day] = +((M.d[day] || 0) + cost).toFixed(6);
+  M.log = (M.log || []).concat([[Date.now(), feat, model === AI_FAST ? 'H' : 'S', u.input_tokens || 0, u.output_tokens || 0, +cost.toFixed(5)]]).slice(-60);
+  await put(env, 'ai:m:' + mk, M);
+  return (j.content || []).filter(c => c.type === 'text').map(c => c.text).join(''); }
+const aiJSON = t => { const s = String(t || ''); const a = s.search(/[\[{]/); if (a < 0) return null; const close = s[a] === '[' ? ']' : '}'; const b = s.lastIndexOf(close); try { return JSON.parse(s.slice(a, b + 1)); } catch(e){ return null; } };
+
+/* ---- catalog of in-stock books (own Manga + Light Novels + sets), rebuilt about hourly by the cron ---- */
+const CAT_Q = `query($a:String){products(first:100,after:$a,query:"status:active AND inventory_total:>0 AND published_status:published AND (product_type:Manga OR product_type:'Light Novel') AND -tag:'Shopify Collective'"){pageInfo{hasNextPage endCursor} nodes{legacyResourceId title handle productType tags priceRangeV2{minVariantPrice{amount}} variants(first:1){nodes{legacyResourceId}} featuredMedia{preview{image{url(transform:{maxWidth:300})}}}
+  se:metafield(namespace:"custom",key:"series"){value} vo:metafield(namespace:"custom",key:"volume"){value} ag:metafield(namespace:"custom",key:"age_rating"){value} g1:metafield(namespace:"custom",key:"genre"){value} gs:metafield(namespace:"custom",key:"genres"){value} th:metafield(namespace:"custom",key:"themes"){value}
+  sp:metafield(namespace:"custom",key:"spice_level"){value} gr:metafield(namespace:"custom",key:"gentle_read"){value} ss:metafield(namespace:"custom",key:"series_status"){value} au:metafield(namespace:"custom",key:"author"){value} an:metafield(namespace:"custom",key:"has_anime"){value} cn:metafield(namespace:"custom",key:"content_notes"){value} sv:metafield(namespace:"custom",key:"series_volumes"){value}}}}`;
+const lst = v => { if (!v) return ''; try { const a = JSON.parse(v); return Array.isArray(a) ? a.join(', ') : String(v); } catch(e){ return String(v); } };
+async function catTick(env){ if (!env.SHOPIFY_CLIENT_ID) return; const have = await env.FRIENDS.get('ai:catat'); const building = await env.FRIENDS.get('ai:catcur');
+  if (!building && have && Date.now() - +have < 50 * 60e3) return; // fresh enough
+  let cur = building && building !== 'start' ? building : null; let B = building ? ((await get(env, 'ai:catb')) || []) : [];
+  for (let i = 0; i < 8; i++){ const d = await adm(env, CAT_Q, { a: cur }); const p = d.products;
+    for (const n of p.nodes){ const tags = n.tags || []; B.push({ i: n.legacyResourceId, vid: n.variants.nodes[0] && n.variants.nodes[0].legacyResourceId, t: n.title, h: n.handle, p: +(+n.priceRangeV2.minVariantPrice.amount).toFixed(2), s: (n.se && n.se.value) || n.title.replace(/\s+(Vol|Volume)\b.*$/i, ''), v: n.vo ? +n.vo.value : null,
+      a: ageIx(n.ag && n.ag.value), g: [n.g1 && n.g1.value, lst(n.gs && n.gs.value)].filter(Boolean).join(', '), th: lst(n.th && n.th.value), sp: n.sp ? parseInt(n.sp.value) || 0 : 0, gr: n.gr && n.gr.value === 'true' ? 1 : 0, st: (n.ss && n.ss.value) || '', au: (n.au && n.au.value) || '', an: n.an && n.an.value === 'true' ? 1 : 0, cn: lst(n.cn && n.cn.value), sv: n.sv ? +n.sv.value : 0,
+      set: tags.includes('Bundle') ? 1 : 0, ln: n.productType === 'Light Novel' ? 1 : 0, img: n.featuredMedia && n.featuredMedia.preview && n.featuredMedia.preview.image ? n.featuredMedia.preview.image.url : '' }); }
+    if (!p.pageInfo.hasNextPage){ await put(env, 'ai:cat', B); await env.FRIENDS.put('ai:catat', String(Date.now())); await env.FRIENDS.delete('ai:catcur'); await env.FRIENDS.delete('ai:catb'); return { done: B.length }; }
+    cur = p.pageInfo.endCursor; }
+  await put(env, 'ai:catb', B); await env.FRIENDS.put('ai:catcur', cur, { expirationTtl: 3 * 3600 }); return { building: B.length }; }
+async function aiCat(env){ const c = await get(env, 'ai:cat'); if (!c || !c.length) throw new AiErr('setup', 'The book helper is still learning the shelves. Try again in an hour!'); return c; }
+/* one row per series: its set if there is one (and it fits the budget), else its lowest in-stock volume */
+function bySeries(cat, keep){ const S = {}; for (const b of cat){ if (keep && !keep(b)) continue; const k = (b.s + (b.ln ? '|ln' : '')).toLowerCase(); const o = S[k] || (S[k] = { k, s: b.s, ln: b.ln, a: b.a, g: b.g, th: b.th, sp: b.sp, gr: b.gr, st: b.st, au: b.au, an: b.an, cn: b.cn, sv: b.sv, items: [] }); o.items.push(b); if (!o.g && b.g) o.g = b.g; if (!o.th && b.th) o.th = b.th; }
+  return Object.values(S); }
+const words = t => String(t || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(w => w.length > 2 && !/^(the|and|for|with|that|like|something|some|want|looking|manga|books?|read|reads|series|about|who|she|her|his|they|them|love|loves|really|very|good|great|into|more|any|not|but|have|has|from|kid|son|daughter|year|years|old)$/.test(w));
+function scoreSeries(o, W, F){ let sc = 0; const hay = (o.s + ' ' + o.g + ' ' + o.th + ' ' + o.au).toLowerCase(); for (const w of W){ if (hay.includes(w)) sc += o.g.toLowerCase().includes(w) || o.th.toLowerCase().includes(w) ? 3 : 2; }
+  for (const g of (F.genres || [])) if (o.g.toLowerCase().includes(String(g).toLowerCase())) sc += 4;
+  for (const g of (F.themes || [])) if ((o.th + ' ' + o.g).toLowerCase().includes(String(g).toLowerCase())) sc += 3;
+  if (F.gentle && o.gr) sc += 3; if (F.complete && /complete/i.test(o.st)) sc += 2; if (F.anime && o.an) sc += 2;
+  if (o.items.some(b => b.set)) sc += 1; if (o.items.some(b => b.v === 1)) sc += 1; return sc + Math.min(o.items.length, 10) * 0.05; }
+function pickItem(o, budget){ const sets = o.items.filter(b => b.set && (!budget || b.p <= budget)).sort((a, b) => b.p - a.p); const v1 = o.items.filter(b => !b.set).sort((a, b) => (a.v || 99) - (b.v || 99));
+  return { set: sets[0] || null, first: v1[0] || null }; }
+function filterSeries(cat, F, W){ const maxA = F.age_max == null ? 3 : F.age_max; const L = bySeries(cat, b => b.a <= maxA && (F.spice_max == null || b.sp <= F.spice_max) && (!F.max_price || b.p <= F.max_price) && (F.format === 'ln' ? b.ln : F.format === 'manga' ? !b.ln : true));
+  const ex = new Set((F.exclude || []).map(x => String(x).toLowerCase())); return L.filter(o => !ex.has(o.s.toLowerCase())).map(o => [scoreSeries(o, W, F), o]).sort((a, b) => b[0] - a[0]); }
+const line = (o, n, budget) => { const { set, first } = pickItem(o, budget); const a = []; if (first) a.push(`v${first.v || 1}:$${first.p}`); if (set) a.push(`set:${set.t.replace(/^.*?(Vol \S+)/, '$1')}:$${set.p}`);
+  return `${n}|${o.s}${o.ln ? ' (light novel)' : ''}|${AGES[o.a]}|${o.g}${o.th ? ' / ' + o.th : ''}|spice ${o.sp || '-'}${o.gr ? '|gentle' : ''}|${o.st || ''}${o.sv ? ' ' + o.sv + ' vols' : ''}${o.an ? '|anime' : ''}|${o.items.filter(b => !b.set).length} in stock|${a.join(' ')}`; };
+const card = (b, why) => b && { id: b.i, vid: b.vid, title: b.t, handle: b.h, price: b.p, img: b.img, set: b.set, ln: b.ln, series: b.s, vol: b.v, why: why || '' };
+const SHOP_VOICE = 'You are the friendly bookseller at The Mage’s Emporium, a small family-run used manga shop in South Carolina. Be warm, upbeat and brief (no more than 2 short sentences per book). Never invent books: only recommend from the CATALOG lines given, by their number. Respect the age ratings given.';
+async function rankWithAI(env, feat, ask, rows, n, budget){ const T = await aiCall(env, feat, { system: SHOP_VOICE + ` Reply with JSON only: {"intro":"one short friendly sentence","picks":[{"n":<catalog number>,"pick":"set"|"first","why":"short reason"}]} with up to ${n} picks, best first.`, messages: [{ role: 'user', content: `${ask}\n\nCATALOG (number|series|age|genres / themes|spice 1-5|status|in stock|prices):\n${rows.map(([, o], i) => line(o, i + 1, budget)).join('\n')}` }], max_tokens: 1400 });
+  const J = aiJSON(T) || {}; const out = []; for (const p of (J.picks || [])){ const r = rows[(+p.n || 0) - 1]; if (!r) continue; const { set, first } = pickItem(r[1], budget); const b = p.pick === 'set' && set ? set : first || set; if (b && !out.some(x => x.id === b.i)) out.push(card(b, String(p.why || '').slice(0, 240))); if (out.length >= n) break; }
+  return { intro: String(J.intro || '').slice(0, 300), picks: out }; }
+async function parseWish(env, feat, q){ // free text -> filters
+  const T = await aiCall(env, feat, { system: 'Turn a manga shopper’s request into search filters. Reply with JSON only: {"keywords":[...],"genres":[...],"themes":[...],"age_max":0-3 or null (0 all ages,1 teen,2 older teen,3 mature),"spice_max":1-5 or null,"gentle":bool,"complete":bool,"anime":bool,"format":"manga"|"ln"|null,"max_price":number or null,"exclude":[series names to leave out]}. Genres/themes use common manga words (romance, fantasy, isekai, horror, comedy, slice of life, shojo, shonen, BL, yuri, sports, mystery, action, sci-fi, found family, enemies to lovers, cozy, magic, school, workplace...). "No spice/clean" = spice_max 1; "a little romance" = spice_max 2.', messages: [{ role: 'user', content: String(q).slice(0, 600) }], max_tokens: 300 });
+  return aiJSON(T) || {}; }
+
+async function aiRoute(env, req, p, whoKey, me){ let b = {}; if (req.method === 'POST'){ try { b = await req.json(); } catch(e){} }
+  const feat = p.split('/').pop(); if (!AI_LIMIT[feat]) return J({ error: 'not found' }, 404);
+  if (!(await aiLimit(env, feat, whoKey))) return J({ error: 'That’s the limit for today. Come back tomorrow!', code: 'limit' }, 429);
+  try {
+    if (feat === 'scan'){ if (!me) return J({ error: 'Log in first' }, 401); const img = String(b.img || ''); if (!/^[A-Za-z0-9+/=]{1000,}$/.test(img) || img.length > 7e6) return J({ error: 'Please try a smaller photo.' }, 400);
+      const T = await aiCall(env, 'scan', { model: AI_SMART, max_tokens: 3000, system: 'You read manga and light novel spines in shelf photos. List every book whose spine you can read. Reply with JSON only: {"books":[{"series":"English series title as printed","vol":number or null,"ln":true if a light novel,"sure":true or false}]}. One entry per physical book; if a volume number is unreadable use null and sure:false. Skip non-book items.', messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: String(b.type || 'image/jpeg').replace(/[^a-z/]/g, ''), data: img } }, { type: 'text', text: 'Read the spines in this photo.' }] }] });
+      const Jb = aiJSON(T) || {}; return J({ books: (Jb.books || []).slice(0, 200).map(x => ({ series: String(x.series || '').slice(0, 160), vol: x.vol == null ? null : +x.vol, ln: !!x.ln, sure: x.sure !== false })) }); }
+    const cat = await aiCat(env);
+    if (feat === 'search'){ const q = String(b.q || '').trim(); if (q.length < 3) return J({ error: 'Tell us a little more!' }, 400); const F = await parseWish(env, 'search', q); if (b.age_max != null) F.age_max = Math.min(+b.age_max, F.age_max == null ? 3 : F.age_max);
+      const W = [...new Set(words(q).concat(F.keywords || []).map(w => String(w).toLowerCase()))]; const rows = filterSeries(cat, F, W).slice(0, 70);
+      return J(await rankWithAI(env, 'search', `Shopper asked: "${q.slice(0, 400)}". Pick the best matches.`, rows, 12, F.max_price)); }
+    if (feat === 'gift'){ const ageMap = { kid: 0, tween: 1, teen: 1, older: 2, adult: 3 }; const F = { age_max: ageMap[b.who] ?? 1, spice_max: b.who === 'adult' ? (b.spicy ? 5 : 3) : b.who === 'older' ? 3 : 2, max_price: +b.budget || null, genres: [], themes: [] };
+      const likes = String(b.likes || '').slice(0, 500); const W = words(likes + ' ' + (b.chips || []).join(' ')); const rows = filterSeries(cat, F, W).slice(0, 70);
+      const ask = `Gift for ${({ kid: 'a kid (under 10)', tween: 'a tween (10–12)', teen: 'a teen (13–15)', older: 'an older teen (16–17)', adult: 'an adult' })[b.who] || 'a teen'}. They like: ${likes || 'not sure'} ${(b.chips || []).join(', ')}. Budget about $${+b.budget || 40}. ${b.newbie ? 'They are NEW to manga: favor complete short series, Vol 1 or sets.' : 'They already read manga: favor fresh picks.'} The shopper may not know manga, so explain each pick simply. Pick up to 6; picks marked "set" must fit the budget.`;
+      return J(await rankWithAI(env, 'gift', ask, rows, 6, +b.budget || null)); }
+    if (feat === 'lib'){ if (!me) return J({ error: 'Log in first' }, 401); const msg = String(b.msg || '').slice(0, 600); const sh = b.shelf || {}; const own = (sh.own || []).slice(0, 400).map(String);
+      const ownL = new Set(own.map(x => x.toLowerCase())); const liked = (sh.top || []).slice(0, 15).map(String); const likedSet = new Set(liked.map(x => x.toLowerCase()));
+      const likeG = {}; for (const o of bySeries(cat)) if (likedSet.has(o.s.toLowerCase())) String(o.g + ',' + o.th).split(/,\s*/).filter(Boolean).forEach(g => likeG[g.toLowerCase()] = (likeG[g.toLowerCase()] || 0) + 1);
+      const F = { genres: Object.entries(likeG).sort((a, b) => b[1] - a[1]).slice(0, 5).map(x => x[0]), exclude: own, age_max: sh.age_max != null ? +sh.age_max : 3 };
+      const W = words(msg); const rows = filterSeries(cat, F, W).slice(0, 60);
+      const next = []; const last = sh.last || {}; for (const [ser, mx] of Object.entries(last).slice(0, 300)){ const hit = cat.find(x => !x.set && x.s.toLowerCase() === ser.toLowerCase() && x.v === +mx + 1); if (hit) next.push(hit); }
+      const hist = (Array.isArray(b.hist) ? b.hist : []).slice(-6).map(h => ({ role: h.r === 'me' ? 'user' : 'assistant', content: String(h.t || '').slice(0, 800) })).filter(h => h.content);
+      const ctx = `READER PROFILE: favorites: ${liked.join('; ') || 'not rated yet'}. Owns ${own.length} series. Wishlist: ${(sh.want || []).slice(0, 20).join('; ')}. Recently read: ${(sh.recent || []).slice(0, 10).join('; ')}.\nNEXT VOLUMES IN STOCK for series they own (mention if useful, as N1, N2...):\n${next.slice(0, 15).map((x, i) => `N${i + 1}|${x.t}|$${x.p}`).join('\n') || 'none'}\nCATALOG (series they don't own yet; number|series|age|genres / themes|spice|status|stock|prices):\n${rows.map(([, o], i) => line(o, i + 1)).join('\n')}`;
+      const T = await aiCall(env, 'lib', { max_tokens: 1200, system: SHOP_VOICE + ' You are chatting in the shop’s reading app as "the Librarian". Answer their message helpfully and conversationally (2-5 sentences), then recommend up to 4 books. Reply with JSON only: {"say":"your reply","picks":[{"n":<catalog number or "N1" style>,"pick":"set"|"first","why":"short reason tied to what they like"}]}. If they ask about something that isn’t books, gently steer back to manga.', messages: hist.concat([{ role: 'user', content: ctx + '\n\nTHEIR MESSAGE: ' + (msg || 'What should I read next?') }]) });
+      const Jl = aiJSON(T) || { say: String(T || '').slice(0, 800), picks: [] }; const picks = [];
+      for (const p of (Jl.picks || [])){ let bk = null; if (/^N\d+$/i.test(String(p.n))) bk = next[+String(p.n).slice(1) - 1]; else { const r = rows[(+p.n || 0) - 1]; if (r){ const { set, first } = pickItem(r[1]); bk = p.pick === 'set' && set ? set : first || set; } } if (bk && !picks.some(x => x.id === bk.i)) picks.push(card(bk, String(p.why || '').slice(0, 240))); if (picks.length >= 4) break; }
+      return J({ say: String(Jl.say || '').slice(0, 1200), picks }); }
+    if (feat === 'wrap'){ if (!me) return J({ error: 'Log in first' }, 401); const s = b.stats || {};
+      const T = await aiCall(env, 'wrap', { max_tokens: 300, system: 'You write a fun, kind end-of-month reading recap for a manga reader. Reply with JSON only: {"title":"a playful 2-4 word reader title (like \\"Midnight Page-Turner\\" or \\"Shojo Sorceress\\")","blurb":"one upbeat sentence about their month, 25 words max"}. Never shame a slow month; celebrate any reading.', messages: [{ role: 'user', content: JSON.stringify(s).slice(0, 2000) }] });
+      const Jw = aiJSON(T) || {}; return J({ title: String(Jw.title || 'Manga Adventurer').slice(0, 40), blurb: String(Jw.blurb || '').slice(0, 220) }); }
+  } catch(e){ return J({ error: e.code ? e.message : 'Something went wrong. Please try again.', code: e.code || 'err' }, e.code === 'setup' || e.code === 'budget' || e.code === 'paused' ? 503 : 500); }
+  return J({ error: 'not found' }, 404); }
+/* the website reaches the AI through the Shopify app proxy (/apps/mme/ai/<feature> -> /proxy/ai/<feature>) */
+async function aiProxy(env, req, url){ const cid = await proxyCid(env, url); if (cid === null) return new Response('{"error":"forbidden"}', { status: 403, headers: { 'content-type': 'application/json' } });
+  const feat = url.pathname.split('/').pop(); if (feat !== 'gift' && feat !== 'search') return new Response('{"error":"not found"}', { status: 404, headers: { 'content-type': 'application/json' } });
+  const whoKey = cid ? 'c' + cid : 'ip' + (await sha(req.headers.get('cf-connecting-ip') || 'x')).slice(0, 16);
+  const r = await aiRoute(env, req, '/ai/' + feat, whoKey, null); return new Response(r.body, { status: r.status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }); }
+/* hourly copy of the spend summary to the shop metafield mme_app.ai_usage (the Packing Desk reads it) */
+async function aiFlush(env){ if (!env.SHOPIFY_CLIENT_ID) return; const last = +(await env.FRIENDS.get('ai:flushat') || 0); if (Date.now() - last < 55 * 60e3) return;
+  const months = {}; let log = []; const now = new Date(); for (let i = 0; i < 6; i++){ const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 15)); const mk = d.toISOString().slice(0, 7); const M = await get(env, 'ai:m:' + mk); if (M){ months[mk] = { spent: M.spent, calls: M.calls, f: M.f, d: M.d }; log = log.concat(M.log || []); } }
+  log.sort((a, b) => b[0] - a[0]); const cfg = await aiCfg(env);
+  const val = { updated: new Date().toISOString(), months, log: log.slice(0, 60), budget: cfg.budget, off: cfg.off, cat: (await env.FRIENDS.get('ai:catat')) || null, err: await env.FRIENDS.get('ai:err'), key: !!env.ANTHROPIC_API_KEY };
+  const sid = (await adm(env, '{shop{id}}')).shop.id; const d = await adm(env, `mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: sid, namespace: 'mme_app', key: 'ai_usage', type: 'json', value: JSON.stringify(val) }] });
+  if (d.metafieldsSet.userErrors.length) await env.FRIENDS.put('ai:err', 'flush ' + d.metafieldsSet.userErrors[0].message, { expirationTtl: 86400 }); await env.FRIENDS.put('ai:flushat', String(Date.now())); }
+async function aiTick(env){ try { await catTick(env); } catch(e){ await env.FRIENDS.put('ai:err', 'catalog ' + String(e).slice(0, 300), { expirationTtl: 86400 }); } try { await aiFlush(env); } catch(e){} }
+
 export default {
   async fetch(req, env){
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
@@ -190,9 +310,11 @@ export default {
       const n = await sendTo(env, SHOP_CID(env), { t: ('🛒 New order ' + String(o.name || '')).slice(0, 80), b: [o.total ? '$' + o.total : '', o.items ? o.items + ' item' + (+o.items === 1 ? '' : 's') : '', o.channel || '', o.who || ''].filter(Boolean).join(' · ').slice(0, 200), u: DESK + '#pack', tag: 'shop-order' });
       return J({ sent: n }); }
     if (p.startsWith('/proxy/wl')) return wlProxy(env, req, url);
+    if (p.startsWith('/proxy/ai/')) return aiProxy(env, req, url);
     if (p === '/wl/unsub') return wlUnsub(env, url);
     if (p === '/wl/status'){ return J({ admin: !!env.SHOPIFY_CLIENT_ID, mail: !!env.RESEND_KEY, last: await env.FRIENDS.get('wl:last'), err: await env.FRIENDS.get('wl:err'), keys: Object.keys(((await get(env, 'wl:idx')) || {}).keys || {}).length }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
+    if (p.startsWith('/ai/')) return aiRoute(env, req, p, 'c' + me.cid, me);
     /* /wl/touch: the app saved the customer's wishlist itself; refresh this customer in the alert index */
     if (p === '/wl/touch' && req.method === 'POST'){ try { await wlIndex(env, me.cid, await wlGet(env, me.cid)); return J({ ok: 1 }); } catch(e){ return J({ error: String(e).slice(0, 120) }, 500); } }
     /* /notify/msg: a customer sent a message or Find request in the app */
@@ -246,5 +368,5 @@ export default {
       if (me.mail) await env.FRIENDS.delete('ask:' + await sha(me.mail)); return J({ ok: 1 }); }
     return J({ error: 'not found' }, 404);
   },
-  async scheduled(event, env, ctx){ ctx.waitUntil(runQueue(env)); ctx.waitUntil(wlTick(env)); }
+  async scheduled(event, env, ctx){ ctx.waitUntil(runQueue(env)); ctx.waitUntil(wlTick(env)); ctx.waitUntil(aiTick(env)); }
 };
