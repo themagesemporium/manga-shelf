@@ -1,0 +1,24 @@
+{%- comment -%} Product page extras (Nov 2026): "Readers say" (series collection metafield custom.readers_say, written from the Packing Desk)
+  and "Is this right for my reader?" (asks the shop's book helper through /apps/mme/ai/kid; answers from this listing's age rating, content notes and spice level). {%- endcomment -%}
+{%- if product.type == 'Manga' or product.type == 'Light Novel' -%}{%- unless product.tags contains 'Shopify Collective' or product.tags contains 'Mystery Box' -%}
+  {%- assign rs = nil -%}
+  {%- for c in product.collections -%}{%- if c.handle contains 'series-' and c.metafields.custom.readers_say -%}{%- assign rs = c.metafields.custom.readers_say.value -%}{%- break -%}{%- endif -%}{%- endfor -%}
+  {%- if rs and rs.text != blank -%}
+    <div class="tme-rs"><div class="tme-rs-h">📣 Readers say{% if rs.n %} <span>· {% if rs.avg %}★ {{ rs.avg }} from {% endif %}{{ rs.n }} app reader{% if rs.n != 1 %}s{% endif %}</span>{% endif %}</div><p>{{ rs.text | escape }}</p></div>
+  {%- endif -%}
+  <details class="tme-kid" id="tme-kid-{{ product.id }}"><summary>👪 Is this right for my reader? <span>Ask us</span></summary>
+    <form data-kid><textarea name="q" rows="2" maxlength="400" placeholder="e.g. Is this okay for my 11-year-old? Is it scary?" required></textarea><button class="button button--secondary" type="submit">Ask</button></form>
+    <div class="tme-kid-a" aria-live="polite"></div><p class="tme-kid-f">Answers come from this book’s age rating and content notes. When in doubt, flip through it first, or <a href="/pages/contact">ask us</a>!</p></details>
+  <style>
+    .tme-rs{margin:14px 0;padding:10px 14px;border-radius:10px;background:#fff7e0;border:1px solid #f0da93}.tme-rs-h{font-weight:700;margin:0 0 4px}.tme-rs-h span{font-weight:400;opacity:.75;font-size:.9em}.tme-rs p{margin:0}
+    .tme-kid{margin:12px 0;border:1px solid rgba(0,0,0,.15);border-radius:10px;padding:8px 12px}.tme-kid summary{cursor:pointer;font-weight:700}.tme-kid summary span{font-weight:400;opacity:.7;font-size:.9em;margin-left:4px}
+    .tme-kid form{display:flex;flex-direction:column;gap:8px;margin-top:8px}.tme-kid textarea{width:100%;box-sizing:border-box;padding:8px;border:1px solid rgba(0,0,0,.25);border-radius:6px;font:inherit}
+    .tme-kid-a{margin-top:8px;white-space:pre-wrap}.tme-kid-a:empty{display:none}.tme-kid-f{font-size:.85em;opacity:.75;margin:8px 0 0}
+  </style>
+  <script>
+  (() => { const box = document.getElementById('tme-kid-{{ product.id }}'); if (!box) return; const f = box.querySelector('[data-kid]'), out = box.querySelector('.tme-kid-a');
+    f.onsubmit = async e => { e.preventDefault(); const q = f.q.value.trim(); if (!q) return; const btn = f.querySelector('button'); btn.disabled = true; out.textContent = '✨ Checking this book’s details…';
+      try { const r = await fetch('/apps/mme/ai/kid', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pid: '{{ product.id }}', q }) }); const j = await r.json().catch(() => ({})); out.textContent = j.answer || j.error || 'Something went wrong. Please try again.'; }
+      catch(err){ out.textContent = 'We couldn’t reach the book helper. Please try again.'; } btn.disabled = false; }; })();
+  </script>
+{%- endunless -%}{%- endif -%}
