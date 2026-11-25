@@ -40,6 +40,15 @@ else if (SP.url && !SP.err.length){
   cfg.snap = SP.url; fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + '\n');
   out(`Store snapshot: ${SP.series} series, ${newAl} aliases (was ${oldAl}). New file ${SP.url.split('/').pop()}`);
 } else { failed = true; out('Store snapshot NOT updated:', JSON.stringify(SP.err)); }
+// 1b) Shopkeeper record (Megan, Nov 25 2026): every volume ever in stock, for her owner-only card in the app. Seeds once from
+// tools/data/ever-stocked-ids.txt, then adds whatever the snapshot shows in stock. Separate from her collector shelf (no XP).
+try { load('shop-record.js'); const p = ROOT + 'shop-record.json'; const old = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
+  const rec = old ? JSON.parse(old) : null; let seed = null;
+  if (!rec || !rec.seeded){ try { seed = fs.readFileSync(ROOT + 'tools/data/ever-stocked-ids.txt', 'utf8').split(/\s+/).filter(Boolean); } catch(e){} }
+  const R = await window._srRun(rec, seed); const SR = window._SR || {}; const txt = JSON.stringify(R) + '\n';
+  if (txt !== old) fs.writeFileSync(p, txt);
+  out(`Shopkeeper record: ${R.n} volumes in ${Object.keys(R.s).length} series (+${SR.added || 0} this run${seed ? `, seeded ${SR.seeded}, ${SR.seedMissed} listings without a series/volume` : ''}).`); }
+catch (e){ out('Shopkeeper record failed:', String(e).slice(0, 300)); }
 // 2) Want List counts
 try { load('wantlist-build.js'); await window._wlRun(); const W = window._WL; out(`Want List: ${W.wishers} wishers, ${W.rows} rows in ${W.parts} parts.${W.err.length ? ' Errors: ' + JSON.stringify(W.err).slice(0, 300) : ''}`); if (W.err.length && !W.rows) failed = true; }
 catch (e){ failed = true; out('Want List failed:', String(e).slice(0, 300)); }
