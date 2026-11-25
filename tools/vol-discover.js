@@ -7,7 +7,7 @@
   const page = async (q, p) => { const h = await (await fetch('/s?k=' + encodeURIComponent(q) + '&i=stripbooks' + (p > 1 ? '&page=' + p : ''))).text(); const d = new DOMParser().parseFromString(h, 'text/html');
     return [...d.querySelectorAll('[data-asin][data-component-type="s-search-result"]')].map(e => ({ t: ((e.querySelector('h2') || {}).textContent || '').trim(), f: [...e.querySelectorAll('a.a-text-bold')].map(x => x.textContent.trim()).join('/') })); };
   window._vdOne = async j => { const [, ser, ln] = j; const kw = norm(ser).split(' ').filter(w => w && !STOP.has(w) && !/^\d+$/.test(w)); const ns = norm(ser);
-    let r = []; for (const p of [1, 2]){ try { r = r.concat(await page(ser + (ln ? ' light novel' : ''), p)); } catch(e){} await new Promise(z => setTimeout(z, 600)); }
+    let r = []; for (const p of [1, 2]){ try { r = r.concat(await page(ser + (ln ? ' light novel' : ' manga'), p)); /* the word manga keeps Amazon in Books (it ignores i=stripbooks for some queries) */ } catch(e){} await new Promise(z => setTimeout(z, 600)); }
     let max = 0, any = false;
     for (const x of r){ const t = norm(x.t); if (!((' ' + t + ' ').includes(' ' + ns + ' ') || (kw.length >= 2 && kw.every(w => t.split(' ').includes(w))) || (kw.length === 1 && t.split(' ').includes(kw[0])))) continue;
       if (!/paperback|hardcover/i.test(x.f)) continue; if (/german|french|italian|spanish|portuguese|japanese edition|box set|coloring|calendar/i.test(x.t)) continue;
