@@ -33,4 +33,8 @@ jobs:
             git add isbn-community.json
             git commit -m "Nightly: community ISBNs"
           fi
+          if [ -f shop-record.json ] && { ! git ls-files --error-unmatch shop-record.json >/dev/null 2>&1 || ! git diff --quiet shop-record.json; }; then
+            git add shop-record.json
+            git commit -m "Nightly: shopkeeper record"
+          fi
           git push || true
