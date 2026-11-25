@@ -57,6 +57,18 @@ async function sendOne(env, sub, msg){ // -> HTTP status; 404/410 means the subs
 async function sendTo(env, cid, msg, kind){ const rec = await get(env, 'push:c:' + cid); if (!rec || !rec.subs || !rec.subs.length) return 0; if (kind && rec.prefs && rec.prefs[kind] === false) return 0;
   let n = 0; const keep = []; for (const s of rec.subs){ let st = 0; try { st = await sendOne(env, s, msg); } catch(e){} if (st === 404 || st === 410) continue; keep.push(s); if (st >= 200 && st < 300) n++; }
   if (keep.length !== rec.subs.length){ rec.subs = keep; await put(env, 'push:c:' + cid, rec); } return n; }
+/* ---- App cart reminder (Megan, Nov 24 2026): one push per cart, 24h after the last change, only if the books are still in it and no order came in since. Respects the 'cart' push toggle. ---- */
+async function cartTick(env){ if (new Date().getUTCMinutes() >= 10) return; const C = (await get(env, 'cart:idx')) || {}; const now = Date.now(); let changed = false, sent = 0;
+  for (const cid of Object.keys(C).slice(0, 40)){ const c = C[cid]; const age = now - c.at; if (age > 7 * 864e5){ delete C[cid]; changed = true; continue; } if (c.sent || age < 24 * 36e5) continue;
+    try { const r = await fetch('https://themagesemporium.com/api/2025-07/graphql.json', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: 'query($c:ID!){cart(id:$c){checkoutUrl totalQuantity lines(first:50){nodes{merchandise{... on ProductVariant{id product{title}}}}}}}', variables: { c: c.id } }) });
+      const cart = ((await r.json()).data || {}).cart; c.sent = 1; changed = true; if (!cart || !cart.totalQuantity) { delete C[cid]; continue; }
+      const since = new Date(c.at - 6e5).toISOString(); const o = await adm(env, `query($q:String){orders(first:1,query:$q){nodes{id}}}`, { q: `customer_id:${cid} AND created_at:>${since}` }); if (o.orders.nodes.length) { delete C[cid]; continue; }
+      const vids = cart.lines.nodes.map(l => l.merchandise && l.merchandise.id).filter(Boolean).slice(0, 50); let last = null;
+      if (vids.length){ const v = await adm(env, `query($ids:[ID!]!){nodes(ids:$ids){... on ProductVariant{inventoryQuantity product{title}}}}`, { ids: vids }); last = (v.nodes || []).find(x => x && x.inventoryQuantity === 1); }
+      const n = cart.totalQuantity; const msg = last ? { t: '📚 Only one ' + last.product.title.slice(0, 50) + ' left!', b: `It’s still in your cart${n > 1 ? ` with ${n - 1} more` : ''}. Grab it before someone else does!`, u: cart.checkoutUrl, tag: 'cart' }
+        : { t: '🛒 Your books are waiting!', b: `${n} ${n === 1 ? 'book is' : 'books are'} still in your cart at The Mage’s Emporium.`, u: cart.checkoutUrl, tag: 'cart' };
+      sent += await sendTo(env, cid, msg, 'cart'); } catch(e){ await env.FRIENDS.put('cart:err', String(e && e.message || e).slice(0, 300), { expirationTtl: 7 * 86400 }); } }
+  if (changed) await put(env, 'cart:idx', C); if (sent) await env.FRIENDS.put('cart:last', JSON.stringify({ at: now, sent }), { expirationTtl: 30 * 86400 }); }
 async function runQueue(env){
   const r = await fetch(STOREFRONT, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: '{shop{metafield(namespace:"mme_app",key:"push_queue"){value}}}' }) });
   const j = await r.json(); const raw = j.data && j.data.shop && j.data.shop.metafield && j.data.shop.metafield.value; if (!raw) return { sent: 0 };
@@ -497,6 +509,9 @@ export default {
       const h = await sha('mme:' + me.cid); const rec = (await get(env, 'push:c:' + me.cid)) || { h, prefs: {}, subs: [] };
       rec.subs = rec.subs.filter(s => s.endpoint !== sub.endpoint).concat([{ endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } }]).slice(-5);
       if (body.prefs) rec.prefs = body.prefs; await put(env, 'push:c:' + me.cid, rec); await env.FRIENDS.put('push:h:' + h, me.cid); return J({ ok: 1 }); }
+    if (p === '/cart/track'){ const C = (await get(env, 'cart:idx')) || {}; const id = String(body.id || ''); const n = Math.max(0, +body.n || 0);
+      if (!/^gid:\/\/shopify\/Cart\//.test(id) || !n) delete C[me.cid]; else { const prev = C[me.cid]; C[me.cid] = { id, n, at: Date.now(), sent: prev && prev.id === id ? prev.sent || 0 : 0 }; }
+      await put(env, 'cart:idx', C); return J({ ok: 1 }); }
     if (p === '/push/prefs'){ const rec = await get(env, 'push:c:' + me.cid); if (!rec) return J({ error: 'not subscribed' }, 404); rec.prefs = body.prefs || {}; await put(env, 'push:c:' + me.cid, rec); return J({ ok: 1 }); }
     if (p === '/push/unsub'){ const rec = await get(env, 'push:c:' + me.cid); if (rec){ rec.subs = rec.subs.filter(s => s.endpoint !== body.endpoint); if (rec.subs.length) await put(env, 'push:c:' + me.cid, rec); else { await env.FRIENDS.delete('push:c:' + me.cid); await env.FRIENDS.delete('push:h:' + rec.h); } } return J({ ok: 1 }); }
     if (p === '/push/test'){ const n = await sendTo(env, me.cid, { t: '🔔 Notifications are on!', b: 'This is how news from The Mage’s Emporium will look.', u: '/', tag: 'test' }); return J({ sent: n }); }
@@ -510,5 +525,5 @@ export default {
       if (me.mail) await env.FRIENDS.delete('ask:' + await sha(me.mail)); return J({ ok: 1 }); }
     return J({ error: 'not found' }, 404);
   },
-  async scheduled(event, env, ctx){ ctx.waitUntil(runQueue(env)); ctx.waitUntil(wlTick(env)); ctx.waitUntil(aiTick(env)); }
+  async scheduled(event, env, ctx){ ctx.waitUntil(runQueue(env)); ctx.waitUntil(wlTick(env)); ctx.waitUntil(aiTick(env)); ctx.waitUntil(cartTick(env).catch(() => {})); }
 };

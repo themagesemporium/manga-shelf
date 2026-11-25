@@ -1975,6 +1975,7 @@ function liveItems(nodes, e, old){ const by = new Map(); const isb = new Map((ol
     const it = { vol: Math.round(v), price: +n.priceRange.minVariantPrice.amount, inv: n.availableForSale ? 1 : 0, handle: n.handle, img: n.featuredImage ? n.featuredImage.url : '', title: n.title, ser: e.n, sv: e.t || 0, isbn: isb.get(n.handle) || '', vid: n.variants.nodes[0] && n.variants.nodes[0].id };
     const ex = by.get(it.vol); if (!ex || (it.inv > ex.inv) || (it.inv === ex.inv && it.price < ex.price)) by.set(it.vol, it); });
   return [...by.values()].sort((a, b) => a.vol - b.vol); }
+let cartTrackT = null; function cartTrack(){ clearTimeout(cartTrackT); cartTrackT = setTimeout(() => { try { if (!FRIENDS_API || !acct || !acct.at) return; fapi('/cart/track', cart && cart.id ? { id: cart.id, n: cart.n || 0 } : { n: 0 }).catch(() => {}); } catch(e){} }, 1500); }
 async function sfq(query, variables){ const r = await fetch(SF, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query, variables }) }); return r.json(); }
 async function liveStock(key, out){ if (window.claude || !navigator.onLine) return; const hit = snapEntry(key); if (!hit) return; const [sk, e] = hit;
   try { const j = await sfq(`{c:collection(handle:${JSON.stringify(collHandle(sk, e))}){${LQ}}}`); const c = j.data && j.data.c;
@@ -2004,13 +2005,13 @@ async function addToCart(handle, btn){ track('add-to-cart'); if (window.claude){
     if (cart && cart.id){ j = await sfq(`mutation($c:ID!,$l:[CartLineInput!]!){cartLinesAdd(cartId:$c,lines:$l){cart{${CF}} userErrors{message}}}`, { c: cart.id, l: [{ merchandiseId: vid, quantity: 1 }] }); j = j.data && j.data.cartLinesAdd; }
     if (!j || !j.cart){ j = await sfq(`mutation($l:[CartLineInput!]!){cartCreate(input:{lines:$l,attributes:[{key:"_source",value:"mme-app"}]}){cart{${CF}} userErrors{message}}}`, { l: [{ merchandiseId: vid, quantity: 1 }] }); j = j.data && j.data.cartCreate; }
     if (!j || !j.cart) throw new Error((j && j.userErrors && j.userErrors[0] && j.userErrors[0].message) || 'cart error');
-    cart = { id: j.cart.id, url: j.cart.checkoutUrl, n: j.cart.totalQuantity }; ls.set('mme-cart', cart); cartChip(); toast('Added to your cart 🛒');
+    cart = { id: j.cart.id, url: j.cart.checkoutUrl, n: j.cart.totalQuantity }; ls.set('mme-cart', cart); cartChip(); cartTrack(); toast('Added to your cart 🛒');
     if (btn){ btn.textContent = 'In cart ✓'; } }
   catch(e){ if (btn){ btn.disabled = false; btn.textContent = '🛒 Add'; } toast('Couldn’t add it (' + e.message + '). Try the shop page.'); } }
 async function openCart(){ if (!cart || !cart.id) return; openSheet(`<h2>🛒 Your cart</h2><div id="cartBody"><p class="sub"><span class="spin"></span>&nbsp; Loading…</p></div>`);
   const draw = async () => { const j = await sfq(`query($c:ID!){cart(id:$c){${CF}}}`, { c: cart.id }); const c = j.data && j.data.cart; const el = $('#cartBody'); if (!el) return;
-    if (!c){ cart = null; ls.set('mme-cart', null); cartChip(); el.innerHTML = '<p class="sub">Your cart is empty.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>'; return; }
-    cart = { id: c.id, url: c.checkoutUrl, n: c.totalQuantity }; ls.set('mme-cart', cart); cartChip();
+    if (!c){ cart = null; ls.set('mme-cart', null); cartChip(); cartTrack(); el.innerHTML = '<p class="sub">Your cart is empty.</p><div class="row2"><button class="btn ghost" data-close>Close</button></div>'; return; }
+    cart = { id: c.id, url: c.checkoutUrl, n: c.totalQuantity }; ls.set('mme-cart', cart); cartChip(); cartTrack();
     el.innerHTML = (c.lines.nodes.length ? c.lines.nodes.map(l => `<div class="find"><img src="${esc(l.merchandise.product.featuredImage ? l.merchandise.product.featuredImage.url : '')}" alt=""><div class="t"><b>${esc(l.merchandise.product.title)}</b><small>Qty ${l.quantity}</small></div><button class="btn ghost sm" data-rmline="${esc(l.id)}">Remove</button></div>`).join('') : '<p class="sub">Your cart is empty.</p>')
       + `<p style="margin:10px 0 6px"><b>Total: $${(+c.cost.totalAmount.amount).toFixed(2)}</b> <span class="sub">(shipping and tax at checkout)</span></p><div class="row2">${c.lines.nodes.length ? `<a class="btn" href="${esc(c.checkoutUrl)}" target="_top">Check out on the shop</a>` : ''}<button class="btn ghost" data-close>Keep browsing</button></div>`;
     el.querySelectorAll('[data-rmline]').forEach(b => b.onclick = async () => { b.disabled = true; await sfq(`mutation($c:ID!,$l:[ID!]!){cartLinesRemove(cartId:$c,lineIds:$l){cart{id}}}`, { c: cart.id, l: [b.dataset.rmline] }); draw(); }); };
@@ -3035,8 +3036,8 @@ document.addEventListener('click', async e => { if (e.target.closest('[data-a2hs
 document.addEventListener('click', e => { if (e.target.closest('[data-a2hsdone]')){ ls.set('mme-a2hs', Date.now()); a2hsShow(); closeSheet(); toast('🎉 Enjoy the app!'); } });
 setTimeout(a2hsShow, 600);
 /* ---------- push notifications (sent by the friends worker; see worker/friends-worker.js) ---------- */
-const PUSHK = [['msgs', '💬 Replies from the shop'], ['stock', '📚 Wishlist volumes back in stock & pre-orders in'], ['orders', '🚚 Your orders & mystery boxes'], ['deals', '🏷️ Sales, deals & conventions']];
-const pushPrefs = () => Object.assign({ msgs: true, stock: true, orders: true, deals: true }, ls.get('mme-pushp') || {});
+const PUSHK = [['msgs', '💬 Replies from the shop'], ['cart', '🛒 A reminder if books sit in your cart'], ['stock', '📚 Wishlist volumes back in stock & pre-orders in'], ['orders', '🚚 Your orders & mystery boxes'], ['deals', '🏷️ Sales, deals & conventions']];
+const pushPrefs = () => Object.assign({ msgs: true, cart: true, stock: true, orders: true, deals: true }, ls.get('mme-pushp') || {});
 const pushHomeFirst = () => /iphone|ipad|ipod/i.test(navigator.userAgent) && !(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
 const pushOK = () => !window.claude && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 const u8 = s => Uint8Array.from(atob(String(s).replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((String(s).length + 3) % 4)), c => c.charCodeAt(0));
