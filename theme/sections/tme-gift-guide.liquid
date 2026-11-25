@@ -38,6 +38,7 @@
     {%- if mb.available -%}<a class="tme-gg-tile" href="{{ mb.url }}"><span>🎲</span><b>Mystery Manga Box</b><small>We hand-pick the books. Tell us what they like and what they already own on the box’s page, and we’ll skip repeats.</small></a>{%- endif -%}
     {%- assign gc = all_products['gift-card'] -%}
     {%- if gc.available -%}<a class="tme-gg-tile" href="{{ gc.url }}"><span>💳</span><b>Gift Card</b><small>Let them pick. Sent by email and works on everything in the shop.</small></a>{%- endif -%}
+    {%- render 'tme-gc-bonus' -%}
     <a class="tme-gg-tile" href="https://app.themagesemporium.com" target="_blank" rel="noopener"><span>📱</span><b>Know a manga fan? Get their gift list</b><small>Readers who use our free My Manga Emporium app can tap “Share my gift list.” Their link opens here with exactly the volumes they want, ready to add to your cart.</small></a>
   </div>
   {%- render 'tme-xmas-by' -%}

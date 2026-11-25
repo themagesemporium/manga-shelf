@@ -2,6 +2,15 @@
   offer to replace them with the set (10% off) and add the remaining volumes. Uses the set's custom.bundle_items for the volume list.
   Skips sets that are sold out or already in the cart. Works next to cart-series-suggest ("Complete your series"). {%- endcomment -%}
 {%- liquid
+  assign has_gc = false
+  for item in cart.items
+    if item.product.gift_card?
+      assign has_gc = true
+    endif
+  endfor
+-%}
+{%- if has_gc -%}<div class="page-width">{%- render 'tme-gc-bonus' -%}</div>{%- endif -%}
+{%- liquid
   assign seen = ''
   capture offers
     for item in cart.items

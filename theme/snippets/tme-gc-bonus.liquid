@@ -1,0 +1,6 @@
+{%- comment -%} Holiday gift card bonus (Megan, Nov 24 2026): buy $50 in gift cards Nov 24-Dec 24, get a $5 bonus card for every $50, usable Jan 1-31.
+  Bonus cards are made on Jan 1 (scheduled task) and Shopify emails them. Shows only while the deal runs (America/New_York). {%- endcomment -%}
+<p class="tme-gcb" data-tme-gcb hidden>🎁 <b>Holiday bonus:</b> buy $50 in gift cards and we’ll send you a <b>$5 bonus card</b> for every $50 ($10 for $100)! Bonus cards arrive by email on Jan 1 and are good through Jan 31.</p>
+<script>(() => { const n = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })); const on = n >= new Date(2026, 10, 24) && n <= new Date(2026, 11, 24, 23, 59, 59);
+  if (on) document.querySelectorAll('[data-tme-gcb]').forEach(e => e.hidden = false); })();</script>
+<style>.tme-gcb{margin:10px 0;padding:8px 12px;border-radius:10px;background:#fff7e0;border:1px solid #f0da93;font-size:14px}</style>
