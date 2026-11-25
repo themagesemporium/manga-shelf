@@ -371,18 +371,26 @@ async function aiSeries(env, b){ const pid = String(b.pid || '').replace(/\D/g, 
 
 /* ---- Mystery box curator (cron): picks books for new mystery box orders -> order metafield custom.box_picks (the Desk shows them on the order) ---- */
 const BOX_RE = /mystery|blind date with manga/i;
+async function boxSave(env, oid, val){ const raw = await fetch(`https://${SHOPD}/admin/api/${AV}/graphql.json`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-shopify-access-token': await admTok(env) }, body: JSON.stringify({ query: `mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, variables: { m: [{ ownerId: oid, namespace: 'custom', key: 'box_picks', type: 'json', value: JSON.stringify(val) }] } }) });
+  const j = await raw.json().catch(() => ({})); if (j.data && j.data.metafieldsSet && !j.data.metafieldsSet.userErrors.length) return 'order';
+  await env.FRIENDS.put('ai:boxerr', JSON.stringify(j.errors || (j.data && j.data.metafieldsSet && j.data.metafieldsSet.userErrors) || j).slice(0, 300), { expirationTtl: 7 * 86400 });
+  const sd = await adm(env, '{shop{id metafield(namespace:"mme_app",key:"box_picks"){value}}}'); let M = {}; try { M = JSON.parse(sd.shop.metafield.value) || {}; } catch(e){}
+  M[oid] = val; const ks = Object.keys(M); if (ks.length > 60) ks.slice(0, ks.length - 60).forEach(k => delete M[k]);
+  const w = await adm(env, `mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: sd.shop.id, namespace: 'mme_app', key: 'box_picks', type: 'json', value: JSON.stringify(M) }] });
+  if (w.metafieldsSet && w.metafieldsSet.userErrors.length) throw new Error('box shop save ' + w.metafieldsSet.userErrors[0].message); return 'shop'; }
 async function aiBoxes(env){ if (!env.SHOPIFY_CLIENT_ID || !env.ANTHROPIC_API_KEY) return; const cfg = await aiCfg(env); if (cfg.off) return;
   const since = new Date(Date.now() - 4 * 864e5).toISOString().slice(0, 10);
   /* Nov 25: the old single query (25 orders x 8 shelf fields x 40 lines) cost more than the API allows and failed every time ("Throttled").
      Now: a cheap list first, then the full details only for the box orders that still need picks. */
   const d = await adm(env, `{orders(first:20,sortKey:CREATED_AT,reverse:true,query:"created_at:>${since} AND (fulfillment_status:unfulfilled OR fulfillment_status:partial OR fulfillment_status:on_hold) AND status:open"){nodes{id bp:metafield(namespace:"custom",key:"box_picks"){id} lineItems(first:15){nodes{title unfulfilledQuantity product{tags}}}}}}`);
-  const ids = d.orders.nodes.filter(o => !o.bp && o.lineItems.nodes.some(li => BOX_RE.test(li.title) && li.unfulfilledQuantity > 0 && !(li.product && li.product.tags.includes('Shopify Collective')))).slice(0, 3).map(o => o.id);
+  let SB = {}; try { const sb = await adm(env, '{shop{metafield(namespace:"mme_app",key:"box_picks"){value}}}'); SB = JSON.parse(sb.shop.metafield.value) || {}; } catch(e){}
+  const ids = d.orders.nodes.filter(o => !o.bp && !SB[o.id] && o.lineItems.nodes.some(li => BOX_RE.test(li.title) && li.unfulfilledQuantity > 0 && !(li.product && li.product.tags.includes('Shopify Collective')))).slice(0, 3).map(o => o.id);
   const todo = []; for (const id of ids){ const x = await adm(env, `query($id:ID!){order(id:$id){id name customer{id ${SHELF_Q}} lineItems(first:40){nodes{title variantTitle quantity unfulfilledQuantity customAttributes{key value} originalUnitPriceSet{shopMoney{amount}} product{id tags}}}}}`, { id }); if (x.order) todo.push(x.order); }
   if (!todo.length) return; const cat = await aiCat(env); const res = (await get(env, 'ai:boxres')) || {}; const now = Date.now(); for (const k of Object.keys(res)) if (now - res[k][1] > 14 * 864e5) delete res[k];
   for (const o of todo){ const boxes = o.lineItems.nodes.filter(li => BOX_RE.test(li.title) && li.unfulfilledQuantity > 0); let need = 0, mature = false, kids = false, perBook = 7; const props = [];
     for (const li of boxes){ const m = (li.variantTitle + ' ' + li.title).match(/(\d+)\s*(?:random\s*)?(?:books?|volumes?|vols?|manga)\b/i); const n = m ? +m[1] : 0; need += n * li.unfulfilledQuantity; if (/mature|18\+/i.test(li.title + li.variantTitle)) mature = true; if (/\bkid|children|all ages/i.test(li.title + li.variantTitle)) kids = true; if (n) perBook = Math.min(perBook, +li.originalUnitPriceSet.shopMoney.amount / n); (li.customAttributes || []).forEach(a => { if (a.value && !a.key.startsWith('_')) props.push(a.key + ': ' + a.value); }); }
     const val = { by: 'ai', at: new Date().toISOString(), picks: [], note: '' };
-    if (!need || need > 40){ val.note = 'The book helper couldn’t tell how many books this box needs, so pick by hand.'; await adm(env, `mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: o.id, namespace: 'custom', key: 'box_picks', type: 'json', value: JSON.stringify(val) }] }); continue; }
+    if (!need || need > 40){ val.note = 'The book helper couldn’t tell how many books this box needs, so pick by hand.'; await boxSave(env, o.id, val); continue; }
     let own = new Set(), likes = []; const sh = o.customer ? await shelfDecode(o.customer) : null;
     if (sh && sh.series) for (const s of Object.values(sh.series)){ if (!s || !s.n) continue; (s.v || []).forEach(v => own.add(cleanS(s.n) + '|' + v)); if ((s.st || 0) >= 4) likes.push(s.n); }
     let past = []; if (o.customer){ try { const pd = await adm(env, `query($id:ID!){customer(id:$id){orders(first:15,sortKey:CREATED_AT,reverse:true){nodes{lineItems(first:50){nodes{product{id}}}}}}}`, { id: o.customer.id }); past = pd.customer.orders.nodes.flatMap(x => x.lineItems.nodes.map(l => l.product && l.product.id.split('/').pop())).filter(Boolean); } catch(e){} }
@@ -397,8 +405,7 @@ async function aiBoxes(env){ if (!env.SHOPIFY_CLIENT_ID || !env.ANTHROPIC_API_KE
       for (const x of scored){ if (chosen.length >= need) break; if (chosen.includes(x) || (perS[x.s] || 0) >= 2) continue; chosen.push(x); perS[x.s] = (perS[x.s] || 0) + 1; }
       val.picks = chosen.map(x => ({ pid: x.i, title: x.t, series: x.s, vol: x.v, price: x.p, handle: x.h })); chosen.forEach(x => res[x.i] = [o.name, now]);
       val.note = '✨ Picked by the book helper' + (props.length ? ' using their notes' : '') + (sh ? ', skipping books on their app shelf' : '') + '. ' + val.note; }
-    const r = await adm(env, `mutation($m:[MetafieldsSetInput!]!){metafieldsSet(metafields:$m){userErrors{message}}}`, { m: [{ ownerId: o.id, namespace: 'custom', key: 'box_picks', type: 'json', value: JSON.stringify(val) }] });
-    if (r.metafieldsSet.userErrors.length) await env.FRIENDS.put('ai:err', 'box ' + r.metafieldsSet.userErrors[0].message, { expirationTtl: 86400 }); }
+    await boxSave(env, o.id, val); }
   await put(env, 'ai:boxres', res); }
 
 /* ---- New for you (nightly, ~4am Eastern): new arrivals matched to app readers -> shop metafield mme_app.new_for_you (Desk Restocks tab: review + Send) ---- */
@@ -467,7 +474,7 @@ export default {
       return J({ sent: n }); }
     if (p.startsWith('/proxy/wl')) return wlProxy(env, req, url);
     if (p.startsWith('/proxy/ai/')) return aiProxy(env, req, url);
-    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), built: ((await get(env, 'ai:catb')) || []).length, catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), last: await get(env, 'ai:last'), flushed: await env.FRIENDS.get('ai:flushat'), blurbs: await get(env, 'ai:blurb') }); }
+    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), built: ((await get(env, 'ai:catb')) || []).length, catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), last: await get(env, 'ai:last'), flushed: await env.FRIENDS.get('ai:flushat'), blurbs: await get(env, 'ai:blurb'), boxerr: await env.FRIENDS.get('ai:boxerr'), v: 13 }); }
     if (p === '/wl/unsub') return wlUnsub(env, url);
     if (p === '/wl/status'){ return J({ admin: !!env.SHOPIFY_CLIENT_ID, mail: !!env.RESEND_KEY, last: await env.FRIENDS.get('wl:last'), err: await env.FRIENDS.get('wl:err'), keys: Object.keys(((await get(env, 'wl:idx')) || {}).keys || {}).length }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
