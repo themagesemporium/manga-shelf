@@ -21,7 +21,7 @@ window._laRun = async (opt = {}) => {
     const prob = [], fill = [], ser = g(p, 'series'), ln = p.productType === 'Light Novel';
     if (!p.productType) prob.push('product type');
     /* Megan, Nov 25: every one of her own books carries 'Mage Books' (Collective private list pulls by this tag) */
-    if (opt.fix && !p.tags.includes('Mage Books') && /^(Manga|Light Novel|Manhwa|Manhua|Graphic Novels?|OEL)$/.test(p.productType || '') && !/mystery|blind date|advent/i.test(p.title)){ const r = await _api(`mutation($id:ID!){tagsAdd(id:$id,tags:["Mage Books"]){userErrors{message}}}`, { id: p.id }); if (r.data) LA.fixed++; }
+    if (opt.fix && !p.tags.includes('Mage Books') && /^(Manga|Light Novel|Manhwa|Manhua|Graphic Novels?|OEL)$/.test(p.productType || '') && !/mystery|blind date|advent calendar/i.test(p.title)){ const r = await _api(`mutation($id:ID!){tagsAdd(id:$id,tags:["Mage Books"]){userErrors{message}}}`, { id: p.id }); if (r.data) LA.fixed++; }
     if (!p.vendor || /mage/i.test(p.vendor)) prob.push('vendor (publisher)');
     const v = p.variants.nodes[0] || {};
     if (!v.barcode) prob.push('ISBN/barcode');
