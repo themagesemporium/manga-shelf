@@ -949,7 +949,10 @@ function monthChal(){
   list.forEach(c => { if (!c.done) return; const A = shelf.ach || (shelf.ach = {}); const a = A.chc || (A.chc = []); const id = mk + '|' + c.t; if (!a.includes(id)){ a.push(id); ch = true; } });
   if (ch && !monthChal._saving){ monthChal._saving = true; setTimeout(() => { monthChal._saving = false; try { save(); } catch(e){} }, 0); }
   const left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate();
-  return { mk, label, list, doneN, sq, marks, win, bingoLines: won.length, marked, left, readsN: reads.length };
+  // which read fills each square, and every square each read could fit (for the tap-a-square view; Megan, Nov 26 2026)
+  const fillBy = sq.map(() => null); owner.forEach((i, j) => { if (i >= 0) fillBy[i] = uniq[j]; });
+  const fitsOf = r => { const j = uniq.indexOf(r); return j < 0 ? [] : sq.map((x, i) => cand[i].includes(j) ? i : -1).filter(i => i >= 0); };
+  return { mk, label, list, doneN, sq, marks, win, bingoLines: won.length, marked, left, readsN: reads.length, fillBy, fitsOf, uniq, cand };
 }
 function openChal(){ const c = monthChal();
   openSheet(`<h2>🎯 ${esc(c.label)} challenges</h2><p class="sub" style="margin-top:0">${c.left} day${c.left === 1 ? '' : 's'} left. New challenges and a new Bingo card every month, the same for every collector. Mark volumes as read (tap a series, then the 📖 on a volume) and they count automatically.</p>
@@ -960,9 +963,19 @@ function openChal(){ const c = monthChal();
   <p style="margin:10px 0 0;display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm gold" href="${STORE}/products/manga-reading-bingo-${['january','february','march','april','may','june','july','august','september','october','november','december'][new Date().getMonth()]}-printable-pdf-english-spanish" target="_blank" rel="noopener">🖨️ This month's printable Bingo card</a><a class="btn sm ghost" href="${STORE}/products/manga-reading-bingo-yearly-kit" target="_blank" rel="noopener">📦 Printed Yearly Kit</a></p>
   ${c.readsN ? '' : '<p class="sub">No volumes marked as read this month yet.</p>'}<p class="sub" style="margin:8px 0 0">Every challenge you finish, every Bingo line and a full blackout earn XP each month. Finish all 3 challenges for 🗓️ Challenger, and get a line for 🎱 Bingo! (see Achievements).</p>`); }
 /* Tap a Bingo square: list the volumes on your shelf that fit it, unread first (Megan, Nov 23 2026) */
+/* What filled a Bingo square: the volume counted, the other squares that volume also fits, and other reads this month that fit here (Megan, Nov 26 2026) */
+function bingoCountedHTML(c, i){ const nm = k => (shelf.series[k] || (shelf.other || {})[k] || {}).n || k; const fmtD = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const vol = r => `${esc(nm(r.key))} Vol ${esc(String(r.v))}`; const lbls = ix => ix.map(x => esc(c.sq[x][0])).join(', ');
+  const r = c.fillBy[i];
+  if (!r) return c.marks[i] ? '<p class="sub" style="margin-top:0">✅ Marked earlier this month. It stays marked even if a book’s details change later.</p>' : '';
+  const also = c.fitsOf(r).filter(x => x !== i);
+  const others = (c.cand[i] || []).map(j => c.uniq[j]).filter(o => o !== r);
+  const row = `<div class="srow"${shelf.series[r.key] ? ` data-bgopen="${esc(r.key)}" role="button" tabindex="0"` : ' style="cursor:default"'}><span>✅ ${vol(r)}<small>Read ${esc(fmtD(r.day))}${also.length ? ` · also fits: ${lbls(also)}` : ''}</small></span></div>`;
+  const more = others.length ? `<p class="sub" style="margin:6px 0 0">Other reads this month that fit here: ${others.slice(0, 8).map(o => { const f = c.fillBy.indexOf(o); return `${vol(o)}${f >= 0 ? ` (counting for ${esc(c.sq[f][0])})` : ''}`; }).join('; ')}${others.length > 8 ? ` and ${others.length - 8} more` : ''}.</p>` : '';
+  return `<p class="sub" style="margin:0 0 4px">Counted for this square:</p>${row}${more}<p class="sub" style="margin:6px 0 10px">Each volume fills one square, and the app shuffles them to fill as many squares as it can.</p>`; }
 function bingoFits(i){ const c = monthChal(); const sq = c.sq[i]; if (!sq || !sq[1]) return; const [lbl, fn] = sq; const mk = c.mk, today = dayKey(new Date());
   const back = `<p style="margin:0 0 8px"><button class="btn sm ghost" data-gochal>‹ Back to Bingo</button></p>`;
-  const head = `<h2>🎱 ${esc(lbl)}</h2>${c.marks[i] ? '<p class="sub" style="margin-top:0">✅ This square is already marked this month.</p>' : ''}` + (/Borrowed/.test(lbl) ? '<p class="sub" style="margin-top:0">Mark a volume as borrowed (open the series, switch to “Loan”, pick “I borrowed it from” and type a friend or “Library”), then mark it as read to fill this square.</p>' : '');
+  const head = `<h2>🎱 ${esc(lbl)}</h2>${bingoCountedHTML(c, i)}` + (/Borrowed/.test(lbl) ? '<p class="sub" style="margin-top:0">Mark a volume as borrowed (open the series, switch to “Loan”, pick “I borrowed it from” and type a friend or “Library”), then mark it as read to fill this square.</p>' : '');
   const tips = { 'Read on a weekend': 'Any volume counts: just mark it as read on a Saturday or Sunday.', '3 vols in one day': 'Any volumes count: read 3 in the same day and mark them as read.' };
   if (tips[lbl]){ openSheet(back + head + `<p>${tips[lbl]}</p>`); return; }
   const rows = [];
