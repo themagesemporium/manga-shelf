@@ -70,17 +70,19 @@ async function cartTick(env){ if (new Date().getUTCMinutes() >= 10) return; cons
       sent += await sendTo(env, cid, msg, 'cart'); } catch(e){ await env.FRIENDS.put('cart:err', String(e && e.message || e).slice(0, 300), { expirationTtl: 7 * 86400 }); } }
   if (changed) await put(env, 'cart:idx', C); if (sent) await env.FRIENDS.put('cart:last', JSON.stringify({ at: now, sent }), { expirationTtl: 30 * 86400 }); }
 async function runQueue(env){
-  const r = await fetch(STOREFRONT, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query: '{shop{metafield(namespace:"mme_app",key:"push_queue"){value}}}' }) });
-  const j = await r.json(); const raw = j.data && j.data.shop && j.data.shop.metafield && j.data.shop.metafield.value; if (!raw) return { sent: 0 };
+  /* v14 (Nov 26 2026): read the queue with the Admin token. The tokenless Storefront API can't see metafields ("Access denied ... unauthenticated_read_metafields"), so before this no queued push was ever sent. */
+  let raw = null; try { const d = await adm(env, '{shop{metafield(namespace:"mme_app",key:"push_queue"){value}}}'); raw = d && d.shop && d.shop.metafield && d.shop.metafield.value; } catch(e){ await env.FRIENDS.put('push:err', String(e && e.message || e).slice(0, 300), { expirationTtl: 7 * 86400 }); }
+  if (!raw) return { sent: 0 };
   let Q = []; try { Q = JSON.parse(raw); } catch(e){ return { sent: 0 }; }
   let sent = 0; const now = Date.now();
   for (const it of Q.sort((a, b) => a.id - b.id)){
     if (it.s && +it.s > now) continue; // scheduled for later (e.g. Christmas morning)
-    if (now - Math.max(+it.at || +it.id, +it.s || 0) > 3 * 864e5) continue; // too old
+    if (now - Math.max(+it.at || +it.id, +it.s || 0) > 2 * 36e5) continue; // too old (2 hours; the cron runs every 10 minutes, and older items were never sent before v14, so they stay unsent)
     const dk = 'push:done:' + it.id; if (await env.FRIENDS.get(dk)) continue; await env.FRIENDS.put(dk, '1', { expirationTtl: 10 * 86400 });
     const msg = { t: String(it.t || 'My Manga Emporium').slice(0, 80), b: String(it.b || '').slice(0, 200), u: it.u || '/', tag: it.k || 'mme' };
     if (it.h === '*'){ let cur; do { const l = await env.FRIENDS.list({ prefix: 'push:c:', cursor: cur }); for (const k of l.keys) sent += await sendTo(env, k.name.slice(7), msg, it.k); cur = l.list_complete ? null : l.cursor; } while (cur); }
     else { const cid = await env.FRIENDS.get('push:h:' + it.h); if (cid) sent += await sendTo(env, cid, msg, it.k); } }
+  if (sent) await env.FRIENDS.put('push:last', JSON.stringify({ at: now, sent }), { expirationTtl: 30 * 86400 });
   return { sent }; }
 
 async function conNow(env){ let L = null; try { L = JSON.parse(await env.FRIENDS.get('cons') || 'null'); } catch(e){} if (!L){ L = []; try { const html = await (await fetch('https://themagesemporium.com/pages/upcoming-events')).text(); const MONS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']; html.split(/<\/p>|<br\s*\/?>|\n/i).map(x => x.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()).forEach(line => { const m = line.match(/^(.+?)\s+[-–—]\s+([A-Za-z]+)\.?\s+(\d{1,2})(?:\s*[-–]\s*(?:([A-Za-z]+)\.?\s+)?(\d{1,2}))?,?\s+(\d{4})/); if (!m) return; const mi = MONS.indexOf(m[2].toLowerCase().slice(0, 3)); if (mi < 0) return; const m2 = m[4] ? MONS.indexOf(m[4].toLowerCase().slice(0, 3)) : mi; L.push([Date.UTC(+m[6], mi, +m[3] - 1, 5), Date.UTC(+m[6], m2 < 0 ? mi : m2, (m[5] ? +m[5] : +m[3]) + 2, 5)]); }); } catch(e){} await env.FRIENDS.put('cons', JSON.stringify(L), { expirationTtl: 21600 }); } const now = Date.now(); return L.some(([s, e]) => now >= s && now < e); }
@@ -474,8 +476,9 @@ export default {
       return J({ sent: n }); }
     if (p.startsWith('/proxy/wl')) return wlProxy(env, req, url);
     if (p.startsWith('/proxy/ai/')) return aiProxy(env, req, url);
-    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), built: ((await get(env, 'ai:catb')) || []).length, catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), last: await get(env, 'ai:last'), flushed: await env.FRIENDS.get('ai:flushat'), blurbs: await get(env, 'ai:blurb'), boxerr: await env.FRIENDS.get('ai:boxerr'), v: 13 }); }
+    if (p === '/ai/status'){ const mk = ymd().slice(0, 7); const M = (await get(env, 'ai:m:' + mk)) || {}; const c = await get(env, 'ai:cat'); return J({ key: !!env.ANTHROPIC_API_KEY, catalog: c ? c.length : 0, building: !!(await env.FRIENDS.get('ai:catcur')), built: ((await get(env, 'ai:catb')) || []).length, catAt: await env.FRIENDS.get('ai:catat'), month: mk, spent: M.spent || 0, calls: M.calls || 0, err: await env.FRIENDS.get('ai:err'), last: await get(env, 'ai:last'), flushed: await env.FRIENDS.get('ai:flushat'), blurbs: await get(env, 'ai:blurb'), boxerr: await env.FRIENDS.get('ai:boxerr'), v: 14 }); }
     if (p === '/wl/unsub') return wlUnsub(env, url);
+    if (p === '/push/status'){ return J({ last: await get(env, 'push:last'), err: await env.FRIENDS.get('push:err'), v: 14 }); }
     if (p === '/wl/status'){ return J({ admin: !!env.SHOPIFY_CLIENT_ID, mail: !!env.RESEND_KEY, last: await env.FRIENDS.get('wl:last'), err: await env.FRIENDS.get('wl:err'), keys: Object.keys(((await get(env, 'wl:idx')) || {}).keys || {}).length }); }
     const me = await who(env, req); if (!me) return J({ error: 'login', detail: who.last || '' }, 401);
     if (p.startsWith('/ai/')) return aiRoute(env, req, p, 'c' + me.cid, me);
