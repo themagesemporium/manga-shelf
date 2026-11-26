@@ -932,12 +932,18 @@ function monthChal(){
   const tryS = (i, seen) => { for (const j of cand[i]){ if (seen[j]) continue; seen[j] = 1; if (owner[j] < 0 || tryS(owner[j], seen)){ owner[j] = i; return true; } } return false; };
   sq.forEach((x, i) => { if (cand[i].length) tryS(i, {}); });
   const filled = new Set(owner.filter(i => i >= 0));
-  const marks = sq.map(([lbl, fn], i) => !fn || filled.has(i));
+  let marks = sq.map(([lbl, fn], i) => !fn || filled.has(i));
+  // a square, once marked, stays marked for that month, so reclassifying a book later (genre, audience, spice...) never takes credit away (Megan, Nov 26 2026). Stored in shelf.ach.bgs = {'YYYY-MM': '0101...'}.
+  let ch = false;
+  { const A = shelf.ach || (shelf.ach = {}); const BS = A.bgs || (A.bgs = {}); const prev = String(BS[mk] || '');
+    marks = marks.map((x, i) => x || prev[i] === '1');
+    const cur = marks.map(x => x ? '1' : '0').join('');
+    if (cur !== prev && marks.some((x, i) => x && i !== 12)){ BS[mk] = cur; Object.keys(BS).sort().slice(0, -14).forEach(k => delete BS[k]); ch = true; } }
   const lines = []; for (let i = 0; i < 5; i++){ lines.push([0,1,2,3,4].map(j => i*5 + j)); lines.push([0,1,2,3,4].map(j => j*5 + i)); } lines.push([0,6,12,18,24], [4,8,12,16,20]);
   const won = lines.filter(l => l.every(i => marks[i])); const win = new Set(won.flat());
   const doneN = list.filter(c => c.done).length; const marked = marks.filter(Boolean).length - 1;
   // remember wins (badges keep them after the month ends)
-  let ch = false; const keep = (f, ok) => { if (!ok) return; const A = shelf.ach || (shelf.ach = {}); const a = A[f] || (A[f] = []); if (!a.includes(mk)){ a.push(mk); ch = true; } };
+  const keep = (f, ok) => { if (!ok) return; const A = shelf.ach || (shelf.ach = {}); const a = A[f] || (A[f] = []); if (!a.includes(mk)){ a.push(mk); ch = true; } };
   keep('chm', doneN === list.length); keep('bgo', won.length > 0); keep('bgx', marked === 24);
   // each finished challenge is remembered as 'YYYY-MM|title' so it earns XP every month (Megan, Nov 22 2026)
   list.forEach(c => { if (!c.done) return; const A = shelf.ach || (shelf.ach = {}); const a = A.chc || (A.chc = []); const id = mk + '|' + c.t; if (!a.includes(id)){ a.push(id); ch = true; } });
