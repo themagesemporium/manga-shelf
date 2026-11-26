@@ -903,7 +903,7 @@ function monthChal(){
   const now = new Date(), mk = dayKey(now).slice(0, 7), label = now.toLocaleDateString(undefined, { month: 'long' });
   const seed = now.getFullYear() * 12 + now.getMonth(); const rnd = seeded(seed * 2654435761);
   const R = shelf.rl || {}, L = shelf.log || {};
-  const known = k => !!(shelf.series[k] || (shelf.other || {})[k]); // books read that left the shelf (or were never owned) still count
+  const known = k => !!(shelf.series[k] || (shelf.other || {})[k] || (SNAP && snapEntry(k))); // books read that left the shelf (or were never owned) still count; so do reads of a shop series even if it was removed from the shelf later (Nov 26 2026)
   const reads = []; Object.keys(R).filter(d => d.slice(0, 7) === mk).forEach(d => R[d].forEach(t => { const i = t.lastIndexOf('|'); reads.push({ key: t.slice(0, i), v: +t.slice(i + 1), day: d }); }));
   const readN = Object.keys(L).filter(d => d.slice(0, 7) === mk).reduce((a, d) => a + (L[d] || 0), 0);
   const readDays = Object.keys(L).filter(d => d.slice(0, 7) === mk && L[d] > 0).length;
