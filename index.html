@@ -616,7 +616,9 @@ function info(key){
   const s = shelf.series[key]; const cov = edCov(key); const own = cov.size ? [...new Set(ints(s).concat([...cov]))].sort((a,b)=>a-b) : ints(s); const set = new Set(own);
   const L = live.get(key); const total = Math.max(L && L.total ? L.total : 0, s.fin || 0);
   const max = Math.max(0, ...own);
-  const span = Math.max(max, total);
+  // Nov 27 2026 (Lynn): series the shop doesn't carry have no known total, so the grid used to shrink back when a top volume was un-owned (Vol 2-3 vanished). Remember the highest volume shown (s.hi) and wishlisted ones so the cells stay.
+  if (!total && max > (s.hi || 0)) s.hi = max;
+  const span = Math.max(max, total, total ? 0 : (s.hi || 0), ...((s.want || []).filter(x => Number.isInteger(x) && x > 0 && x < 500)));
   const gaps = []; for (let i=1;i<max;i++) if (!set.has(i)) gaps.push(i);
   const next = (!total || max < total) ? max + 1 : null;
   const inStock = L ? L.items.filter(it => it.inv > 0 && !set.has(it.vol)) : [];
