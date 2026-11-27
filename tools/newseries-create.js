@@ -31,6 +31,9 @@ window._ncCreate = async (jobs, rows) => {
   const clean = t => String(t || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*\[[^\]]*\]/g, '').replace(/[,:]?\s*(vol\.?|volume|book|#)\s*\d+.*$/i, '').replace(/\s+\d+\s*[:,].*$/, '').replace(/,\s*\d+\s*$/, '').replace(/\s+\d+\s*$/, '').replace(/\s*[:\-–]\s*$/, '').trim();
   const nameOf = {}; rows.forEach(r => { if (nameOf[r[0]] == null){ const c = clean(r[7]); const typed = (byIdx[r[0]] || [, ''])[1]; const nt = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
     nameOf[r[0]] = c && nt(c).length >= 3 && (nt(c).includes(nt(typed).slice(0, 6)) || nt(typed).includes(nt(c).slice(0, 6))) ? c : null;
+    // Customers' typed names are usually right and better cased than Amazon's ("SECRET DEVIL-CHAN GN", "Lip and Sword: 唇枪"):
+    // use the typed name unless it carries volume/part numbers or brackets (Megan, Nov 27 2026: Lynn's data is ~99% right)
+    if (nameOf[r[0]] && typed && !/\b(vols?|volume|part|book|chapter)\b|[()\[\]]|\d+\s*-\s*\d+|,\s*\d+$/i.test(typed)) nameOf[r[0]] = typed.trim();
     // A series whose name ends in a number (Persona 4, Gundam 00) loses it in clean(): keep the typed name then (Nov 27 2026)
     if (nameOf[r[0]] && /\d\s*$/.test(typed) && nt(typed).startsWith(nt(nameOf[r[0]])) && nt(typed) !== nt(nameOf[r[0]])) nameOf[r[0]] = typed.trim(); } });
   NC.newAlias = [];
