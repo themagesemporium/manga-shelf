@@ -30,7 +30,9 @@ window._ncCreate = async (jobs, rows) => {
   // Series name from the Amazon title (fixes typos in what customers typed); the typed name becomes an app alias.
   const clean = t => String(t || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*\[[^\]]*\]/g, '').replace(/[,:]?\s*(vol\.?|volume|book|#)\s*\d+.*$/i, '').replace(/\s+\d+\s*[:,].*$/, '').replace(/,\s*\d+\s*$/, '').replace(/\s+\d+\s*$/, '').replace(/\s*[:\-–]\s*$/, '').trim();
   const nameOf = {}; rows.forEach(r => { if (nameOf[r[0]] == null){ const c = clean(r[7]); const typed = (byIdx[r[0]] || [, ''])[1]; const nt = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
-    nameOf[r[0]] = c && nt(c).length >= 3 && (nt(c).includes(nt(typed).slice(0, 6)) || nt(typed).includes(nt(c).slice(0, 6))) ? c : null; } });
+    nameOf[r[0]] = c && nt(c).length >= 3 && (nt(c).includes(nt(typed).slice(0, 6)) || nt(typed).includes(nt(c).slice(0, 6))) ? c : null;
+    // A series whose name ends in a number (Persona 4, Gundam 00) loses it in clean(): keep the typed name then (Nov 27 2026)
+    if (nameOf[r[0]] && /\d\s*$/.test(typed) && nt(typed).startsWith(nt(nameOf[r[0]])) && nt(typed) !== nt(nameOf[r[0]])) nameOf[r[0]] = typed.trim(); } });
   NC.newAlias = [];
   const seen = new Set();
   for (const r of rows){
