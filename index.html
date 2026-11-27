@@ -248,6 +248,21 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .shelfv .sh{position:relative;align-self:end;height:96px;margin-bottom:14px;padding:0;border:0;background:none;cursor:pointer}
 .shelfv .sh img,.shelfv .sh .ph{width:100%;height:96px;object-fit:cover;border-radius:3px;box-shadow:2px 2px 4px rgba(0,0,0,.35);display:block}
 .shelfv .sh img{position:absolute;inset:0;background:#fff}
+/* Spine bookcase view (Megan, Nov 27 2026): one spine per owned volume, grouped by series, on wooden shelves */
+.spinev{display:flex!important;flex-wrap:wrap;align-content:flex-start;row-gap:16px;column-gap:2px;padding:10px 8px 16px;border:8px solid #7a4a26;border-radius:12px;background:repeating-linear-gradient(180deg,#3f2615 0,#5a3820 148px,#b07a48 148px,#9a6436 164px);background-position:0 10px;box-shadow:0 8px 20px rgba(60,35,15,.28)}
+.spinev .sp{position:relative;flex:0 0 20px;width:20px;padding:0;border:0;border-radius:2px 2px 1px 1px;cursor:pointer;overflow:hidden;background-size:cover;background-position:center;box-shadow:inset -3px 0 0 rgba(0,0,0,.22),inset 2px 0 0 rgba(255,255,255,.16)}
+.spinev .sp.cov::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.3),rgba(0,0,0,0) 45%,rgba(0,0,0,.22))}
+.spinev .sp i{position:absolute;top:7px;left:0;right:0;margin:0 auto;writing-mode:vertical-rl;font:600 9px/1 Figtree,sans-serif;font-style:normal;letter-spacing:.02em;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;max-height:calc(100% - 30px)}
+.spinev .sp b,.spinev .gp b{position:absolute;bottom:3px;left:1px;right:1px;font:700 9px/12px Figtree,sans-serif;color:#fff;background:rgba(0,0,0,.45);border-radius:2px;text-align:center}
+.spinev .sp .ur{position:absolute;top:2px;left:7px;width:5px;height:5px;border-radius:50%;background:#ffe066;box-shadow:0 0 0 1px rgba(0,0,0,.35);z-index:1}
+.spinev .gp{position:relative;flex:0 0 16px;width:16px;box-sizing:border-box;border:1.5px dashed rgba(255,236,200,.55);border-radius:2px;cursor:pointer;padding:0;background:none}
+.spinev .gp b{background:none;color:rgba(255,236,200,.85)}
+.spinev .brk{flex:0 0 8px;height:148px}
+.spinev .more{flex:1 0 100%;margin-top:4px;min-height:44px;border-radius:10px;border:0;background:#fffef7;color:var(--ink);font-weight:700;cursor:pointer}
+#spineCtl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+#spineCtl[hidden]{display:none}
+#spineCtl button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--accent);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
+#spineCtl button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .shelfv .sh .ph{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .shelfv .sh .ph{display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;font-weight:700;line-height:1.15;padding:4px;box-sizing:border-box;color:#fff;overflow:hidden;word-break:break-word}
 .shelfv .sh .lg{position:absolute;left:0;right:0;bottom:0;font-style:normal;font-size:9.5px;font-weight:800;text-align:center;background:rgba(20,20,30,.78);color:#fff;border-radius:0 0 3px 3px;padding:1px 0;letter-spacing:.04em}
@@ -451,7 +466,7 @@ html:has(#sheet.on),html:has(#sheet.on) body,html:has(.vpop) body{overflow:hidde
         <option value="genre">Sort: By genre</option>
       </select>
       <select id="sfilt" aria-label="Show only"><option value="">Show: Everything</option></select>
-      <select id="view" aria-label="Change the view"><option value="shelf">View: Bookshelf</option><option value="full">View: Full cards</option><option value="compact">View: Compact list</option></select>
+      <select id="view" aria-label="Change the view"><option value="shelf">View: Bookshelf</option><option value="full">View: Full cards</option><option value="compact">View: Compact list</option><option value="spine">View: Spine bookcase</option></select>
     </div>
     <div class="seg2" id="shelfSeg" role="group" aria-label="Show"><button data-sf="all" aria-pressed="true">All</button><button data-sf="done" aria-pressed="false">Complete</button><button data-sf="open" aria-pressed="false">Incomplete</button><button data-sf="recs" aria-pressed="false">✨ For you</button><button data-sf="hl" aria-pressed="false">📦 Holds &amp; loans</button></div>
     <div class="count" id="count"></div>
@@ -1520,6 +1535,9 @@ function renderList(){
   if (!keys.length){ $('#list').innerHTML = `<div class="empty">${q ? `Nothing on your shelf matches “${esc(q)}”.` : shelfFilter === 'done' ? 'No complete series yet. Finish a run and it shows up here! ⭐' : 'Every series on your shelf is complete. 🎉'}</div>`; return; }
   const FX = (() => { try { return fixMap(); } catch(e){ return new Map(); } })();
   const vmode = $('#view').value; const compact = vmode === 'compact'; $('#list').classList.toggle('compact', compact); $('#list').classList.toggle('shelfv', vmode === 'shelf');
+  { let sc = $('#spineCtl'); if (!sc && vmode === 'spine'){ sc = document.createElement('div'); sc.id = 'spineCtl'; $('#list').before(sc); } if (sc) sc.hidden = vmode !== 'spine'; }
+  $('#list').classList.toggle('spinev', vmode === 'spine');
+  if (vmode === 'spine') return renderSpines(keys);
   if (vmode === 'shelf'){ const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
     $('#list').innerHTML = keys.map(k => { const i = I[k]; const u = coverOf(k); const n = i.s.n;
       return `<button class="sh" data-k="${esc(k)}" title="${esc(n)}" aria-label="${esc(n)}${langOf(k) ? ', ' + langOf(k) + ' edition' : ''}, ${i.own.length} volumes"><span class="ph" style="background:hsl(${hue(n)} 50% 30%)">${esc(n)}</span>${u ? `<img src="${esc(u)}" alt="" loading="lazy" onload="if(this.naturalWidth<40||this.naturalHeight<40)this.remove()" onerror="this.remove()">` : ''}<b>${i.own.length}</b>${langOf(k) ? `<i class="lg" title="${esc(langOf(k))} edition">${lflag(langOf(k))[0]} ${lflag(langOf(k))[1]}</i>` : ''}</button>`; }).join(''); return; }
@@ -1673,6 +1691,34 @@ $('#impFile').onchange = async e => { const f = e.target.files && e.target.files
 const autoCov = c => /covers\.openlibrary\.org\/b\/id\/|books\.google|googleusercontent\.com\/books|books\.googleapis/.test(String(c || ''));
 const tNorm = x => String(x || '').toLowerCase().replace(/\((manga|light novel|novel|english|[a-z]+ edition)\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\b(the|a|an|vol|volume|omnibus|edition|manga|light novel)\b/g, ' ').replace(/\s+/g, ' ').trim();
 const titleOk = (doc, want) => { const d = tNorm(doc), w = tNorm(want); if (!d || !w || w.length < 3) return false; return d === w || (d.startsWith(w + ' ') && /^(\d+|hardcover|paperback|collection|complete)( |$)/.test(d.slice(w.length + 1))); };
+/* Spine bookcase (Megan, Nov 27 2026). Options: covers (a slice of each volume's own cover, series cover as backup)
+   or solid series colors; missing volumes as dashed slots or hidden. Big shelves render 1,500 spines at a time. */
+let spineLim = 1500;
+function volCovers(k){ const m = new Map(); const L = live.get(k); (L && L.items || []).forEach(p => { if (p.img && Number.isInteger(p.vol) && !m.has(p.vol)) m.set(p.vol, p.img); });
+  const h = SNAP && snapEntry(k); const e = h && h[1]; (e && e.i || []).forEach(x => { if (x[4] && !m.has(x[0])) m.set(x[0], snapImg(x[4])); }); return m; }
+function renderSpines(keys){
+  const style = ls.get('mme-spine-style') || 'covers', gapsOn = ls.get('mme-spine-gaps') !== 'hide';
+  const sc = $('#spineCtl'); if (sc) sc.innerHTML = `<button type="button" data-spst="covers" aria-pressed="${style === 'covers'}">Covers</button><button type="button" data-spst="colors" aria-pressed="${style === 'colors'}">Solid colors</button><button type="button" data-spgap aria-pressed="${!gapsOn}">${gapsOn ? 'Hide missing volumes' : 'Show missing volumes'}</button>`;
+  const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
+  const out = []; let count = 0, more = false;
+  for (const k of keys){ const i = info(k); const s = i.s; if (!i.own.length) continue; if (count >= spineLim){ more = true; break; }
+    const n = s.n, hu = hue(n), ln = isLN(k, s), H = Math.min(146, (ln ? 130 : 116) + hu % 22), mt = 148 - H;
+    const read = new Set(s.r || []), own = i.set, col = `hsl(${hu} 48% 30%)`;
+    const vc = style === 'covers' ? volCovers(k) : null; const sCov = style === 'covers' ? coverOf(k) : '';
+    if (out.length) out.push('<span class="brk" aria-hidden="true"></span>');
+    const top = Math.max(i.max, 0); const vols = gapsOn ? Array.from({ length: top }, (_, x) => x + 1) : i.own.filter(v => Number.isInteger(v));
+    if (!vols.length) i.own.forEach(v => vols.push(v));
+    for (const v of vols){
+      if (!own.has(v)){ out.push(`<button type="button" class="gp" data-k="${esc(k)}" style="height:${H - 6}px;margin-top:${mt + 6}px" aria-label="Missing ${esc(n)} Vol ${v}"><b>${v}</b></button>`); continue; }
+      const u = vc ? (vc.get(v) || sCov) : '';
+      out.push(`<button type="button" class="sp${u ? ' cov' : ''}" data-k="${esc(k)}" title="${esc(n)} Vol ${v}" aria-label="${esc(n)} Vol ${v}${read.has(v) ? ', read' : ', unread'}" style="height:${H}px;margin-top:${mt}px;background-color:${col}${u ? `;background-image:url('${esc(u).replace(/'/g, '%27')}')` : ''}">${read.has(v) ? '' : '<span class="ur" aria-hidden="true"></span>'}${u ? '' : `<i>${esc(n)}</i>`}<b>${v}</b></button>`);
+      count++; }
+  }
+  if (more) out.push(`<button type="button" class="more" data-spmore>Show more shelves</button>`);
+  $('#list').innerHTML = out.join('');
+}
+document.addEventListener('click', e => { const st = e.target.closest('[data-spst]'), gp = e.target.closest('[data-spgap]'), mo = e.target.closest('[data-spmore]');
+  if (st){ ls.set('mme-spine-style', st.dataset.spst); renderList(); } else if (gp){ ls.set('mme-spine-gaps', ls.get('mme-spine-gaps') === 'hide' ? 'show' : 'hide'); renderList(); } else if (mo){ e.stopPropagation(); spineLim += 1500; renderList(); } }, true);
 function coverOf(k){ const s = shelf.series[k]; if (s && s.c && autoCov(s.c)){ const L0 = live.get(k); const it0 = L0 && (L0.items.find(p => p.img && new Set(ints(s)).has(p.vol)) || L0.items.find(p => p.img)); if (it0) return it0.img; const h0 = SNAP && snapEntry(k); const e0 = h0 && h0[1]; const i0 = e0 && (e0.i || []).find(x => x[4]); if (i0) return snapImg(i0[4]); } if (!s){ const e = SNAP && SNAP.s[k]; const it = e && (e.i || []).find(x => x[4]); return it ? snapImg(it[4]) : ''; } if (s.c) return s.c; const L = live.get(k);
   if (!L){ /* no live data yet: use the snapshot, then omnibus/deluxe pictures for shelves that only hold editions (Gunsmith Cats omnibus etc.) */
     const hit = SNAP && snapEntry(k); const e = hit && hit[1]; if (!e) return ''; const own = new Set(ints(s));
@@ -1807,7 +1853,7 @@ function recList(){
     out.push({ k, e, v1, sc, why: au ? `By the author of ${au}` : `Because you collect ${gm.slice(0, 2).join(' & ')}${e.m.aud && A[e.m.aud] ? ` · ${e.m.aud}` : ''}` }); });
   return out.sort((a, b) => b.sc - a.sc).slice(0, 40);
 }
-function renderHL(q){ const el = $('#list'); el.classList.remove('compact','shelfv'); const rows = [];
+function renderHL(q){ const el = $('#list'); el.classList.remove('compact','shelfv','spinev'); { const sc = $('#spineCtl'); if (sc) sc.hidden = true; } const rows = [];
   const keyOf = n => Object.keys(shelf.series).find(k => normName(shelf.series[k].n) === normName(n));
   (holds ? holds.items : []).forEach(h => { const k = keyOf(h.s); const s = k && shelf.series[k]; const v = h.v != null ? Math.round(h.v) : null; rows.push({ k, n: s ? s.n : h.s, v, t: h.t, kind: 'hold', p: h.p, own: !!(s && v != null && ints(s).includes(v)) }); });
   Object.entries(shelf.series).forEach(([k, s]) => Object.entries(s.ln || {}).forEach(([v, l]) => rows.push({ k, n: s.n, v: +v, kind: l.d === 'out' ? 'out' : 'in', who: l.w, at: l.at, own: ints(s).includes(+v) })));
@@ -1857,7 +1903,7 @@ document.addEventListener('click', e => { const t = e.target.closest('[data-quiz
   if (t.hasAttribute('data-qnext')) return nx();
   const v = t.dataset.qv; if (s.multi){ const a = QA[s.id] = QA[s.id] || []; const i = a.indexOf(v); if (i > -1) a.splice(i, 1); else a.push(v); quizDraw(); } else { QA[s.id] = v; nx(); } });
 function renderRecs(q){
-  const el = $('#list'); el.classList.remove('compact', 'shelfv');
+  const el = $('#list'); el.classList.remove('compact', 'shelfv', 'spinev'); { const sc = $('#spineCtl'); if (sc) sc.hidden = true; }
   if (!SNAP){ el.innerHTML = `<div class="empty"><span class="spin"></span></div>`; $('#count').textContent = ''; loadSnap().then(() => { if (shelfFilter === 'recs') renderList(); }); return; }
   let R = recList(); if (q) R = R.filter(r => r.e.n.toLowerCase().includes(q));
   $('#count').textContent = R.length ? `${R.length} series to try · Vol 1 is in stock for each` : '';
@@ -1868,7 +1914,7 @@ function renderRecs(q){
 const savedSort = ls.get('mme-sort'); if (savedSort) $('#sort').value = savedSort;
 $('#view').onchange = () => { renderList(); ls.set('mme-view', $('#view').value); };
 { const sv = ls.get('mme-view'); $('#view').value = sv || 'shelf'; }
-$('#list').onclick = e => { const c = e.target.closest('.card, .crow, .sh'); if (c) openSeries(c.dataset.k); };
+$('#list').onclick = e => { const c = e.target.closest('.card, .crow, .sh, .sp, .gp'); if (c) openSeries(c.dataset.k); };
 
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
