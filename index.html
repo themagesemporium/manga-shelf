@@ -259,10 +259,10 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;margin
 .spinev .gp b{background:none;color:rgba(255,236,200,.85)}
 .spinev .brk{flex:0 0 8px;height:148px}
 .spinev .more{flex:1 0 100%;margin-top:4px;min-height:44px;border-radius:10px;border:0;background:#fffef7;color:var(--ink);font-weight:700;cursor:pointer}
-#spineCtl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+#spineCtl{display:flex;gap:10px;align-items:center;margin:0 0 8px}
 #spineCtl[hidden]{display:none}
-#spineCtl button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--accent);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
-#spineCtl button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+#spineCtl select{flex:1 1 auto;min-width:0;height:36px;padding:0 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13.5px}
+#spineCtl .spgap{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink);white-space:nowrap}
 .shelfv .sh .ph{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .shelfv .sh .ph{display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;font-weight:700;line-height:1.15;padding:4px;box-sizing:border-box;color:#fff;overflow:hidden;word-break:break-word}
 .shelfv .sh .lg{position:absolute;left:0;right:0;bottom:0;font-style:normal;font-size:9.5px;font-weight:800;text-align:center;background:rgba(20,20,30,.78);color:#fff;border-radius:0 0 3px 3px;padding:1px 0;letter-spacing:.04em}
@@ -1698,7 +1698,7 @@ function volCovers(k){ const m = new Map(); const L = live.get(k); (L && L.items
   const h = SNAP && snapEntry(k); const e = h && h[1]; (e && e.i || []).forEach(x => { if (x[4] && !m.has(x[0])) m.set(x[0], snapImg(x[4])); }); return m; }
 function renderSpines(keys){
   const style = ls.get('mme-spine-style') || 'covers', gapsOn = ls.get('mme-spine-gaps') !== 'hide';
-  const sc = $('#spineCtl'); if (sc) sc.innerHTML = `<button type="button" data-spst="covers" aria-pressed="${style === 'covers'}">Series cover</button><button type="button" data-spst="vols" aria-pressed="${style === 'vols'}">Each volume's cover</button><button type="button" data-spst="colors" aria-pressed="${style === 'colors'}">Solid colors</button><button type="button" data-spgap aria-pressed="${!gapsOn}">${gapsOn ? 'Hide missing volumes' : 'Show missing volumes'}</button>`;
+  const sc = $('#spineCtl'); if (sc) sc.innerHTML = `<select id="spStyle" aria-label="Spine style"><option value="covers"${style === 'covers' ? ' selected' : ''}>Spines: Vol 1 cover</option><option value="vols"${style === 'vols' ? ' selected' : ''}>Spines: each volume's cover</option><option value="colors"${style === 'colors' ? ' selected' : ''}>Spines: solid colors</option></select><label class="spgap"><input type="checkbox" data-spgap${gapsOn ? '' : ' checked'}> Hide missing</label>`;
   const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
   const out = []; let count = 0, more = false;
   for (const k of keys){ const i = info(k); const s = i.s; if (!i.own.length) continue; if (count >= spineLim){ more = true; break; }
@@ -1717,8 +1717,8 @@ function renderSpines(keys){
   if (more) out.push(`<button type="button" class="more" data-spmore>Show more shelves</button>`);
   $('#list').innerHTML = out.join('');
 }
-document.addEventListener('click', e => { const st = e.target.closest('[data-spst]'), gp = e.target.closest('[data-spgap]'), mo = e.target.closest('[data-spmore]');
-  if (st){ ls.set('mme-spine-style', st.dataset.spst); renderList(); } else if (gp){ ls.set('mme-spine-gaps', ls.get('mme-spine-gaps') === 'hide' ? 'show' : 'hide'); renderList(); } else if (mo){ e.stopPropagation(); spineLim += 1500; renderList(); } }, true);
+document.addEventListener('change', e => { if (e.target.id === 'spStyle'){ ls.set('mme-spine-style', e.target.value); renderList(); } else if (e.target.matches('[data-spgap]')){ ls.set('mme-spine-gaps', e.target.checked ? 'hide' : 'show'); renderList(); } });
+document.addEventListener('click', e => { const mo = e.target.closest('[data-spmore]'); if (mo){ e.stopPropagation(); spineLim += 1500; renderList(); } }, true);
 function coverOf(k){ const s = shelf.series[k]; if (s && s.c && autoCov(s.c)){ const L0 = live.get(k); const it0 = L0 && (L0.items.find(p => p.img && new Set(ints(s)).has(p.vol)) || L0.items.find(p => p.img)); if (it0) return it0.img; const h0 = SNAP && snapEntry(k); const e0 = h0 && h0[1]; const i0 = e0 && (e0.i || []).find(x => x[4]); if (i0) return snapImg(i0[4]); } if (!s){ const e = SNAP && SNAP.s[k]; const it = e && (e.i || []).find(x => x[4]); return it ? snapImg(it[4]) : ''; } if (s.c) return s.c; const L = live.get(k);
   if (!L){ /* no live data yet: use the snapshot, then omnibus/deluxe pictures for shelves that only hold editions (Gunsmith Cats omnibus etc.) */
     const hit = SNAP && snapEntry(k); const e = hit && hit[1]; if (!e) return ''; const own = new Set(ints(s));
