@@ -1698,19 +1698,19 @@ function volCovers(k){ const m = new Map(); const L = live.get(k); (L && L.items
   const h = SNAP && snapEntry(k); const e = h && h[1]; (e && e.i || []).forEach(x => { if (x[4] && !m.has(x[0])) m.set(x[0], snapImg(x[4])); }); return m; }
 function renderSpines(keys){
   const style = ls.get('mme-spine-style') || 'covers', gapsOn = ls.get('mme-spine-gaps') !== 'hide';
-  const sc = $('#spineCtl'); if (sc) sc.innerHTML = `<button type="button" data-spst="covers" aria-pressed="${style === 'covers'}">Covers</button><button type="button" data-spst="colors" aria-pressed="${style === 'colors'}">Solid colors</button><button type="button" data-spgap aria-pressed="${!gapsOn}">${gapsOn ? 'Hide missing volumes' : 'Show missing volumes'}</button>`;
+  const sc = $('#spineCtl'); if (sc) sc.innerHTML = `<button type="button" data-spst="covers" aria-pressed="${style === 'covers'}">Series cover</button><button type="button" data-spst="vols" aria-pressed="${style === 'vols'}">Each volume's cover</button><button type="button" data-spst="colors" aria-pressed="${style === 'colors'}">Solid colors</button><button type="button" data-spgap aria-pressed="${!gapsOn}">${gapsOn ? 'Hide missing volumes' : 'Show missing volumes'}</button>`;
   const hue = n => { let h = 0; for (const c of n) h = (h*31 + c.charCodeAt(0)) % 360; return h; };
   const out = []; let count = 0, more = false;
   for (const k of keys){ const i = info(k); const s = i.s; if (!i.own.length) continue; if (count >= spineLim){ more = true; break; }
     const n = s.n, hu = hue(n), ln = isLN(k, s), H = Math.min(146, (ln ? 130 : 116) + hu % 22), mt = 148 - H;
     const read = new Set(s.r || []), own = i.set, col = `hsl(${hu} 48% 30%)`;
-    const sCov = style === 'covers' ? coverOf(k) : '';
+    const sCov = style !== 'colors' ? coverOf(k) : ''; const vc = style === 'vols' ? volCovers(k) : null;
     if (out.length) out.push('<span class="brk" aria-hidden="true"></span>');
     const top = Math.max(i.max, 0); const vols = gapsOn ? Array.from({ length: top }, (_, x) => x + 1) : i.own.filter(v => Number.isInteger(v));
     if (!vols.length) i.own.forEach(v => vols.push(v));
     for (const v of vols){
       if (!own.has(v)){ out.push(`<button type="button" class="gp" data-k="${esc(k)}" style="height:${H - 6}px;margin-top:${mt + 6}px" aria-label="Missing ${esc(n)} Vol ${v}"><b>${v}</b></button>`); continue; }
-      const u = sCov; /* Megan, Nov 27: every spine in a series shows the series (Vol 1) cover, so series read as one block */
+      const u = vc ? (vc.get(v) || sCov) : sCov; /* 'covers': every spine shows the series (Vol 1) cover; 'vols': each volume's own shop cover */
       out.push(`<button type="button" class="sp${u ? ' cov' : ''}" data-k="${esc(k)}" title="${esc(n)} Vol ${v}" aria-label="${esc(n)} Vol ${v}${read.has(v) ? ', read' : ', unread'}" style="height:${H}px;margin-top:${mt}px;background-color:${col}${u ? `;background-image:url('${esc(u).replace(/'/g, '%27')}')` : ''}">${read.has(v) ? '' : '<span class="ur" aria-hidden="true"></span>'}${u ? '' : `<i>${esc(n)}</i>`}<b>${v}</b></button>`);
       count++; }
   }
