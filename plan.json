@@ -1,0 +1,3597 @@
+[
+ {
+  "id": "gid://shopify/Product/12652922143038",
+  "title": "Chainsaw Man Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12652922175806",
+  "title": ".hack//Legend of the Twilight Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12652922208574",
+  "title": "Kill Me Kiss Me Vol 1-5 Complete Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12652922241342",
+  "title": "Samurai 8 The Tale of Hachimaru Vol 1-5 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12652922306878",
+  "title": "Kiss the Scars of the Girls Vol 1-3 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12652922339646",
+  "title": "Whispered Words Vol 1-3 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653368410430",
+  "title": "A Strange and Mystifying Story Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653368443198",
+  "title": "Alice and Zoroku Vol 1-5 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653368475966",
+  "title": "Assassination Classroom Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653368508734",
+  "title": "Attack on Titan Vol 1-3 Set (retired, replaced by Vol 1-8 Set)",
+  "act": "restore",
+  "from": 3,
+  "to": 8,
+  "complete": false,
+  "ser": "Attack on Titan",
+  "status": "DRAFT",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/6780668313684",
+    "vid": "gid://shopify/ProductVariant/39851831590996",
+    "price": 5.66,
+    "t": "Attack on Titan Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/8005178261822",
+    "vid": "gid://shopify/ProductVariant/44051139690814",
+    "price": 6.29,
+    "t": "Attack on Titan Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8005178327358",
+    "vid": "gid://shopify/ProductVariant/44051142639934",
+    "price": 6.99,
+    "t": "Attack on Titan Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/8005178392894",
+    "vid": "gid://shopify/ProductVariant/44051143065918",
+    "price": 6.99,
+    "t": "Attack on Titan Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/8323913679166",
+    "vid": "gid://shopify/ProductVariant/45326679179582",
+    "price": 6.99,
+    "t": "Attack on Titan Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/8005178458430",
+    "vid": "gid://shopify/ProductVariant/44051143131454",
+    "price": 6.99,
+    "t": "Attack on Titan Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/8005178556734",
+    "vid": "gid://shopify/ProductVariant/44051143229758",
+    "price": 6.29,
+    "t": "Attack on Titan Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/8005178589502",
+    "vid": "gid://shopify/ProductVariant/44051143262526",
+    "price": 6.29,
+    "t": "Attack on Titan Vol 8"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13632176446",
+    "vid": "gid://shopify/ProductVariant/39851831590996"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13632209214",
+    "vid": "gid://shopify/ProductVariant/44051139690814"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13632241982",
+    "vid": "gid://shopify/ProductVariant/44051142639934"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54600320516414",
+  "handle": "attack-on-titan-vol-1-3-set-retired",
+  "desc": "<p class=\"book-intro\">Attack on Titan Vol 1-3 set by Hajime Isayama. A Action manga series rated Older Teen, published in English by Kodansha, first volume 2009.</p><p>Start the series with Vol 1-3 in one order. This set includes Vol 1, Vol 2, Vol 3 (3 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Attack on Titan Vol 1-3 Set | The Mage's Emporium",
+   "description": "Attack on Titan Vol 1-3 Set by Hajime Isayama. Action manga set rated Older Teen. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "2611",
+   "AOT",
+   "BackInStock",
+   "Bundle",
+   "Gift Idea",
+   "retired-set",
+   "Shingeki no Kyojin",
+   "Vol 1 Bundle",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12653368541502",
+  "title": "Bite Maker Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653368574270",
+  "title": "Black Bird Vol 1-9 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653368607038",
+  "title": "Black Butler Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653368639806",
+  "title": "Black Clover Vol 1-10 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653368672574",
+  "title": "Black God Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653368705342",
+  "title": "Boys Be Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653369721150",
+  "title": "Brain Powered Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653369753918",
+  "title": "Bring It On! Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653369786686",
+  "title": "Carole and Tuesday Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653369819454",
+  "title": "Ceres Celestial Legend Oversized Vol 1-4 Set",
+  "act": "grow",
+  "from": 4,
+  "to": 9,
+  "complete": false,
+  "ser": "Ceres Celestial Legend",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/12322771730750",
+    "vid": "gid://shopify/ProductVariant/53274621837630",
+    "price": 5.79,
+    "t": "Ceres Celestial Legend Vol 1 Aya Oversized"
+   },
+   {
+    "pid": "gid://shopify/Product/6789481824340",
+    "vid": "gid://shopify/ProductVariant/39874906882132",
+    "price": 6.29,
+    "t": "Ceres Celestial Legend Vol 2 Yuhi"
+   },
+   {
+    "pid": "gid://shopify/Product/8004517626174",
+    "vid": "gid://shopify/ProductVariant/43991040753982",
+    "price": 5.99,
+    "t": "Ceres Celestial Legend Vol 3: Suzumi Oversized"
+   },
+   {
+    "pid": "gid://shopify/Product/8004517724478",
+    "vid": "gid://shopify/ProductVariant/43991040852286",
+    "price": 5.21,
+    "t": "Ceres Celestial Legend Vol 4: Chidori Oversized"
+   },
+   {
+    "pid": "gid://shopify/Product/6789481136212",
+    "vid": "gid://shopify/ProductVariant/39874903605332",
+    "price": 5.99,
+    "t": "Ceres Celestial Legend Vol 5 Mikage"
+   },
+   {
+    "pid": "gid://shopify/Product/7965034938686",
+    "vid": "gid://shopify/ProductVariant/43647625691454",
+    "price": 6.29,
+    "t": "Ceres Celestial Legend Vol 6 Shuro"
+   },
+   {
+    "pid": "gid://shopify/Product/8340907721022",
+    "vid": "gid://shopify/ProductVariant/45397149155646",
+    "price": 6.29,
+    "t": "Ceres Celestial Legend Vol 7 Maya"
+   },
+   {
+    "pid": "gid://shopify/Product/8004517167422",
+    "vid": "gid://shopify/ProductVariant/43991039312190",
+    "price": 6.29,
+    "t": "Ceres Celestial Legend Vol 8"
+   },
+   {
+    "pid": "gid://shopify/Product/12594161418558",
+    "vid": "gid://shopify/ProductVariant/54356112933182",
+    "price": 6.29,
+    "t": "Ceres Celestial Legend Vol 9"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13633454398",
+    "vid": "gid://shopify/ProductVariant/53274621837630"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13633487166",
+    "vid": "gid://shopify/ProductVariant/39874906882132"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13633519934",
+    "vid": "gid://shopify/ProductVariant/43991040753982"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13633552702",
+    "vid": "gid://shopify/ProductVariant/43991040852286"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54600328020286",
+  "handle": "ceres-celestial-legend-oversized-vol-1-4-set",
+  "desc": "<p class=\"book-intro\">Ceres Celestial Legend Oversized Vol 1-4 set by Yuu Watase. A Shojo manga series rated Older Teen, published in English by Viz Media, first volume 2001.</p><p>Start the series with Vol 1-4 in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4 (4 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Ceres Celestial Legend Oversized Vol 1-4 Set Manga",
+   "description": "Ceres Celestial Legend Oversized Vol 1-4 Set by Yuu Watase. Fantasy manga rated Older Teen. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "2610",
+   "Ayashi no Ceres",
+   "Bundle",
+   "Ceres",
+   "Gift Idea",
+   "Vol 1 Bundle",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12653369852222",
+  "title": "Chitose Is In Ramune Bottle Vol 1-6 Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653369884990",
+  "title": "Chitose Is In The Ramune Bottle Light Novel Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653369917758",
+  "title": "Core Scramble Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653369950526",
+  "title": "Crescent Moon Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653369983294",
+  "title": "Cross Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370016062",
+  "title": "Daughter of the Emperor Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370048830",
+  "title": "Dears Vol 1-6 Set",
+  "act": "shrink",
+  "from": 6,
+  "to": 4,
+  "complete": false,
+  "ser": "Dears",
+  "status": "DRAFT",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/9764490150206",
+    "vid": "gid://shopify/ProductVariant/46828901892414",
+    "price": 5.66,
+    "t": "Dears Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/8038225117502",
+    "vid": "gid://shopify/ProductVariant/44172758548798",
+    "price": 5.66,
+    "t": "Dears Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8027465580862",
+    "vid": "gid://shopify/ProductVariant/44136270201150",
+    "price": 6.99,
+    "t": "Dears Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/9764490182974",
+    "vid": "gid://shopify/ProductVariant/46828901925182",
+    "price": 6.99,
+    "t": "Dears Vol 4"
+   }
+  ],
+  "drop": [
+   {
+    "pid": "gid://shopify/Product/9764490215742",
+    "vid": "gid://shopify/ProductVariant/46828902023486",
+    "t": "Dears Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/11837634380094",
+    "vid": "gid://shopify/ProductVariant/51465387147582",
+    "t": "Dears Vol 6"
+   }
+  ],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13634339134",
+    "vid": "gid://shopify/ProductVariant/46828901892414"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13634371902",
+    "vid": "gid://shopify/ProductVariant/44172758548798"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13634404670",
+    "vid": "gid://shopify/ProductVariant/44136270201150"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14131691838",
+    "vid": "gid://shopify/ProductVariant/46828901925182"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14131724606",
+    "vid": "gid://shopify/ProductVariant/46828902023486"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14131757374",
+    "vid": "gid://shopify/ProductVariant/51465387147582"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54600328249662",
+  "handle": "dears-vol-1-3-set",
+  "desc": "<p class=\"book-intro\">Dears Vol 1-3 set by Peach-Pit. A Romance manga series rated Teen, published in English by Tokyopop, first volume 2002.</p><p>Start the series with Vol 1-3 in one order. This set includes Vol 1, Vol 2, Vol 3 (3 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Dears Vol 1-3 Set Manga by Peach-Pit | The Mage's Emporium",
+   "description": "Dears Vol 1-3 Set by Peach-Pit. Romance manga rated Teen. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "Bundle",
+   "Gift Idea",
+   "outofstock",
+   "Vol 1 Bundle",
+   "zz eBay 35",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12653370081598",
+  "title": "Demon Sacred Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370114366",
+  "title": "Demon Slayer Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370147134",
+  "title": "My Hero Academia Vigilantes Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370179902",
+  "title": "Dragon Ball Super Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370212670",
+  "title": "My Room is a Dungeon Rest Stop Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370245438",
+  "title": "Et Cetera Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370278206",
+  "title": "My Special One Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370310974",
+  "title": "Evil's Return Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370343742",
+  "title": "Never Give Up Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370376510",
+  "title": "Scarlet Soul Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370409278",
+  "title": "Fairy Tail 100 Years Quest Vol 1-12 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370442046",
+  "title": "Noragami Stray God Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370474814",
+  "title": "School Judgement Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370507582",
+  "title": "Ashita no Joe: Fighting for Tomorrow Hardcover Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370540350",
+  "title": "One Piece Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370573118",
+  "title": "Show-Ha Shoten Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370605886",
+  "title": "Fly Me To The Moon Vol 1-15 Set",
+  "act": "shrink",
+  "from": 15,
+  "to": 14,
+  "complete": false,
+  "ser": "Fly Me to the Moon",
+  "status": "DRAFT",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/8387968139582",
+    "vid": "gid://shopify/ProductVariant/45606981828926",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968205118",
+    "vid": "gid://shopify/ProductVariant/45606982091070",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968237886",
+    "vid": "gid://shopify/ProductVariant/45606982123838",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968270654",
+    "vid": "gid://shopify/ProductVariant/45606982156606",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/8027472199998",
+    "vid": "gid://shopify/ProductVariant/44136291598654",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968336190",
+    "vid": "gid://shopify/ProductVariant/45606982222142",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968368958",
+    "vid": "gid://shopify/ProductVariant/45606982254910",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968434494",
+    "vid": "gid://shopify/ProductVariant/45606982648126",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 8"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968467262",
+    "vid": "gid://shopify/ProductVariant/45606982680894",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 9"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968500030",
+    "vid": "gid://shopify/ProductVariant/45606982713662",
+    "price": 5.79,
+    "t": "Fly Me To The Moon Vol 10"
+   },
+   {
+    "pid": "gid://shopify/Product/8387968532798",
+    "vid": "gid://shopify/ProductVariant/45606982746430",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 11"
+   },
+   {
+    "pid": "gid://shopify/Product/11895297900862",
+    "vid": "gid://shopify/ProductVariant/51659849957694",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 12"
+   },
+   {
+    "pid": "gid://shopify/Product/11895297835326",
+    "vid": "gid://shopify/ProductVariant/51659849793854",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 13"
+   },
+   {
+    "pid": "gid://shopify/Product/12592733192510",
+    "vid": "gid://shopify/ProductVariant/54347650400574",
+    "price": 6.29,
+    "t": "Fly Me To The Moon Vol 14"
+   }
+  ],
+  "drop": [
+   {
+    "pid": "gid://shopify/Product/12592733126974",
+    "vid": "gid://shopify/ProductVariant/54347650335038",
+    "t": "Fly Me To The Moon Vol 15"
+   }
+  ],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635584318",
+    "vid": "gid://shopify/ProductVariant/45606981828926"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635617086",
+    "vid": "gid://shopify/ProductVariant/45606982091070"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635649854",
+    "vid": "gid://shopify/ProductVariant/45606982123838"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635682622",
+    "vid": "gid://shopify/ProductVariant/45606982156606"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635715390",
+    "vid": "gid://shopify/ProductVariant/44136291598654"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635748158",
+    "vid": "gid://shopify/ProductVariant/45606982222142"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635780926",
+    "vid": "gid://shopify/ProductVariant/45606982254910"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635813694",
+    "vid": "gid://shopify/ProductVariant/45606982648126"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635846462",
+    "vid": "gid://shopify/ProductVariant/45606982680894"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635879230",
+    "vid": "gid://shopify/ProductVariant/45606982713662"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635911998",
+    "vid": "gid://shopify/ProductVariant/45606982746430"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635944766",
+    "vid": "gid://shopify/ProductVariant/51659849957694"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13635977534",
+    "vid": "gid://shopify/ProductVariant/51659849793854"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13636010302",
+    "vid": "gid://shopify/ProductVariant/54347650400574"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13636043070",
+    "vid": "gid://shopify/ProductVariant/54347650335038"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54600328806718",
+  "handle": "fly-me-to-the-moon-vol-1-15-set",
+  "desc": "<p class=\"book-intro\">Fly Me To The Moon Vol 1-15 set by Kenjiro Hata. A Romance manga series rated Teen, published in English by Viz Media, first volume 2020.</p><p>Start the series with Vol 1-15 in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4, Vol 5, Vol 6, Vol 7, Vol 8, Vol 9, Vol 10, Vol 11, Vol 12, Vol 13, Vol 14, Vol 15 (15 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Fly Me To The Moon Vol 1-15 Set Manga | The Mage's Emporium",
+   "description": "Fly Me To The Moon Vol 1-15 Set by Kenjiro Hata. Romance manga rated Teen. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "Bundle",
+   "Gift Idea",
+   "outofstock",
+   "Tonikaku Kawaii",
+   "Tonikawa",
+   "Vol 1 Bundle",
+   "zz eBay 35",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12653370638654",
+  "title": "Orphen Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370671422",
+  "title": "Hands Off Vol 1-8 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370704190",
+  "title": "Shy Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370736958",
+  "title": "Oshi No Ko Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370769726",
+  "title": "Species Domain Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370802494",
+  "title": "Otaku Elf Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370835262",
+  "title": "Spice and Wolf Vol 1-5 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370868030",
+  "title": "Pastel Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370900798",
+  "title": "Spy Classroom Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653370933566",
+  "title": "Superwomen in Love! Honey Trap and Rapid Rabbit Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370966334",
+  "title": "The Ancient Magus Bride Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653370999102",
+  "title": "The Boss Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371097406",
+  "title": "The Detective Is Already Dead Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371130174",
+  "title": "Prince Freya Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371162942",
+  "title": "Heart Gear Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371195710",
+  "title": "The Faraway Paladin Omnibus Vol 1-3 Set",
+  "act": "keep",
+  "why": "edition set: out The Faraway Paladin Omnibus Vol 1, The Faraway Paladin Omnibus Vol 2, The Faraway Paladin Omnibus Vol 3"
+ },
+ {
+  "id": "gid://shopify/Product/12653371228478",
+  "title": "Princess Resurrection Vol 1-7 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371261246",
+  "title": "The Hero Is Overpowered but Overly Cautious Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371294014",
+  "title": "I Cannot Reach You Vol 1-5 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371326782",
+  "title": "Psycho Busters Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371359550",
+  "title": "The Hero Is Overpowered but Overly Cautious Light Novel Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371392318",
+  "title": "iD_eNTITY Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371425086",
+  "title": "Reborn To Master Blade From Hero-King To Squire Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371457854",
+  "title": "The Otherworlder, Exploring the Dungeon Light Novel Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371490622",
+  "title": "Imadoki! Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371556158",
+  "title": "The Star Seekers Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371588926",
+  "title": "In Dream World Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371621694",
+  "title": "Romance Papa Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371654462",
+  "title": "True Beauty Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371687230",
+  "title": "Is It Wrong To Try To Pick Up Girls in a Dungeon? Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371719998",
+  "title": "Rozen Maiden Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371752766",
+  "title": "Unholy Blood Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371785534",
+  "title": "Kemono Friends a la Carte Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371818302",
+  "title": "Kiss Him, Not Me! Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653371851070",
+  "title": "Saiyuki Reload Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371883838",
+  "title": "Welcome to the Outcast's Restaurant! Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371916606",
+  "title": "Komi Can't Communicate Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371949374",
+  "title": "Samurai Deeper Kyo Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653371982142",
+  "title": "Kubo Won't Let Me Be Invisible Vol 1-7 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653372014910",
+  "title": "Sasaki & Peeps Light Novel Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653372277054",
+  "title": "Lagoon Engine Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653372309822",
+  "title": "Love and Lies Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653372342590",
+  "title": "Love Hina Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653372375358",
+  "title": "Mar Vol 1-5 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653372408126",
+  "title": "Maximum Ride Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653372440894",
+  "title": "May These Leaden Battlegrounds Leave No Trace Light Novel Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653372473662",
+  "title": "Me & My Brothers Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653372506430",
+  "title": "MeruPuri Vol 1-4 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12653372539198",
+  "title": "Missions of Love Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12653372571966",
+  "title": "My Hero Academia Vol 1-3 Set",
+  "act": "grow",
+  "from": 3,
+  "to": 21,
+  "complete": false,
+  "ser": "My Hero Academia",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/6776613503060",
+    "vid": "gid://shopify/ProductVariant/39840508805204",
+    "price": 5.66,
+    "t": "My Hero Academia Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/7968507593022",
+    "vid": "gid://shopify/ProductVariant/43661080527166",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8104681832766",
+    "vid": "gid://shopify/ProductVariant/44429852180798",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/8104681963838",
+    "vid": "gid://shopify/ProductVariant/44429852475710",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/8104682127678",
+    "vid": "gid://shopify/ProductVariant/44429852836158",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/8050408489278",
+    "vid": "gid://shopify/ProductVariant/44217183732030",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/8127376228670",
+    "vid": "gid://shopify/ProductVariant/44522764632382",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/7973364859198",
+    "vid": "gid://shopify/ProductVariant/43679916294462",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 8"
+   },
+   {
+    "pid": "gid://shopify/Product/8096895828286",
+    "vid": "gid://shopify/ProductVariant/44403165823294",
+    "price": 5.66,
+    "t": "My Hero Academia Vol 9"
+   },
+   {
+    "pid": "gid://shopify/Product/8027489993022",
+    "vid": "gid://shopify/ProductVariant/44136342782270",
+    "price": 5.99,
+    "t": "My Hero Academia Vol 10"
+   },
+   {
+    "pid": "gid://shopify/Product/8098050277694",
+    "vid": "gid://shopify/ProductVariant/44407835230526",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 11"
+   },
+   {
+    "pid": "gid://shopify/Product/8176468885822",
+    "vid": "gid://shopify/ProductVariant/44752280420670",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 12"
+   },
+   {
+    "pid": "gid://shopify/Product/8098050670910",
+    "vid": "gid://shopify/ProductVariant/44407835787582",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 13"
+   },
+   {
+    "pid": "gid://shopify/Product/10861994017086",
+    "vid": "gid://shopify/ProductVariant/48921067159870",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 14"
+   },
+   {
+    "pid": "gid://shopify/Product/8348351136062",
+    "vid": "gid://shopify/ProductVariant/45433253953854",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 15"
+   },
+   {
+    "pid": "gid://shopify/Product/8176470131006",
+    "vid": "gid://shopify/ProductVariant/44752303456574",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 16"
+   },
+   {
+    "pid": "gid://shopify/Product/8180767981886",
+    "vid": "gid://shopify/ProductVariant/44770322121022",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 17"
+   },
+   {
+    "pid": "gid://shopify/Product/8176470688062",
+    "vid": "gid://shopify/ProductVariant/44752314270014",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 18"
+   },
+   {
+    "pid": "gid://shopify/Product/8176471638334",
+    "vid": "gid://shopify/ProductVariant/44752327573822",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 19"
+   },
+   {
+    "pid": "gid://shopify/Product/6776613273684",
+    "vid": "gid://shopify/ProductVariant/39840508608596",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 20"
+   },
+   {
+    "pid": "gid://shopify/Product/8176473112894",
+    "vid": "gid://shopify/ProductVariant/44752353460542",
+    "price": 6.99,
+    "t": "My Hero Academia Vol 21"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13638795582",
+    "vid": "gid://shopify/ProductVariant/39840508805204"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13638861118",
+    "vid": "gid://shopify/ProductVariant/44429852180798"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13956120894",
+    "vid": "gid://shopify/ProductVariant/43661080527166"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54600331198782",
+  "handle": "my-hero-academia-vol-1-3-set",
+  "desc": "<p class=\"book-intro\">My Hero Academia Vol 1-3 set by Kohei Horikoshi. A Shonen manga series rated Teen, published in English by Viz Media, first volume 2015.</p><p>Start the series with Vol 1-3 in one order. This set includes Vol 1, Vol 2, Vol 3 (3 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "My Hero Academia Vol 1-3 Set Manga | The Mage's Emporium",
+   "description": "My Hero Academia Vol 1-3 Set by Kohei Horikoshi. Action manga rated Teen. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "2611",
+   "BackInStock",
+   "Bundle",
+   "Gift Idea",
+   "Vol 1 Bundle",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12657802772798",
+  "title": "Call of the Night Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12657949933886",
+  "title": "Hot Gimmick Vol 1-9 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12657950032190",
+  "title": "Kaijin Fugeki Kindled Spirits Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12680950350142",
+  "title": "Fangirl Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681005531454",
+  "title": "Magic Artisan Dahlia Wilts No More Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681023848766",
+  "title": "Planet Ladder Vol 1-7 Complete Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681023914302",
+  "title": "The Record of a Fallen Vampire Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681047900478",
+  "title": "Vampire Knight Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681050685758",
+  "title": "Flame of Recca Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681061171518",
+  "title": "Naruto Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681092366654",
+  "title": "Dr. Stone Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681133785406",
+  "title": "The Flowers of Evil Complete Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681152495934",
+  "title": "Cage of Eden Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681157935422",
+  "title": "Mysterious Disappearances Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681167634750",
+  "title": "Tokyo Revengers Omnibus Vol 1-31 Complete Set",
+  "act": "keep",
+  "why": "edition set: out Tokyo Revengers Vol 3-4 Omnibus, Tokyo Revengers Vol 11-12 Omnibus, Tokyo Revengers Vol 13-14 Omnibus, Tokyo Revengers Vol 17-18 Omnibus, Tokyo Revengers Vol 19-20 Omnibus"
+ },
+ {
+  "id": "gid://shopify/Product/12681167700286",
+  "title": "Tokyo Revengers A Letter from Keisuke Baji Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681172058430",
+  "title": "Mardock Scramble Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12681176777022",
+  "title": "Priest Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681176842558",
+  "title": "Pandora Seven Vol 1-5 Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681180414270",
+  "title": "Noragami Stray God Omnibus Vol 1-24 Set",
+  "act": "keep",
+  "why": "edition set: out Noragami Stray God Omnibus Vol 1-3, Noragami Stray God Omnibus Vol 4-6, Noragami Stray God Omnibus Vol 7-9, Noragami Stray God Omnibus Vol 10-12, Noragami Stray God Omnibus Vol 13-15, Noragami Stray God Omnibus Vol 16-18, Noragami Stray God Omnibus Vol 19-21, Noragami Stray God Omnibus Vol 22-24"
+ },
+ {
+  "id": "gid://shopify/Product/12681183265086",
+  "title": "Devilman Grimoire G Vol 1-5 Complete Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681183297854",
+  "title": "Devilman vs. Hades Vol 1-3 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681183363390",
+  "title": "Black Torch Vol 1-5 Complete Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681197289790",
+  "title": "Boy's Abyss Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681197420862",
+  "title": "No. 5 Vol 1-4 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681203417406",
+  "title": "The Boxer Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681204367678",
+  "title": "Slasher Maidens Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681205842238",
+  "title": "Pandora in the Crimson Shell Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681205907774",
+  "title": "Island in a Puddle Vol 1-5 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681207906622",
+  "title": "Higurashi When They Cry Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681207939390",
+  "title": "Higurashi When They Cry Meguri Vol 1-5 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12681210528062",
+  "title": "Blue Exorcist Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686434631998",
+  "title": "The Manga Companion The Rising of the Shield Hero Vol 1-8 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686435385662",
+  "title": "Bloody Kiss Vol 1-2 Complete Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686435418430",
+  "title": "Deadpool Samurai Vol 1-2 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686807236926",
+  "title": "Rent-A-Girlfriend Vol 1-13 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686807990590",
+  "title": "Tokyo Revengers Omnibus Vol 1-12 Set",
+  "act": "draft",
+  "why": "edition set: out Tokyo Revengers Vol 3-4 Omnibus, Tokyo Revengers Vol 11-12 Omnibus"
+ },
+ {
+  "id": "gid://shopify/Product/12686810054974",
+  "title": "Dragon Knights Vol 1-9 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686811103550",
+  "title": "City Vol 1-13 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686813135166",
+  "title": "Atom The Beginning Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686813167934",
+  "title": "Outbride Beauty and the Beasts Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686813200702",
+  "title": "Spy Classroom Light Novel Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686817493310",
+  "title": "Forbidden Dance Vol 1-4 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686819557694",
+  "title": "Yuyu Hakusho Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686819590462",
+  "title": "Orient Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686819623230",
+  "title": "Beauty is the Beast Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686822146366",
+  "title": "Failure Frame Manga Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686822179134",
+  "title": "Berserk of Gluttony Manga Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686822211902",
+  "title": "Skeleton Knight in Another World Manga Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686823522622",
+  "title": "Ragnarok Vol 1-7 Set (retired, replaced by Vol 1-9 Set)",
+  "act": "restore",
+  "from": 7,
+  "to": 9,
+  "complete": false,
+  "ser": "Ragnarok",
+  "status": "DRAFT",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/6781805854804",
+    "vid": "gid://shopify/ProductVariant/39855007989844",
+    "price": 6.29,
+    "t": "Ragnarok Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/6781805363284",
+    "vid": "gid://shopify/ProductVariant/39855007301716",
+    "price": 6.99,
+    "t": "Ragnarok Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/6781804773460",
+    "vid": "gid://shopify/ProductVariant/39855006187604",
+    "price": 6.29,
+    "t": "Ragnarok Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/6778052870228",
+    "vid": "gid://shopify/ProductVariant/39845285494868",
+    "price": 6.29,
+    "t": "Ragnarok Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/8004522934590",
+    "vid": "gid://shopify/ProductVariant/43991058678078",
+    "price": 6.99,
+    "t": "Ragnarok Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/8027494580542",
+    "vid": "gid://shopify/ProductVariant/44136353530174",
+    "price": 6.29,
+    "t": "Ragnarok Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/9656720359742",
+    "vid": "gid://shopify/ProductVariant/46507048370494",
+    "price": 6.29,
+    "t": "Ragnarok Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/6781804511316",
+    "vid": "gid://shopify/ProductVariant/39855005499476",
+    "price": 6.99,
+    "t": "Ragnarok Vol 8"
+   },
+   {
+    "pid": "gid://shopify/Product/8122291683646",
+    "vid": "gid://shopify/ProductVariant/44507288764734",
+    "price": 6.29,
+    "t": "Ragnarok Vol 9"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13975585086",
+    "vid": "gid://shopify/ProductVariant/39855007989844"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13975617854",
+    "vid": "gid://shopify/ProductVariant/39855007301716"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13975650622",
+    "vid": "gid://shopify/ProductVariant/39855006187604"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13975683390",
+    "vid": "gid://shopify/ProductVariant/39845285494868"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13975716158",
+    "vid": "gid://shopify/ProductVariant/43991058678078"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/13975748926",
+    "vid": "gid://shopify/ProductVariant/44136353530174"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14079525182",
+    "vid": "gid://shopify/ProductVariant/46507048370494"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54763353243966",
+  "handle": "ragnarok-vol-1-7-set-retired",
+  "desc": "<p class=\"book-intro\">Ragnarok Vol 1-9 set by Lee Myung-Jin. A Fantasy manhwa series rated Teen, published in English by Tokyopop, first volume 2002.</p><p>Start the series with Vol 1-9 in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4, Vol 5, Vol 6, Vol 7, Vol 8, Vol 9 (9 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Ragnarok Vol 1-9 Set | The Mage's Emporium",
+   "description": "Ragnarok Vol 1-9 Set: 9 used manga volumes at 10% off. Free shipping on $35+."
+  },
+  "tags": [
+   "Bundle",
+   "retired-set"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12686823555390",
+  "title": "The Strongest Sage with the Weakest Crest Vol 1-9 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686823588158",
+  "title": "Tokyo Mew Mew A La Mode Vol 1-2 Complete Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686825488702",
+  "title": "Roll Over and Die Manga Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686825521470",
+  "title": "Jing: King of Bandits Vol 1-7 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686825554238",
+  "title": "Undead Unluck Vol 1-5 Set (retired, replaced by Vol 1-6 Set)",
+  "act": "restore-same"
+ },
+ {
+  "id": "gid://shopify/Product/12686827487550",
+  "title": "Demon Diary Vol 1-7 Complete Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686827684158",
+  "title": "Mashle Magic and Muscles Vol 1-5 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686828142910",
+  "title": "My Status as an Assassin Obviously Exceeds the Hero's Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12686828175678",
+  "title": "Cheeky Angel Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12686828208446",
+  "title": "Nichijou My Ordinary Life Vol 1-5 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12688095478078",
+  "title": "Alice 19th Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12692005978430",
+  "title": "Eerie Queerie Vol 1-4 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12692908245310",
+  "title": "Masamune-kun's Revenge Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12692908278078",
+  "title": "Witchcraft Works Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12692908310846",
+  "title": "Aquarian Age Juvenile Orion Vol 1-5 Complete Set",
+  "act": "restore-same"
+ },
+ {
+  "id": "gid://shopify/Product/12692908343614",
+  "title": "Tsubasa Reservoir Chronicle Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12692908376382",
+  "title": "The Golden Sheep Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12692908409150",
+  "title": "Again!! Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12695262789950",
+  "title": "Crossroad Vol 1-7 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12695414636862",
+  "title": "Rin-Ne Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12695414669630",
+  "title": "Fairy Tail Vol 1-4 Set",
+  "act": "grow",
+  "from": 4,
+  "to": 5,
+  "complete": false,
+  "ser": "Fairy Tail",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/6780418261076",
+    "vid": "gid://shopify/ProductVariant/39851042177108",
+    "price": 6.99,
+    "t": "Fairy Tail Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/6780417540180",
+    "vid": "gid://shopify/ProductVariant/39851039981652",
+    "price": 6.99,
+    "t": "Fairy Tail Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8027470790974",
+    "vid": "gid://shopify/ProductVariant/44136285733182",
+    "price": 5.79,
+    "t": "Fairy Tail Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/8242963611966",
+    "vid": "gid://shopify/ProductVariant/44981164147006",
+    "price": 5.79,
+    "t": "Fairy Tail Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/8027470922046",
+    "vid": "gid://shopify/ProductVariant/44136285897022",
+    "price": 6.99,
+    "t": "Fairy Tail Vol 5"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14079099198",
+    "vid": "gid://shopify/ProductVariant/39851042177108"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14079131966",
+    "vid": "gid://shopify/ProductVariant/39851039981652"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14079164734",
+    "vid": "gid://shopify/ProductVariant/44136285733182"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14079197502",
+    "vid": "gid://shopify/ProductVariant/44981164147006"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54821491769662",
+  "handle": "fairy-tail-vol-1-4-set",
+  "desc": "<p class=\"book-intro\">Fairy Tail set by Hiro Mashima. An Action manga series rated Teen, published in English by Kodansha, first volume 2008.</p><p>Start the series with Vol 1-4 in one order. This set includes Vol 1, Vol 2, Vol 3 and Vol 4 (4 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": null,
+   "description": null
+  },
+  "tags": [
+   "2611",
+   "BackInStock",
+   "Bundle",
+   "Gift Idea",
+   "Vol 1 Bundle",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12695414702398",
+  "title": "Ouran High School Host Club Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12695414735166",
+  "title": "Tista Vol 1-2 Complete Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12695422599486",
+  "title": "D.N. Angel Vol 1-11 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12695423385918",
+  "title": "Sweet Blue Flowers Vol 1-4 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12695423418686",
+  "title": "The Vexations of a Shut-In Vampire Princess Light Novel Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12695423615294",
+  "title": "Syrup: A Yuri Anthology Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12695428596030",
+  "title": "Real Account Vol 1-8 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12695428628798",
+  "title": "Absolute Boyfriend Vol 1-6 Complete Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12695429742910",
+  "title": "I'm A Wolf, But My Boss Is A Sheep Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12695429775678",
+  "title": "That Wolf-Boy Is Mine! Vol 1-4 Complete Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12696691507518",
+  "title": "Ai Yori Aoshi Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12698296484158",
+  "title": "Battle Club Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12698296582462",
+  "title": "Van Von Hunter Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12698296779070",
+  "title": "Dramacon Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12698296942910",
+  "title": "Wild Act Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12698297106750",
+  "title": "Scrapped Princess Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12698297205054",
+  "title": "Saber Marionette J Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12699573584190",
+  "title": "Marvel Runaways Vol 1-9 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12718169817406",
+  "title": "Devils and Realist Vol 1-9 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12719048589630",
+  "title": "Black Cat Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12719048622398",
+  "title": "Loveless Vol 1-8 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12719048655166",
+  "title": "Negima! Magister Negi Magi Vol 1-18 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12721751425342",
+  "title": "Battle Royale Vol 1-4 Set",
+  "act": "grow",
+  "from": 4,
+  "to": 12,
+  "complete": false,
+  "ser": "Battle Royale",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/8144727998782",
+    "vid": "gid://shopify/ProductVariant/44586451927358",
+    "price": 8.59,
+    "t": "Battle Royale Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/8340906017086",
+    "vid": "gid://shopify/ProductVariant/45397137948990",
+    "price": 6.99,
+    "t": "Battle Royale Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/10638238351678",
+    "vid": "gid://shopify/ProductVariant/47825521901886",
+    "price": 9.89,
+    "t": "Battle Royale Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/10733687177534",
+    "vid": "gid://shopify/ProductVariant/48272587915582",
+    "price": 10.99,
+    "t": "Battle Royale Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/10733687308606",
+    "vid": "gid://shopify/ProductVariant/48272588734782",
+    "price": 10.99,
+    "t": "Battle Royale Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/11862927409470",
+    "vid": "gid://shopify/ProductVariant/51568430776638",
+    "price": 6.99,
+    "t": "Battle Royale Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/11862927212862",
+    "vid": "gid://shopify/ProductVariant/51568430416190",
+    "price": 6.99,
+    "t": "Battle Royale Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/11862927245630",
+    "vid": "gid://shopify/ProductVariant/51568430481726",
+    "price": 29.99,
+    "t": "Battle Royale Vol 8"
+   },
+   {
+    "pid": "gid://shopify/Product/12666309837118",
+    "vid": "gid://shopify/ProductVariant/54648484954430",
+    "price": 23.99,
+    "t": "Battle Royale Vol 9"
+   },
+   {
+    "pid": "gid://shopify/Product/12666309869886",
+    "vid": "gid://shopify/ProductVariant/54648484987198",
+    "price": 60.99,
+    "t": "Battle Royale Vol 10"
+   },
+   {
+    "pid": "gid://shopify/Product/12666309902654",
+    "vid": "gid://shopify/ProductVariant/54648485019966",
+    "price": 11.99,
+    "t": "Battle Royale Vol 11"
+   },
+   {
+    "pid": "gid://shopify/Product/12666309935422",
+    "vid": "gid://shopify/ProductVariant/54648485052734",
+    "price": 11.99,
+    "t": "Battle Royale Vol 12"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14169669950",
+    "vid": "gid://shopify/ProductVariant/44586451927358"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14169702718",
+    "vid": "gid://shopify/ProductVariant/45397137948990"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14169735486",
+    "vid": "gid://shopify/ProductVariant/47825521901886"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14169768254",
+    "vid": "gid://shopify/ProductVariant/48272587915582"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54888996340030",
+  "handle": "battle-royale-vol-1-4-set",
+  "desc": "<p class=\"book-intro\">Battle Royale set by Masayuki Taguchi. An Action manga series rated Mature, published in English by Tokyopop, first volume 2000.</p><p>Start the series with Vol 1-4 in one order. This set includes Vol 1, Vol 2, Vol 3 and Vol 4 (4 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": null,
+   "description": null
+  },
+  "tags": [
+   "2611",
+   "Bundle",
+   "Vol 1 Bundle",
+   "zz eBay 35"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12721751458110",
+  "title": "Golosseum Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12723360989502",
+  "title": "Rosario + Vampire Vol 1-10 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12723361087806",
+  "title": "Rosario + Vampire Season II Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12723361120574",
+  "title": "Blood on the Tracks Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12723361186110",
+  "title": "Bleach Vol 1-7 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12723622576446",
+  "title": "Chobits Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12726191456574",
+  "title": "Soloist in a Cage Vol 1-3 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12726192046398",
+  "title": "Franken Fran Omnibus Vol 1-4 Complete Set",
+  "act": "keep",
+  "why": "edition set: out Franken Fran Omnibus Vol 1, Franken Fran Omnibus Vol 2, Franken Fran Omnibus Vol 3, Franken Fran Omnibus Vol 4"
+ },
+ {
+  "id": "gid://shopify/Product/12726192308542",
+  "title": "Until Death Do Us Part Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12726192472382",
+  "title": "Shibuya Goldfish Vol 1-11 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12726192701758",
+  "title": "For The Kid I Saw In My Dreams Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12726192865598",
+  "title": "Mobile Suit Gundam: Char's Counterattack Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12726193029438",
+  "title": "Black Lagoon Vol 1-5 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12728111366462",
+  "title": "Shaman King Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12728185061694",
+  "title": "Die Wergelder Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12728185094462",
+  "title": "Terra Formars Vol 1-5 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12728185159998",
+  "title": "Mobile Suit Gundam: The Origin Vol 1-12 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12728185192766",
+  "title": "Mobile Suit Gundam: Cucuruz Doan's Island Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733336551742",
+  "title": "Ten Count Vol 1-6 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733337469246",
+  "title": "Classmates Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733339500862",
+  "title": "Manly Appetites Minegishi Loves Otsu Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733339730238",
+  "title": "Blue Period Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733339926846",
+  "title": "Monster and the Beast Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733340123454",
+  "title": "Gangsta Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733340352830",
+  "title": "Cutie and the Beast Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733340582206",
+  "title": "Escape Journey Vol 1-3 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733340811582",
+  "title": "Black or White Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733341008190",
+  "title": "Jealousy Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733341237566",
+  "title": "My Hero Academia Smash!! Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733341434174",
+  "title": "Bad Boys, Happy Home Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733341663550",
+  "title": "Hell's Paradise Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733341860158",
+  "title": "The Case Files of Jeweler Richard Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733342056766",
+  "title": "Angel Sanctuary Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733342286142",
+  "title": "Chibi Vampire Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733342515518",
+  "title": "Shiki Tsukai Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733342679358",
+  "title": "Cherry Magic! Thirty Years of Virginity Can Make You A Wizard?! Vol 1-4 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733342908734",
+  "title": "Plus-Sized Elf Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733343105342",
+  "title": "My Androgynous Boyfriend Vol 1-3 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12733343269182",
+  "title": "My Hero Academia School Briefs Light Novel Vol 1-4 Set",
+  "act": "grow",
+  "from": 4,
+  "to": 6,
+  "complete": false,
+  "ser": "My Hero Academia School Briefs",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/7966004805950",
+    "vid": "gid://shopify/ProductVariant/43651595206974",
+    "price": 5.66,
+    "t": "My Hero Academia School Briefs Vol 1 Light Novel"
+   },
+   {
+    "pid": "gid://shopify/Product/9264615719230",
+    "vid": "gid://shopify/ProductVariant/46079544361278",
+    "price": 3.23,
+    "t": "My Hero Academia School Briefs Vol 2 Light Novel"
+   },
+   {
+    "pid": "gid://shopify/Product/10730407657790",
+    "vid": "gid://shopify/ProductVariant/48251675574590",
+    "price": 6.99,
+    "t": "My Hero Academia School Briefs Vol 3 Light Novel"
+   },
+   {
+    "pid": "gid://shopify/Product/10730407723326",
+    "vid": "gid://shopify/ProductVariant/48251675803966",
+    "price": 6.99,
+    "t": "My Hero Academia School Briefs Vol 4 Light Novel"
+   },
+   {
+    "pid": "gid://shopify/Product/12241664475454",
+    "vid": "gid://shopify/ProductVariant/52924505751870",
+    "price": 5.01,
+    "t": "My Hero Academia School Briefs Novel Vol 5 - BRAND NEW CONDITION"
+   },
+   {
+    "pid": "gid://shopify/Product/11582157291838",
+    "vid": "gid://shopify/ProductVariant/50682739327294",
+    "price": 3.23,
+    "t": "My Hero Academia School Briefs Vol 6 Light Novel"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14261518654",
+    "vid": "gid://shopify/ProductVariant/43651595206974"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14261551422",
+    "vid": "gid://shopify/ProductVariant/46079544361278"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14261584190",
+    "vid": "gid://shopify/ProductVariant/48251675574590"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14261616958",
+    "vid": "gid://shopify/ProductVariant/48251675803966"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54942421090622",
+  "handle": "my-hero-academia-school-briefs-light-novel-vol-1-4-set",
+  "desc": "<p class=\"book-intro\">My Hero Academia School Briefs Light Novel set by Anri Yoshi. A Comedy light novel series rated Teen, published in English by Viz Media, first volume 2019.</p><p>Start the series with Vol 1-4 in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4 (4 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "My Hero Academia School Briefs Light Novel Vol 1-4 Set | The Mage's Emporium",
+   "description": "My Hero Academia School Briefs Light Novel Vol 1-4 Set: 4 used light novel volumes by Anri Yoshi at 10% off. Free shipping on $35+."
+  },
+  "tags": [
+   "2611",
+   "BackInStock",
+   "Bundle",
+   "Gift Idea",
+   "Vol 1 Bundle"
+  ],
+  "pt": "Light Novel"
+ },
+ {
+  "id": "gid://shopify/Product/12733343498558",
+  "title": "The Way of the Househusband Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12733343727934",
+  "title": "Twittering Birds Never Fly Vol 1-5 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12735443501374",
+  "title": "Therapy Game Vol 1-2 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12743440400702",
+  "title": "Platinum End Vol 1-14 Complete Set",
+  "act": "shrink",
+  "from": 14,
+  "to": 11,
+  "complete": true,
+  "ser": "Platinum End",
+  "status": "DRAFT",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/8015847883070",
+    "vid": "gid://shopify/ProductVariant/44086367125822",
+    "price": 6.99,
+    "t": "Platinum End Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/8015847981374",
+    "vid": "gid://shopify/ProductVariant/44086367224126",
+    "price": 6.99,
+    "t": "Platinum End Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8015848177982",
+    "vid": "gid://shopify/ProductVariant/44086367715646",
+    "price": 6.99,
+    "t": "Platinum End Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/8107531665726",
+    "vid": "gid://shopify/ProductVariant/44443150057790",
+    "price": 6.99,
+    "t": "Platinum End Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/11309165871422",
+    "vid": "gid://shopify/ProductVariant/50105734496574",
+    "price": 6.99,
+    "t": "Platinum End Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/11944595063102",
+    "vid": "gid://shopify/ProductVariant/51908983226686",
+    "price": 6.99,
+    "t": "Platinum End Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/12679311163710",
+    "vid": "gid://shopify/ProductVariant/54699565613374",
+    "price": 6.99,
+    "t": "Platinum End Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/12679311196478",
+    "vid": "gid://shopify/ProductVariant/54699565646142",
+    "price": 6.99,
+    "t": "Platinum End Vol 8"
+   },
+   {
+    "pid": "gid://shopify/Product/12679311229246",
+    "vid": "gid://shopify/ProductVariant/54699565678910",
+    "price": 6.99,
+    "t": "Platinum End Vol 9"
+   },
+   {
+    "pid": "gid://shopify/Product/12679311262014",
+    "vid": "gid://shopify/ProductVariant/54699565711678",
+    "price": 6.99,
+    "t": "Platinum End Vol 10"
+   },
+   {
+    "pid": "gid://shopify/Product/12679311294782",
+    "vid": "gid://shopify/ProductVariant/54699565744446",
+    "price": 6.99,
+    "t": "Platinum End Vol 11"
+   }
+  ],
+  "drop": [
+   {
+    "pid": "gid://shopify/Product/12679311327550",
+    "vid": "gid://shopify/ProductVariant/54699565842750",
+    "t": "Platinum End Vol 12"
+   },
+   {
+    "pid": "gid://shopify/Product/12679311425854",
+    "vid": "gid://shopify/ProductVariant/54699565908286",
+    "t": "Platinum End Vol 13"
+   },
+   {
+    "pid": "gid://shopify/Product/10843512308030",
+    "vid": "gid://shopify/ProductVariant/48869479252286",
+    "t": "Platinum End Vol 14"
+   }
+  ],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434402622",
+    "vid": "gid://shopify/ProductVariant/44086367125822"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434435390",
+    "vid": "gid://shopify/ProductVariant/44086367224126"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434468158",
+    "vid": "gid://shopify/ProductVariant/44086367715646"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434500926",
+    "vid": "gid://shopify/ProductVariant/44443150057790"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434533694",
+    "vid": "gid://shopify/ProductVariant/50105734496574"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434566462",
+    "vid": "gid://shopify/ProductVariant/51908983226686"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434599230",
+    "vid": "gid://shopify/ProductVariant/54699565613374"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434631998",
+    "vid": "gid://shopify/ProductVariant/54699565646142"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434664766",
+    "vid": "gid://shopify/ProductVariant/54699565678910"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434697534",
+    "vid": "gid://shopify/ProductVariant/54699565711678"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434730302",
+    "vid": "gid://shopify/ProductVariant/54699565744446"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434763070",
+    "vid": "gid://shopify/ProductVariant/54699565842750"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434795838",
+    "vid": "gid://shopify/ProductVariant/54699565908286"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14434828606",
+    "vid": "gid://shopify/ProductVariant/48869479252286"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54972009611582",
+  "handle": "platinum-end-vol-1-14-complete-set",
+  "desc": "<p class=\"book-intro\">Platinum End Vol 1-14 set by Tsugumi Ohba. A Supernatural manga series rated Mature, published in English by Viz Media, first volume 2016.</p><p>Get the complete series, Vol 1-14, in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4, Vol 5, Vol 6, Vol 7, Vol 8, Vol 9, Vol 10, Vol 11, Vol 12, Vol 13, Vol 14 (14 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Platinum End Vol 1-14 Complete Set Manga | The Mage's Emporium",
+   "description": "Platinum End Vol 1-14 Complete Set by Tsugumi Ohba. Supernatural manga rated Mature. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "Bundle",
+   "Complete Series",
+   "outofstock",
+   "Vol 1 Bundle",
+   "zz eb set"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12743442170174",
+  "title": "Limit Vol 1-6 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12743442202942",
+  "title": "Nura: Rise of the Yokai Clan Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12743442268478",
+  "title": "Fairy Girls Vol 1-4 Complete Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12743444169022",
+  "title": "Eyeshield 21 Vol 1-8 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12743444201790",
+  "title": "Star-Crossed!! Vol 1-4 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12743444267326",
+  "title": "Rave Master Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12743444300094",
+  "title": "Blackguard Vol 1-5 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12743444365630",
+  "title": "Monster Guild The Dark Lord's (No-Good) Comeback! Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12743445414206",
+  "title": "Team Phoenix Vol 1-5 Complete Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12743445479742",
+  "title": "Heavenly Delusion Vol 1-6 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12743445512510",
+  "title": "Wind Breaker Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12743445578046",
+  "title": "Slam Dunk Vol 1-30 Set",
+  "act": "keep",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12743446692158",
+  "title": "Battle Royale Vol 1-15 Complete Set",
+  "act": "shrink",
+  "from": 15,
+  "to": 12,
+  "complete": true,
+  "ser": "Battle Royale",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/8144727998782",
+    "vid": "gid://shopify/ProductVariant/44586451927358",
+    "price": 8.59,
+    "t": "Battle Royale Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/8340906017086",
+    "vid": "gid://shopify/ProductVariant/45397137948990",
+    "price": 6.99,
+    "t": "Battle Royale Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/10638238351678",
+    "vid": "gid://shopify/ProductVariant/47825521901886",
+    "price": 9.89,
+    "t": "Battle Royale Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/10733687177534",
+    "vid": "gid://shopify/ProductVariant/48272587915582",
+    "price": 10.99,
+    "t": "Battle Royale Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/10733687308606",
+    "vid": "gid://shopify/ProductVariant/48272588734782",
+    "price": 10.99,
+    "t": "Battle Royale Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/11862927409470",
+    "vid": "gid://shopify/ProductVariant/51568430776638",
+    "price": 6.99,
+    "t": "Battle Royale Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/11862927212862",
+    "vid": "gid://shopify/ProductVariant/51568430416190",
+    "price": 6.99,
+    "t": "Battle Royale Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/11862927245630",
+    "vid": "gid://shopify/ProductVariant/51568430481726",
+    "price": 29.99,
+    "t": "Battle Royale Vol 8"
+   },
+   {
+    "pid": "gid://shopify/Product/12666309837118",
+    "vid": "gid://shopify/ProductVariant/54648484954430",
+    "price": 23.99,
+    "t": "Battle Royale Vol 9"
+   },
+   {
+    "pid": "gid://shopify/Product/12666309869886",
+    "vid": "gid://shopify/ProductVariant/54648484987198",
+    "price": 60.99,
+    "t": "Battle Royale Vol 10"
+   },
+   {
+    "pid": "gid://shopify/Product/12666309902654",
+    "vid": "gid://shopify/ProductVariant/54648485019966",
+    "price": 11.99,
+    "t": "Battle Royale Vol 11"
+   },
+   {
+    "pid": "gid://shopify/Product/12666309935422",
+    "vid": "gid://shopify/ProductVariant/54648485052734",
+    "price": 11.99,
+    "t": "Battle Royale Vol 12"
+   }
+  ],
+  "drop": [
+   {
+    "pid": "gid://shopify/Product/12666310132030",
+    "vid": "gid://shopify/ProductVariant/54648485445950",
+    "t": "Battle Royale Vol 13"
+   },
+   {
+    "pid": "gid://shopify/Product/12666310164798",
+    "vid": "gid://shopify/ProductVariant/54648485478718",
+    "t": "Battle Royale Vol 14"
+   },
+   {
+    "pid": "gid://shopify/Product/12666310197566",
+    "vid": "gid://shopify/ProductVariant/54648485511486",
+    "t": "Battle Royale Vol 15"
+   }
+  ],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437613886",
+    "vid": "gid://shopify/ProductVariant/44586451927358"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437646654",
+    "vid": "gid://shopify/ProductVariant/45397137948990"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437679422",
+    "vid": "gid://shopify/ProductVariant/47825521901886"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437712190",
+    "vid": "gid://shopify/ProductVariant/48272587915582"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437744958",
+    "vid": "gid://shopify/ProductVariant/48272588734782"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437777726",
+    "vid": "gid://shopify/ProductVariant/51568430776638"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437810494",
+    "vid": "gid://shopify/ProductVariant/51568430416190"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437843262",
+    "vid": "gid://shopify/ProductVariant/51568430481726"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437876030",
+    "vid": "gid://shopify/ProductVariant/54648484954430"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437908798",
+    "vid": "gid://shopify/ProductVariant/54648484987198"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437941566",
+    "vid": "gid://shopify/ProductVariant/54648485019966"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14437974334",
+    "vid": "gid://shopify/ProductVariant/54648485052734"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14438007102",
+    "vid": "gid://shopify/ProductVariant/54648485445950"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14438039870",
+    "vid": "gid://shopify/ProductVariant/54648485478718"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14438072638",
+    "vid": "gid://shopify/ProductVariant/54648485511486"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54972038676798",
+  "handle": "battle-royale-vol-1-15-complete-set",
+  "desc": "<p class=\"book-intro\">Battle Royale Vol 1-15 set by Masayuki Taguchi. An Action manga series rated Mature, published in English by Tokyopop, first volume 2000.</p><p>Get the complete series, Vol 1-15, in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4, Vol 5, Vol 6, Vol 7, Vol 8, Vol 9, Vol 10, Vol 11, Vol 12, Vol 13, Vol 14, Vol 15 (15 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Battle Royale Vol 1-15 Complete Set Manga | The Mage's Emporium",
+   "description": "Battle Royale Vol 1-15 Complete Set by Masayuki Taguchi. Action manga rated Mature. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "Bundle",
+   "Complete Series",
+   "outofstock",
+   "Vol 1 Bundle",
+   "zz eb set"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12743446790462",
+  "title": "Happiness Vol 1-10 Complete Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12743446921534",
+  "title": "Goodnight Punpun Vol 1-7 Complete Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12743446987070",
+  "title": "Pet Shop of Horrors Collector's Edition Vol 1-3 Set",
+  "act": "draft",
+  "why": "edition set: out Pet Shop of Horrors Collector's Edition Vol 2"
+ },
+ {
+  "id": "gid://shopify/Product/12747133354302",
+  "title": "Moriarty The Patriot Vol 1-6 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12747133780286",
+  "title": "The Haunted Bookstore Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12747133911358",
+  "title": "King of Hell Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12747134075198",
+  "title": "The Elusive Samurai Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12747134599486",
+  "title": "Girl Got Game Vol 1-8 Set (retired, replaced by Vol 1-10 Complete Set)",
+  "act": "restore",
+  "from": 8,
+  "to": 10,
+  "complete": false,
+  "ser": "Girl Got Game",
+  "status": "DRAFT",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/8027476230462",
+    "vid": "gid://shopify/ProductVariant/44136299135294",
+    "price": 6.99,
+    "t": "Girl Got Game Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/8004519526718",
+    "vid": "gid://shopify/ProductVariant/43991047110974",
+    "price": 6.99,
+    "t": "Girl Got Game Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8145713922366",
+    "vid": "gid://shopify/ProductVariant/44590434877758",
+    "price": 6.99,
+    "t": "Girl Got Game Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/7965122625854",
+    "vid": "gid://shopify/ProductVariant/43648386203966",
+    "price": 5.79,
+    "t": "Girl Got Game Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/8315189035326",
+    "vid": "gid://shopify/ProductVariant/45272505647422",
+    "price": 5.79,
+    "t": "Girl Got Game Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/8226930721086",
+    "vid": "gid://shopify/ProductVariant/44929379696958",
+    "price": 5.79,
+    "t": "Girl Got Game Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/8315189756222",
+    "vid": "gid://shopify/ProductVariant/45272506597694",
+    "price": 6.99,
+    "t": "Girl Got Game Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/8004519395646",
+    "vid": "gid://shopify/ProductVariant/43991045275966",
+    "price": 6.99,
+    "t": "Girl Got Game Vol 8"
+   },
+   {
+    "pid": "gid://shopify/Product/8027476656446",
+    "vid": "gid://shopify/ProductVariant/44136299594046",
+    "price": 10.99,
+    "t": "Girl Got Game Vol 9"
+   },
+   {
+    "pid": "gid://shopify/Product/8027476427070",
+    "vid": "gid://shopify/ProductVariant/44136299266366",
+    "price": 6.99,
+    "t": "Girl Got Game Vol 10"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14457733438",
+    "vid": "gid://shopify/ProductVariant/44136299135294"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14457766206",
+    "vid": "gid://shopify/ProductVariant/43991047110974"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14457798974",
+    "vid": "gid://shopify/ProductVariant/44590434877758"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14457831742",
+    "vid": "gid://shopify/ProductVariant/43648386203966"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14457864510",
+    "vid": "gid://shopify/ProductVariant/45272505647422"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14457897278",
+    "vid": "gid://shopify/ProductVariant/44929379696958"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14457930046",
+    "vid": "gid://shopify/ProductVariant/45272506597694"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14457962814",
+    "vid": "gid://shopify/ProductVariant/43991045275966"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/54984317370686",
+  "handle": "girl-got-game-vol-1-8-set-retired",
+  "desc": "<p class=\"book-intro\">Girl Got Game Vol 1-8 set by Shizuru Seino. A Romance manga series rated Teen, published in English by Tokyopop, first volume 2004.</p><p>Start the series with Vol 1-8 in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4, Vol 5, Vol 6, Vol 7, Vol 8 (8 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Girl Got Game Vol 1-8 Set | The Mage's Emporium",
+   "description": "Girl Got Game Vol 1-8 Set by Shizuru Seino. Romance manga set rated Teen. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "2611",
+   "BackInStock",
+   "Bundle",
+   "Gift Idea",
+   "retired-set",
+   "Vol 1 Bundle",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12750539260222",
+  "title": "Pompo The Cinephile Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12750539391294",
+  "title": "Pokemon Adventures Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12750539653438",
+  "title": "My Hero Academia Vol 1-21 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12758740894014",
+  "title": "Saiyuki Vol 1-8 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12758740926782",
+  "title": "The Horizon Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12758740959550",
+  "title": "Ping Pong Vol 1-2 Complete Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12758741025086",
+  "title": "The Legend of Zelda Ocarina of Time Vol 1-2 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760161648958",
+  "title": "Hi Score Girl Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760162107710",
+  "title": "Toilet-Bound Hanako-kun Vol 1-10 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760162304318",
+  "title": "Yurara Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760162500926",
+  "title": "My Love Mix-Up! Vol 1-7 Set",
+  "act": "shrink",
+  "from": 7,
+  "to": 4,
+  "complete": false,
+  "ser": "My Love Mix-Up!",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/9029245829438",
+    "vid": "gid://shopify/ProductVariant/45944454676798",
+    "price": 6.99,
+    "t": "My Love Mix-Up! Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/9664670564670",
+    "vid": "gid://shopify/ProductVariant/46527762170174",
+    "price": 6.99,
+    "t": "My Love Mix-Up! Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/9664670597438",
+    "vid": "gid://shopify/ProductVariant/46527762202942",
+    "price": 6.99,
+    "t": "My Love Mix-Up! Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/6785755676756",
+    "vid": "gid://shopify/ProductVariant/39864019714132",
+    "price": 6.99,
+    "t": "My Love Mix-Up! Vol 4"
+   }
+  ],
+  "drop": [
+   {
+    "pid": "gid://shopify/Product/9664670662974",
+    "vid": "gid://shopify/ProductVariant/46527762301246",
+    "t": "My Love Mix-Up! Vol 5"
+   },
+   {
+    "pid": "gid://shopify/Product/9664670695742",
+    "vid": "gid://shopify/ProductVariant/46527762334014",
+    "t": "My Love Mix-Up! Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/9664670794046",
+    "vid": "gid://shopify/ProductVariant/46527762596158",
+    "t": "My Love Mix-Up! Vol 7"
+   }
+  ],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14479950142",
+    "vid": "gid://shopify/ProductVariant/45944454676798"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14479982910",
+    "vid": "gid://shopify/ProductVariant/46527762170174"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14480015678",
+    "vid": "gid://shopify/ProductVariant/46527762202942"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14480048446",
+    "vid": "gid://shopify/ProductVariant/39864019714132"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14480081214",
+    "vid": "gid://shopify/ProductVariant/46527762301246"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14480113982",
+    "vid": "gid://shopify/ProductVariant/46527762334014"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14480146750",
+    "vid": "gid://shopify/ProductVariant/46527762596158"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/55026635702590",
+  "handle": "my-love-mix-up-vol-1-7-set",
+  "desc": "<p class=\"book-intro\">My Love Mix-Up! set by Wataru Hinekure. A Yaoi/BL manga series rated Teen, published in English by Viz Media, first volume 2021.</p><p>Start the series with Vol 1-7 in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4, Vol 5, Vol 6, Vol 7 (7 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "My Love Mix-Up! Vol 1-7 Set | The Mage's Emporium",
+   "description": "My Love Mix-Up! Vol 1-7 Set: 7 used manga volumes at 10% off. Free shipping on $35+."
+  },
+  "tags": [
+   "Bundle",
+   "Gift Idea",
+   "Haul-2611-23",
+   "outofstock",
+   "Vol 1 Bundle",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12760162697534",
+  "title": "Turns Out My Online Friend is My Real-Life Boss! Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760162894142",
+  "title": "Devil Survivor Vol 1-4 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12760163090750",
+  "title": "Rainbows After Storms Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760163254590",
+  "title": "Adachi and Shimamura Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760163483966",
+  "title": "Sword Art Online Progressive Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760163713342",
+  "title": "Ceres Celestial Legend Vol 1-9 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12760166203710",
+  "title": "Ragnarok Vol 1-9 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767100404030",
+  "title": "My Hero Academia Vol 1-21 Set",
+  "act": "restore-same"
+ },
+ {
+  "id": "gid://shopify/Product/12767100567870",
+  "title": "Saiyuki Vol 1-8 Set",
+  "act": "restore-same"
+ },
+ {
+  "id": "gid://shopify/Product/12767100666174",
+  "title": "Fairy Tail Vol 1-4 Set",
+  "act": "restore",
+  "from": 4,
+  "to": 5,
+  "complete": false,
+  "ser": "Fairy Tail",
+  "status": "DRAFT",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/6780418261076",
+    "vid": "gid://shopify/ProductVariant/39851042177108",
+    "price": 6.99,
+    "t": "Fairy Tail Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/6780417540180",
+    "vid": "gid://shopify/ProductVariant/39851039981652",
+    "price": 6.99,
+    "t": "Fairy Tail Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8027470790974",
+    "vid": "gid://shopify/ProductVariant/44136285733182",
+    "price": 5.79,
+    "t": "Fairy Tail Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/8242963611966",
+    "vid": "gid://shopify/ProductVariant/44981164147006",
+    "price": 5.79,
+    "t": "Fairy Tail Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/8027470922046",
+    "vid": "gid://shopify/ProductVariant/44136285897022",
+    "price": 6.99,
+    "t": "Fairy Tail Vol 5"
+   }
+  ],
+  "drop": [],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14736654654",
+    "vid": "gid://shopify/ProductVariant/39851042177108"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14736687422",
+    "vid": "gid://shopify/ProductVariant/39851039981652"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14736720190",
+    "vid": "gid://shopify/ProductVariant/44136285733182"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14736752958",
+    "vid": "gid://shopify/ProductVariant/44981164147006"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/55045365956926",
+  "handle": "fairy-tail-vol-1-4-set-q6af",
+  "desc": "<p class=\"book-intro\">Fairy Tail set by Hiro Mashima. A Action manga series rated Teen, published in English by Kodansha, first volume 2008.</p><p>Start the series with Vol 1-4 in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4 (4 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Fairy Tail Vol 1-4 Set | The Mage's Emporium",
+   "description": "Fairy Tail Vol 1-4 Set: 4 used manga volumes by Hiro Mashima at 10% off. Free shipping on $35+."
+  },
+  "tags": [
+   "2611",
+   "BackInStock",
+   "Bundle",
+   "Gift Idea",
+   "Vol 1 Bundle",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12767100731710",
+  "title": "Crossroad Vol 1-7 Set",
+  "act": "restore-same"
+ },
+ {
+  "id": "gid://shopify/Product/12767100895550",
+  "title": "Platinum End Vol 1-11 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767100961086",
+  "title": "Don't Toy With Me Miss Nagatoro Vol 1-8 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767101059390",
+  "title": "Fly Me to the Moon Vol 1-14 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767101157694",
+  "title": "To The Abandoned Sacred Beasts Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767101321534",
+  "title": "Accomplishments of the Duke's Daughter Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767101550910",
+  "title": "The Abandoned Empress Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767101714750",
+  "title": "The Rising of the Shield Hero: The Manga Companion Vol 1-8 Set",
+  "act": "keep",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12767101878590",
+  "title": "Last Round Arthurs Light Novel Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767102140734",
+  "title": "Seraphic Feather Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767102337342",
+  "title": "Pandora Seven Vol 1-5 Set",
+  "act": "keep",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12767102566718",
+  "title": "Appleseed Vol 1-4 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767265620286",
+  "title": "Cherry Juice Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767265784126",
+  "title": "Tramps Like Us Vol 1-5 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767265849662",
+  "title": "Rebirth Vol 1-7 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767265915198",
+  "title": "Crest of the Stars Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767265980734",
+  "title": "The Dark-Hunters Vol 1-4 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767266046270",
+  "title": "Arata The Legend Vol 1-11 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767266111806",
+  "title": "Gravitation Vol 1-7 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767266210110",
+  "title": "Elemental Gelade Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767266275646",
+  "title": "Genshiken Second Season Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12767266308414",
+  "title": "Lament of the Lamb Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767267127614",
+  "title": "Girl Got Game Vol 1-10 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12767305728318",
+  "title": "Oh My Goddess Vol 1-22 Set (Mixed Editions)",
+  "act": "draft",
+  "why": "edition set: out Oh My Goddess Vol 22"
+ },
+ {
+  "id": "gid://shopify/Product/12772477829438",
+  "title": "Attack on Titan Vol 1-8 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12772477927742",
+  "title": "Undead Unluck Vol 1-6 Set",
+  "act": "shrink",
+  "from": 6,
+  "to": 5,
+  "complete": false,
+  "ser": "Undead Unluck",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/6782585569364",
+    "vid": "gid://shopify/ProductVariant/39857052057684",
+    "price": 6.29,
+    "t": "Undead Unluck Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/8107537006910",
+    "vid": "gid://shopify/ProductVariant/44443163951422",
+    "price": 6.99,
+    "t": "Undead Unluck Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/8107537170750",
+    "vid": "gid://shopify/ProductVariant/44443164803390",
+    "price": 6.99,
+    "t": "Undead Unluck Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/10728197030206",
+    "vid": "gid://shopify/ProductVariant/48235514724670",
+    "price": 6.99,
+    "t": "Undead Unluck Vol 4"
+   },
+   {
+    "pid": "gid://shopify/Product/10728196768062",
+    "vid": "gid://shopify/ProductVariant/48235512922430",
+    "price": 6.99,
+    "t": "Undead Unluck Vol 5"
+   }
+  ],
+  "drop": [
+   {
+    "pid": "gid://shopify/Product/10728197062974",
+    "vid": "gid://shopify/ProductVariant/48235514757438",
+    "t": "Undead Unluck Vol 6"
+   }
+  ],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14751596862",
+    "vid": "gid://shopify/ProductVariant/39857052057684"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14751629630",
+    "vid": "gid://shopify/ProductVariant/44443163951422"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14751662398",
+    "vid": "gid://shopify/ProductVariant/44443164803390"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14751695166",
+    "vid": "gid://shopify/ProductVariant/48235514724670"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14751727934",
+    "vid": "gid://shopify/ProductVariant/48235512922430"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14751760702",
+    "vid": "gid://shopify/ProductVariant/48235514757438"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/55078113313086",
+  "handle": "undead-unluck-vol-1-6-set",
+  "desc": "<p class=\"book-intro\">Undead Unluck set by Yoshifumi Tozuka. An Action manga series rated Older Teen, published in English by Viz Media, first volume 2021.</p><p>Start the series with Vol 1-6 in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4, Vol 5, Vol 6 (6 books) at 10% off the individual prices.</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Undead Unluck Vol 1-6 Set Manga | The Mage's Emporium",
+   "description": "Undead Unluck Vol 1-6 Set by Yoshifumi Tozuka. Action manga rated Older Teen. Used from The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "Bundle",
+   "Gift Idea",
+   "outofstock",
+   "Vol 1 Bundle",
+   "zz eBay manga"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12773042880830",
+  "title": "Gantz Omnibus Vol 1-12 Complete Set",
+  "act": "draft",
+  "why": "edition set: out Gantz Omnibus 4, Gantz Omnibus 5, Gantz Omnibus 9, Gantz Omnibus 12"
+ },
+ {
+  "id": "gid://shopify/Product/12773042913598",
+  "title": "Psyren Vol 1-16 Complete Set",
+  "act": "shrink",
+  "from": 16,
+  "to": 12,
+  "complete": true,
+  "ser": "Psyren",
+  "status": "ACTIVE",
+  "keep": [
+   {
+    "pid": "gid://shopify/Product/8339860652350",
+    "vid": "gid://shopify/ProductVariant/45392022896958",
+    "price": 6.99,
+    "t": "Psyren Vol 1"
+   },
+   {
+    "pid": "gid://shopify/Product/10719703695678",
+    "vid": "gid://shopify/ProductVariant/48192194216254",
+    "price": 6.99,
+    "t": "Psyren Vol 2"
+   },
+   {
+    "pid": "gid://shopify/Product/12695842816318",
+    "vid": "gid://shopify/ProductVariant/54824642609470",
+    "price": 6.99,
+    "t": "Psyren Vol 3"
+   },
+   {
+    "pid": "gid://shopify/Product/12773039178046",
+    "vid": "gid://shopify/ProductVariant/55080389050686",
+    "price": 6.99,
+    "t": "Psyren Vol 4 Ex Library"
+   },
+   {
+    "pid": "gid://shopify/Product/12773039210814",
+    "vid": "gid://shopify/ProductVariant/55080389083454",
+    "price": 6.99,
+    "t": "Psyren Vol 5 Ex Library"
+   },
+   {
+    "pid": "gid://shopify/Product/8339860619582",
+    "vid": "gid://shopify/ProductVariant/45392022634814",
+    "price": 7.99,
+    "t": "Psyren Vol 6"
+   },
+   {
+    "pid": "gid://shopify/Product/8339860291902",
+    "vid": "gid://shopify/ProductVariant/45392021258558",
+    "price": 7.99,
+    "t": "Psyren Vol 7"
+   },
+   {
+    "pid": "gid://shopify/Product/12773039276350",
+    "vid": "gid://shopify/ProductVariant/55080389181758",
+    "price": 6.99,
+    "t": "Psyren Vol 8 Ex Library"
+   },
+   {
+    "pid": "gid://shopify/Product/8339860488510",
+    "vid": "gid://shopify/ProductVariant/45392021487934",
+    "price": 6.99,
+    "t": "Psyren Vol 9"
+   },
+   {
+    "pid": "gid://shopify/Product/12695843242302",
+    "vid": "gid://shopify/ProductVariant/54824643068222",
+    "price": 6.99,
+    "t": "Psyren Vol 10"
+   },
+   {
+    "pid": "gid://shopify/Product/8339860422974",
+    "vid": "gid://shopify/ProductVariant/45392021389630",
+    "price": 6.99,
+    "t": "Psyren Vol 11"
+   },
+   {
+    "pid": "gid://shopify/Product/12695804739902",
+    "vid": "gid://shopify/ProductVariant/54824569864510",
+    "price": 7.99,
+    "t": "Psyren Vol 12"
+   }
+  ],
+  "drop": [
+   {
+    "pid": "gid://shopify/Product/12695804772670",
+    "vid": "gid://shopify/ProductVariant/54824569930046",
+    "t": "Psyren Vol 13"
+   },
+   {
+    "pid": "gid://shopify/Product/12695804838206",
+    "vid": "gid://shopify/ProductVariant/54824570126654",
+    "t": "Psyren Vol 14"
+   },
+   {
+    "pid": "gid://shopify/Product/12695804870974",
+    "vid": "gid://shopify/ProductVariant/54824570159422",
+    "t": "Psyren Vol 15"
+   },
+   {
+    "pid": "gid://shopify/Product/12695804969278",
+    "vid": "gid://shopify/ProductVariant/54824570519870",
+    "t": "Psyren Vol 16"
+   }
+  ],
+  "comp": [
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848098622",
+    "vid": "gid://shopify/ProductVariant/45392022896958"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848131390",
+    "vid": "gid://shopify/ProductVariant/48192194216254"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848164158",
+    "vid": "gid://shopify/ProductVariant/54824642609470"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848196926",
+    "vid": "gid://shopify/ProductVariant/55080389050686"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848229694",
+    "vid": "gid://shopify/ProductVariant/55080389083454"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848262462",
+    "vid": "gid://shopify/ProductVariant/45392022634814"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848295230",
+    "vid": "gid://shopify/ProductVariant/45392021258558"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848327998",
+    "vid": "gid://shopify/ProductVariant/55080389181758"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848360766",
+    "vid": "gid://shopify/ProductVariant/45392021487934"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848393534",
+    "vid": "gid://shopify/ProductVariant/54824643068222"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848426302",
+    "vid": "gid://shopify/ProductVariant/45392021389630"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848459070",
+    "vid": "gid://shopify/ProductVariant/54824569864510"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848491838",
+    "vid": "gid://shopify/ProductVariant/54824569930046"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848524606",
+    "vid": "gid://shopify/ProductVariant/54824570126654"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848557374",
+    "vid": "gid://shopify/ProductVariant/54824570159422"
+   },
+   {
+    "cid": "gid://shopify/ProductVariantComponent/14848590142",
+    "vid": "gid://shopify/ProductVariant/54824570519870"
+   }
+  ],
+  "vid": "gid://shopify/ProductVariant/55080400519486",
+  "handle": "psyren-vol-1-16-complete-set",
+  "desc": "<p class=\"book-intro\">Psyren Vol 1-16 Complete Set by Toshiaki Iwashiro. A Action manga series rated Teen, published in English by Viz Media, first volume 2011.</p><p>The complete series in one order. This set includes Vol 1, Vol 2, Vol 3, Vol 4, Vol 5, Vol 6, Vol 7, Vol 8, Vol 9, Vol 10, Vol 11, Vol 12, Vol 13, Vol 14, Vol 15, Vol 16 (16 books) at 10% off the individual prices.</p><p>Vol 4 and Vol 5 and Vol 8 are ex-library copies (library stickers and markings).</p><p>Condition: used books in good readable condition unless marked otherwise on the individual listings; sets may mix new and used copies.</p>",
+  "seo": {
+   "title": "Psyren Vol 1-16 Complete Set | The Mage's Emporium",
+   "description": "Psyren Vol 1-16 Complete Set by Toshiaki Iwashiro. 16 used manga at 10% off. The Mage's Emporium, free shipping on $35+."
+  },
+  "tags": [
+   "Bundle",
+   "Complete Series",
+   "Gift Idea",
+   "outofstock",
+   "Vol 1 Bundle",
+   "zzmc1125"
+  ],
+  "pt": "Manga"
+ },
+ {
+  "id": "gid://shopify/Product/12773042946366",
+  "title": "Btooom Vol 1-9 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12773043011902",
+  "title": "Battle Angel Alita Last Order Omnibus Vol 1-5 Set",
+  "act": "ok",
+  "why": "edition set"
+ },
+ {
+  "id": "gid://shopify/Product/12773043044670",
+  "title": "Pretty Guardian Sailor Moon Vol 1-3 Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12773043110206",
+  "title": "Mail Vol 1-3 Complete Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12773043175742",
+  "title": "Eden It's An Endless World! Vol 1-5 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12773043241278",
+  "title": "Spirit Circle Vol 1-6 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12773043306814",
+  "title": "Burst Angel Titan Edition Vol 1-3 Complete Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12773043863870",
+  "title": "Speed Grapher Titan Edition Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12773044257086",
+  "title": "The Tree Of Death Yomotsuhegui Vol 1-3 Set",
+  "act": "draft",
+  "why": "Vol 2 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12773044781374",
+  "title": "Cagaster Vol 1-6 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12773045141822",
+  "title": "No Longer Human Vol 1-3 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12773045174590",
+  "title": "Emanon Vol 1-4 Set",
+  "act": "draft",
+  "why": "Vol 1 out of stock"
+ },
+ {
+  "id": "gid://shopify/Product/12773045240126",
+  "title": "Cardcaptor Sakura Collector's Edition Vol 1-3 Set",
+  "act": "ok",
+  "why": "edition set"
+ },
+ {
+  "id": "gid://shopify/Product/12773045272894",
+  "title": "Ikigami The Ultimate Limit Vol 1-10 Complete Set",
+  "act": "ok"
+ },
+ {
+  "id": "gid://shopify/Product/12773045338430",
+  "title": "The Kurosagi Corpse Delivery Service Omnibus Vol 1-5 Set",
+  "act": "draft",
+  "why": "edition set: out The Kurosagi Corpse Delivery Service Omnibus Vol 1"
+ },
+ {
+  "id": "gid://shopify/Product/12773045371198",
+  "title": "Attack on Titan Colossal Edition Vol 1-7 Complete Set",
+  "act": "draft",
+  "why": "Vol 3 out of stock"
+ }
+]

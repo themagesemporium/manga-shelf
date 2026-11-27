@@ -1,6 +1,0 @@
-{
-  "sections": {
-    "main": { "type": "tme-wishlist-page", "settings": {} }
-  },
-  "order": ["main"]
-}
