@@ -40,7 +40,7 @@ window._ncCreate = async (jobs, rows) => {
     try {
       const [idx, vol, isbn, yr, low, img, fut, at, au, pub, age, cats] = r; const job = byIdx[idx]; if (!job){ NC.skip.push(isbn + ' nojob'); continue; }
       // A job marked as a light novel (job[2]) takes prose fiction too: Amazon files most light novels under Fantasy / Literature & Fiction.
-      if (!(job[2] && /fiction|fantasy|romance|novel|young adult|science fiction|mystery|horror/i.test(String(cats || ''))) && !/manga|comic|graphic novel|light novel|yaoi|manhwa|manhua|webtoon|boys'? ?love/i.test(String(cats || '') + ' ' + String(at || ''))){ NC.skip.push(job[1] + ' ' + vol + ' not manga (' + String(cats || '').slice(0, 40) + ')'); continue; }
+      if (String(cats || '').trim() && !(job[2] && /fiction|fantasy|romance|novel|young adult|science fiction|mystery|horror/i.test(String(cats || ''))) && !/manga|comic|graphic novel|light novel|yaoi|manhwa|manhua|webtoon|boys'? ?love/i.test(String(cats || '') + ' ' + String(at || ''))){ NC.skip.push(job[1] + ' ' + vol + ' not manga (' + String(cats || '').slice(0, 40) + ')'); continue; }
       if (fut || seen.has(isbn) || !/\.jpg$|^[\w+-]+$/.test(img || '')){ NC.skip.push(job[1] + ' ' + vol + ' fut/dup/noimg'); continue; } seen.add(isbn);
       const ex = await _api(`query($q:String){productVariants(first:1,query:$q){nodes{product{title productType se:metafield(namespace:"custom",key:"series"){value}}}}}`, { q: 'barcode:' + isbn + ' OR sku:' + isbn });
       if (ex.data && ex.data.productVariants.nodes.length){ const p = ex.data.productVariants.nodes[0].product; if (p.se && p.se.value) NC.alias.push([job[1], job[2], p.se.value, p.productType === 'Light Novel' ? 1 : 0]); NC.skip.push(job[1] + ' ' + vol + ' exists'); continue; }
