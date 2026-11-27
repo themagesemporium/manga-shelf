@@ -1463,6 +1463,7 @@ function renderStatsTab(){
     return `<div class="st-sec"><h3>Your volume reviews <span class="sub" style="font-weight:400">(${A.length})</span></h3><p class="sub" style="margin:0 0 4px">Top rated</p>${top.map(vrRow).join('')}${recent.length ? `<p class="sub" style="margin:10px 0 4px">Most recent</p>${recent.map(vrRow).join('')}` : ''}</div>`; })()}
 `;
   el.querySelectorAll('[data-merge]').forEach(b => b.onclick = () => mergeSeries(b.dataset.merge.split('|')));
+  el.querySelectorAll('[data-notdup]').forEach(b => b.onclick = () => notDup(b.dataset.notdup.split('|')));
   try { foldSections(el, 'st'); } catch(e){}
   if (!crownsData && mcp) loadCrowns().then(d => { if (d && !$('#tab-stats').classList.contains('hidden')) renderStatsTab(); });
 }
@@ -1547,11 +1548,14 @@ function worthOf(k){ const s = shelf.series[k]; if (!s) return { v: 0, est: true
   let v = 0, guessed = 0; s.v.forEach(x => { const q = byVol.get(x); if (q) v += q; else { v += avg; guessed++; } });
   return { v, est: guessed > 0 }; }
 function money(w){ return (w.est ? '≈ $' : '$') + Math.round(w.v).toLocaleString(); }
-function dupNorm(n){ return n.toLowerCase().replace(/\((manga|english|paperback)\)/g,' ').replace(/^(the|a|an)\s+/,'').replace(/[’']/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,''); }
+// Nov 27 2026: a colon is part of the name (Rebirth vs Re:BIRTH, Replay vs Re: Play are different series), so it stays significant
+function dupNorm(n){ return n.toLowerCase().replace(/\((manga|english|paperback)\)/g,' ').replace(/^(the|a|an)\s+/,'').replace(/[’']/g,'').replace(/&/g,' and ').replace(/\s*:\s*/g,'~').replace(/[^a-z0-9~]+/g,''); }
 function findDups(){ const g = {}; Object.keys(shelf.series).forEach(k => { const s = shelf.series[k]; const key = dupNorm(s.n) + (isLN(k, s) ? '|ln' : '') + (langOf(k) ? '|' + langOf(k) : ''); (g[key] = g[key] || []).push(k); });
-  return Object.values(g).filter(a => a.length > 1).map(a => a.sort((x, y) => shelf.series[y].v.length - shelf.series[x].v.length)); }
+  const nd = new Set(shelf.notDup || []);
+  return Object.values(g).filter(a => a.length > 1 && !nd.has(a.slice().sort().join('|'))).map(a => a.sort((x, y) => shelf.series[y].v.length - shelf.series[x].v.length)); }
+function notDup(keys){ shelf.notDup = [...new Set((shelf.notDup || []).concat(keys.slice().sort().join('|')))]; save(); renderStats(); }
 function dupHTML(){ const d = findDups(); if (!d.length) return `<div class="st-sec"><h3>Duplicate finder</h3><p class="sub" style="margin:0">No duplicate series on your shelf. 👍</p></div>`;
-  return `<div class="st-sec"><h3>Duplicate finder <span class="sub" style="font-weight:400">(${d.length})</span></h3><p class="sub" style="margin:0 0 6px">These look like the same series added twice. Merge keeps every volume, read mark, note and loan.</p>${d.map(a => `<div class="srow" style="cursor:default"><span>${a.map(k => `${esc(shelf.series[k].n)} <small style="display:inline">(${shelf.series[k].v.length})</small>`).join('<br>')}</span><button class="btn sm" data-merge="${esc(a.join('|'))}">Merge</button></div>`).join('')}</div>`; }
+  return `<div class="st-sec"><h3>Duplicate finder <span class="sub" style="font-weight:400">(${d.length})</span></h3><p class="sub" style="margin:0 0 6px">These look like the same series added twice. Merge keeps every volume, read mark, note and loan. Different series that just look alike? Tap Not the same.</p>${d.map(a => `<div class="srow" style="cursor:default"><span>${a.map(k => `${esc(shelf.series[k].n)} <small style="display:inline">(${shelf.series[k].v.length})</small>`).join('<br>')}</span><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn sm" data-merge="${esc(a.join('|'))}">Merge</button><button class="btn sm ghost" data-notdup="${esc(a.join('|'))}">Not the same</button></span></div>`).join('')}</div>`; }
 function mergeSeries(keys){ const [t, ...rest] = keys; const T = shelf.series[t]; const prev = JSON.parse(JSON.stringify(shelf.series));
   const uni = (a, b) => [...new Set((a||[]).concat(b||[]))].sort((x,y)=>x-y);
   rest.forEach(k => { const S = shelf.series[k]; if (!S) return; T.v = uni(T.v, S.v); if (S.r) T.r = uni(T.r, S.r); if (S.want) T.want = uni(T.want, S.want).filter(v => !T.v.includes(v)); if (S.sell) T.sell = uni(T.sell, S.sell);
@@ -3197,7 +3201,7 @@ function openAcct(focus){ current = null; openSheet(`<h2>${ACCT.client && !windo
   try { fixHTML(); } catch(e){} renderNewsBar();
   { const c = $('#cmOpt'); if (c) c.onchange = () => { if (c.checked) shelf.cm = 1; else delete shelf.cm; xpLast = null; save(); applyCM(); try { renderStats(); } catch(e){} toast(c.checked ? '📚 Collector-only mode on' : '✨ Levels and achievements are back'); }; }
   if (focus === 'io') setTimeout(() => $('#ioBox').scrollIntoView({ block: 'start', behavior: 'smooth' }), 50); }
-document.addEventListener('click', e => { const am = e.target.closest('[data-achmode]'); if (am){ ls.set('mme-achmode', +am.dataset.achmode); renderStats(); } const t = e.target.closest('[data-achtog]'); if (t){ ls.set('mme-achmode', ls.get('mme-achmode') === 2 ? 0 : 2); renderStats(); } const m = e.target.closest('#dupBox [data-merge]'); if (m) mergeSeries(m.dataset.merge.split('|')); });
+document.addEventListener('click', e => { const am = e.target.closest('[data-achmode]'); if (am){ ls.set('mme-achmode', +am.dataset.achmode); renderStats(); } const t = e.target.closest('[data-achtog]'); if (t){ ls.set('mme-achmode', ls.get('mme-achmode') === 2 ? 0 : 2); renderStats(); } const m = e.target.closest('#dupBox [data-merge]'); if (m) mergeSeries(m.dataset.merge.split('|')); const nd = e.target.closest('#dupBox [data-notdup]'); if (nd) notDup(nd.dataset.notdup.split('|')); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-openacct]'); if (b) openAcct(b.dataset.openacct); });
 async function forgetAll(){ const y = $('#forgetYes'); if (y){ y.disabled = true; y.textContent = 'Deleting…'; }
   try { if (FRIENDS_API) await fapi('/forget', {}).catch(() => {});
