@@ -2282,7 +2282,7 @@ function infoHTML(key){
    s.c = cover URL, s.cvm = 1 when the customer chose it (so automatic cover fills leave it alone), s.ib = {vol: isbn13}.
    An ISBN the shop doesn't carry also goes to the shop as a message so Megan can add the listing. ---------- */
 let cvPrev = null, cvOpen = false;
-function cvHTML(key){ const s = shelf.series[key]; if (!s || langOf(key)) return ''; const ib = s.ib || {};
+function cvHTML(key){ const s = shelf.series[key]; if (!s) return ''; /* Nov 27 2026: foreign editions can get a cover too (spine bookcase) */ const ib = s.ib || {};
   const have = Object.entries(ib).sort((a, b) => a[0] - b[0]).map(([v, i]) => `<li>${v > 0 ? 'Vol ' + esc(v) : 'Book'}: ${esc(i)} <button class="iconbtn" data-cvdel="${esc(v)}" aria-label="Remove ISBN for ${v > 0 ? 'Vol ' + esc(v) : 'this book'}" style="width:28px;height:28px">✕</button></li>`).join('');
   const pv = cvPrev && cvPrev.key === key ? `<div style="display:flex;gap:10px;align-items:center;margin:8px 0">${cvPrev.url ? `<img src="${esc(cvPrev.url)}" alt="Cover found" style="width:64px;border-radius:4px">` : ''}<div style="flex:1"><p class="sub" style="margin:0 0 6px">${esc(cvPrev.msg)}</p>${cvPrev.url ? `<button class="btn sm" data-cvuse>Use this cover</button>` : ''}${cvPrev.isbn ? ` <button class="btn ghost sm" data-cvsave>Save ISBN${cvPrev.url ? ' only' : ''}</button>` : ''}</div></div>` : '';
   return `<details class="about" data-cvwrap${cvOpen ? ' open' : ''}><summary>🖼️ Add a cover or ISBN</summary>
@@ -2303,8 +2303,8 @@ async function cvFind(key){ const s = shelf.series[key]; const raw = ($('#cvIsbn
 function cvCommit(key, useCover){ const s = shelf.series[key]; const P = cvPrev; if (!s || !P) return; const prev = JSON.parse(JSON.stringify(s));
   if (useCover && P.url){ s.c = P.url; s.cvm = 1; }
   if (P.isbn){ s.ib = Object.assign({}, s.ib || {}); s.ib[P.vol || 0] = P.isbn;
-    if (!P.inShop){ const t = `Added from the app: ${s.n}${P.vol ? ' Vol ' + P.vol : ''}, ISBN ${P.isbn}. Not in the shop yet.`; shelf.fb = (shelf.fb || []).concat({ t, at: Date.now() }); try { notifyShop(t); } catch(e){} } }
-  s.t = Date.now(); save(); cvPrev = null; track('cover-add'); toast(useCover ? 'Cover saved' + (P.isbn && !P.inShop ? '. We’ll add it to the shop.' : '') : 'ISBN saved' + (P.isbn && !P.inShop ? '. We’ll add it to the shop.' : ''), () => { shelf.series[key] = prev; save(); if (current === key) renderSeries(key); });
+    if (!P.inShop && !langOf(key)){ const t = `Added from the app: ${s.n}${P.vol ? ' Vol ' + P.vol : ''}, ISBN ${P.isbn}. Not in the shop yet.`; shelf.fb = (shelf.fb || []).concat({ t, at: Date.now() }); try { notifyShop(t); } catch(e){} } }
+  s.t = Date.now(); save(); cvPrev = null; track('cover-add'); toast(useCover ? 'Cover saved' + (P.isbn && !P.inShop && !langOf(key) ? '. We’ll add it to the shop.' : '') : 'ISBN saved' + (P.isbn && !P.inShop && !langOf(key) ? '. We’ll add it to the shop.' : ''), () => { shelf.series[key] = prev; save(); if (current === key) renderSeries(key); });
   renderAll(); renderSeries(key); }
 document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('[data-cvwrap]')) cvOpen = e.target.open; }, true);
 document.addEventListener('click', e => { if (!current) return; const key = current;
