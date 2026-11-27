@@ -1488,13 +1488,13 @@ function renderList(){
   { // "Show only" filter: genres on this shelf + one-shots, light novels, spice, gentle reads, anime, read/unread, other languages
     const M = k => serMeta(k); const sel = $('#sfilt'); const cur = sel.value || ls.get('mme-sfilt') || '';
     const gs = new Map(); Object.keys(shelf.series).forEach(k => M(k).g.forEach(g => gs.set(g, (gs.get(g) || 0) + 1)));
-    const opts = [['', 'Show: Everything'], ['one', 'One-shots'], ['ln', 'Light novels'], ['spicy', 'Spicy (🌶️ 3+)'], ['gentle', 'Gentle reads'], ['anime', 'Has an anime'], ['unread', 'Has unread volumes'], ['read', 'All read'], ['lang', 'Other languages'], ['done', 'Finished series (Japan)'], ...[...gs.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([g, n]) => ['g:' + g, `Genre: ${g} (${n})`])];
+    const opts = [['', 'Show: Everything'], ['one', 'One-shots'], ['ln', 'Light novels'], ['spicy', 'Spicy (🌶️ 3+)'], ['gentle', 'Gentle reads'], ['anime', 'Has an anime'], ['unread', 'Has unread volumes'], ['read', 'All read'], ['en', 'English only'], ['lang', 'Other languages'], ['done', 'Finished series (Japan)'], ...[...gs.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([g, n]) => ['g:' + g, `Genre: ${g} (${n})`])];
     const html = opts.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join(''); if (sel.dataset.h !== html){ sel.innerHTML = html; sel.dataset.h = html; } sel.value = opts.some(o => o[0] === cur) ? cur : '';
     const f = sel.value; if (f){ keys = keys.filter(k => { const m = M(k), s = shelf.series[k], e = (snapEntry(k) || [])[1];
       if (f === 'one') return /one-?shot/i.test(m.ss) || (e && e.t === 1) || (!e && (s.v || []).length === 1 && s.fin === 1);
       if (f === 'ln') return m.ln; if (f === 'spicy') return m.sp >= 3; if (f === 'gentle') return m.gr; if (f === 'anime') return m.an;
       if (f === 'unread') return (s.v || []).some(v => !(s.r || []).includes(v)); if (f === 'read') return (s.v || []).length && (s.v || []).every(v => (s.r || []).includes(v));
-      if (f === 'lang') return !!langOf(k); if (f === 'done') return /complete|finished|ended/i.test(m.ss);
+      if (f === 'lang') return !!langOf(k); if (f === 'en') return !langOf(k); /* Megan, Nov 27: hide foreign-language editions */ if (f === 'done') return /complete|finished|ended/i.test(m.ss);
       if (f.startsWith('g:')) return m.g.includes(f.slice(2)); return true; }); } }
   if (shelfFilter === 'done') keys = keys.filter(k => I[k].complete); else if (shelfFilter === 'open') keys = keys.filter(k => !I[k].complete);
   const name = k => shelf.series[k].n.replace(/^(the|a)\s+/i,'');
