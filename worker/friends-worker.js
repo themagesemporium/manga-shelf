@@ -397,12 +397,12 @@ async function aiBoxes(env){ if (!env.SHOPIFY_CLIENT_ID || !env.ANTHROPIC_API_KE
     if (sh && sh.series) for (const s of Object.values(sh.series)){ if (!s || !s.n) continue; (s.v || []).forEach(v => own.add(cleanS(s.n) + '|' + v)); if ((s.st || 0) >= 4) likes.push(s.n); }
     let past = []; if (o.customer){ try { const pd = await adm(env, `query($id:ID!){customer(id:$id){orders(first:15,sortKey:CREATED_AT,reverse:true){nodes{lineItems(first:50){nodes{product{id}}}}}}}`, { id: o.customer.id }); past = pd.customer.orders.nodes.flatMap(x => x.lineItems.nodes.map(l => l.product && l.product.id.split('/').pop())).filter(Boolean); } catch(e){} }
     const pastSet = new Set(past); const maxA = kids ? 0 : 2;
-    /* v15 (Nov 28 2026): box pull rules; the order note's genre comes first. Megan's pull rules (Nov 6, 12, 27): Mature boxes are ONLY books rated Mature (not Teen or Older Teen); manga boxes get no light novels;
+    /* v16 (Nov 28 2026): never pick a mystery product itself (Blind Date With Manga). v15: box pull rules; the order note's genre comes first. Megan's pull rules (Nov 6, 12, 27): Mature boxes are ONLY books rated Mature (not Teen or Older Teen); manga boxes get no light novels;
        standard size only unless the box says oversized; Vol 1 boxes get all Vol 1s, every other box a mix of volumes; no ex-library, damaged or
        foreign-language copies; skip anything they own or have ordered; then cheapest first, most stock first at the same price, and avoid
        taking the last loose copy of a volume that a set listing needs unless that is the only way to stay at the same price. */
     const pool = cat.filter(x => !x.set && (mature ? x.a === 3 : x.a <= maxA) && (mature || x.sp <= 3) && (lnBox ? x.ln : !x.ln) && (bigOk || !x.big) && (!vol1 || x.v === 1)
-      && !res[x.i] && !pastSet.has(String(x.i)) && !own.has(cleanS(x.s) + '|' + x.v) && !/ex library|damaged|\b(?:japanese|chinese|korean|vietnamese|thai|spanish|french|german|italian|hungarian|portuguese) edition\b/i.test(x.t));
+      && !BOX_RE.test(x.t) && !res[x.i] && !pastSet.has(String(x.i)) && !own.has(cleanS(x.s) + '|' + x.v) && !/ex library|damaged|\b(?:japanese|chinese|korean|vietnamese|thai|spanish|french|german|italian|hungarian|portuguese) edition\b/i.test(x.t));
     const NEG = /\b(?:no|avoid|avoiding|without|minimal|never|hate|hates|dislike|dislikes|not)\b((?:\s+(?:or|and|no|any|much|too|heavy|very|of))*\s+[a-z/-]+(?:\s+(?:or|and)\s+[a-z/-]+){0,3})/gi;
     const noteTxt = props.join(' '); const N = new Set(words([...noteTxt.matchAll(NEG)].map(m => m[1]).join(' ')));
     const textWant = noteTxt.replace(NEG, ' ') + ' ' + likes.join(' '); const W = words(textWant).filter(w => !N.has(w));
