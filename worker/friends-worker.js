@@ -403,7 +403,7 @@ async function aiBoxes(env){ if (!env.SHOPIFY_CLIENT_ID || !env.ANTHROPIC_API_KE
        taking the last loose copy of a volume that a set listing needs unless that is the only way to stay at the same price. */
     const pool = cat.filter(x => !x.set && (mature ? x.a === 3 : x.a <= maxA) && (mature || x.sp <= 3) && (lnBox ? x.ln : !x.ln) && (bigOk || !x.big) && (!vol1 || x.v === 1)
       && !res[x.i] && !pastSet.has(String(x.i)) && !own.has(cleanS(x.s) + '|' + x.v) && !/ex library|damaged|\b(?:japanese|chinese|korean|vietnamese|thai|spanish|french|german|italian|hungarian|portuguese) edition\b/i.test(x.t));
-    const NEG = /\b(?:no|avoid|avoiding|without|minimal|never|hate|hates|dislike|dislikes|not)\b((?:\s+(?:or|and|no|any|much|too|heavy|very|of))*\s+[a-z/-]+(?:\s*(?:,|or|and)\s*[a-z/-]+){0,3})/gi;
+    const NEG = /\b(?:no|avoid|avoiding|without|minimal|never|hate|hates|dislike|dislikes|not)\b((?:\s+(?:or|and|no|any|much|too|heavy|very|of))*\s+[a-z/-]+(?:\s+(?:or|and)\s+[a-z/-]+){0,3})/gi;
     const noteTxt = props.join(' '); const N = new Set(words([...noteTxt.matchAll(NEG)].map(m => m[1]).join(' ')));
     const textWant = noteTxt.replace(NEG, ' ') + ' ' + likes.join(' '); const W = words(textWant).filter(w => !N.has(w));
     const fit = x => { const hay = (x.s + ' ' + x.g + ' ' + x.th).toLowerCase(); if ([...N].some(w => hay.includes(w))) return -1; return W.filter(w => hay.includes(w)).length; };
