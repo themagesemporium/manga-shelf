@@ -397,7 +397,7 @@ async function aiBoxes(env){ if (!env.SHOPIFY_CLIENT_ID || !env.ANTHROPIC_API_KE
     if (sh && sh.series) for (const s of Object.values(sh.series)){ if (!s || !s.n) continue; (s.v || []).forEach(v => own.add(cleanS(s.n) + '|' + v)); if ((s.st || 0) >= 4) likes.push(s.n); }
     let past = []; if (o.customer){ try { const pd = await adm(env, `query($id:ID!){customer(id:$id){orders(first:15,sortKey:CREATED_AT,reverse:true){nodes{lineItems(first:50){nodes{product{id}}}}}}}`, { id: o.customer.id }); past = pd.customer.orders.nodes.flatMap(x => x.lineItems.nodes.map(l => l.product && l.product.id.split('/').pop())).filter(Boolean); } catch(e){} }
     const pastSet = new Set(past); const maxA = kids ? 0 : 2;
-    /* Megan's pull rules (Nov 6, 12, 27): Mature boxes are ONLY books rated Mature (not Teen or Older Teen); manga boxes get no light novels;
+    /* v15 (Nov 28 2026): box pull rules. Megan's pull rules (Nov 6, 12, 27): Mature boxes are ONLY books rated Mature (not Teen or Older Teen); manga boxes get no light novels;
        standard size only unless the box says oversized; Vol 1 boxes get all Vol 1s, every other box a mix of volumes; no ex-library, damaged or
        foreign-language copies; skip anything they own or have ordered; then cheapest first, most stock first at the same price, and avoid
        taking the last loose copy of a volume that a set listing needs unless that is the only way to stay at the same price. */
